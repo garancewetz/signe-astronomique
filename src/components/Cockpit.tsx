@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useGeolocation } from '../hooks/useGeolocation';
 import { motion, useReducedMotion } from 'framer-motion';
 import { SpaceView, type SpaceViewHandle } from './space/SpaceView';
 import { HudFrame } from './HudFrame';
@@ -19,9 +20,10 @@ import {
   reportFilename,
   viewFilename,
 } from '../utils/exportReport';
-import type { CelestialReading } from '../utils/astroEngine';
+import { computeReading, type CelestialReading } from '../utils/astroEngine';
 import type { CityResult } from './CityAutocomplete';
 import { timezoneFromLatLon } from '../utils/timezone';
+import { Button, cn } from './ui';
 
 const DEFAULT_CITY: CityResult = {
   label: 'Paris, France',
@@ -29,6 +31,19 @@ const DEFAULT_CITY: CityResult = {
   lon: 2.3522,
   timezone: timezoneFromLatLon(48.8566, 2.3522),
 };
+
+function formatInputDate(now: Date): string {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function formatInputTime(now: Date): string {
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
 
 // Onglets droits empilés verticalement le long du bord. Les `tabTop`
 // donnent le centre vertical de chaque onglet (avec -translate-y-1/2),
@@ -54,12 +69,30 @@ export function Cockpit() {
   const [exportingView, setExportingView] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
   const [bodyLabelsEnabled, setBodyLabelsEnabled] = useState(false);
+  const [satellitesEnabled, setSatellitesEnabled] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
 
   // État du formulaire — vit dans Cockpit pour survivre à la fermeture du panel.
   const [date, setDate] = useState('1990-06-15');
   const [time, setTime] = useState('14:30');
-  const [city, setCity] = useState<CityResult>(DEFAULT_CITY);
+  // `userCity` becomes non-null once the user explicitly picks a city. While
+  // it's null, `city` is derived from geolocation (Paris as a final
+  // fallback) — pure derivation, no effect-based sync.
+  const [userCity, setUserCity] = useState<CityResult | null>(null);
+
+  const geolocation = useGeolocation();
+
+  const geoCity = useMemo<CityResult | null>(() => {
+    if (geolocation.status !== 'resolved') return null;
+    return {
+      label: 'Position actuelle',
+      lat: geolocation.lat,
+      lon: geolocation.lon,
+      timezone: timezoneFromLatLon(geolocation.lat, geolocation.lon),
+    };
+  }, [geolocation]);
+
+  const city = userCity ?? geoCity ?? DEFAULT_CITY;
 
   const cockpitRef = useRef<HTMLDivElement>(null);
   const spaceViewRef = useRef<SpaceViewHandle>(null);
@@ -81,6 +114,20 @@ export function Cockpit() {
     // accessibles via leurs onglets respectifs.
     setLeftOpen(false);
     setActiveRight('resume');
+  };
+
+  const handleJumpNow = () => {
+    const now = new Date();
+    setDate(formatInputDate(now));
+    setTime(formatInputTime(now));
+    handleJump(
+      computeReading({
+        date: now,
+        latitude: city.lat,
+        longitude: city.lon,
+        placeLabel: city.label,
+      }),
+    );
   };
 
   const toggleAudio = () => {
@@ -155,6 +202,9 @@ export function Cockpit() {
           reading={reading}
           showGuides={showGuides}
           showBodyLabels={bodyLabelsEnabled}
+          showSatellites={satellitesEnabled}
+          liveLatitude={city.lat}
+          liveLongitude={city.lon}
         />
       </div>
 
@@ -163,7 +213,7 @@ export function Cockpit() {
 
       {/* === CADRE HUD === */}
       <div className="absolute inset-0 z-10 pointer-events-none">
-        <HudFrame />
+        <HudFrame reading={reading} />
       </div>
 
       {/* === PANEL GAUCHE — formulaire natal (onglet intégré qui dépasse) === */}
@@ -181,7 +231,7 @@ export function Cockpit() {
           city={city}
           onDateChange={setDate}
           onTimeChange={setTime}
-          onCityChange={setCity}
+          onCityChange={setUserCity}
           onJump={handleJump}
           onBlip={audio.blip}
           onClose={() => setLeftOpen(false)}
@@ -194,6 +244,7 @@ export function Cockpit() {
           key={key}
           side="right"
           open={activeRight === key}
+          tabVisible={!activeRight || activeRight === key}
           onToggle={() => toggleRightPanel(key)}
           label={label}
           panelId={`panel-${key}`}
@@ -207,7 +258,11 @@ export function Cockpit() {
             <CartePanel reading={reading} onClose={() => setActiveRight(null)} />
           )}
           {key === 'lecture' && (
-            <LecturePanel reading={reading} onClose={() => setActiveRight(null)} />
+            <LecturePanel
+              reading={reading}
+              satellitesEnabled={satellitesEnabled}
+              onClose={() => setActiveRight(null)}
+            />
           )}
           {key === 'donnees' && (
             <DonneesPanel reading={reading} onClose={() => setActiveRight(null)} />
@@ -229,7 +284,7 @@ export function Cockpit() {
 
       {/* === CONSOLE (BAS) — caméra + affichage + audio === */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-20 min-h-20
+        className="absolute bottom-0 left-0 right-0 z-20
                    pb-[max(0,env(safe-area-inset-bottom))]
                    bg-linear-to-t from-[#060210]/98 via-[#060210]/85 to-transparent
                    backdrop-blur-md border-t border-violet-500/15"
@@ -237,16 +292,18 @@ export function Cockpit() {
         <div className="absolute top-0 inset-x-0 h-px
                         bg-linear-to-r from-transparent via-violet-400/25 to-transparent" />
         <ControlConsole
-          reading={reading}
           audioEnabled={audio.enabled}
           onToggleAudio={toggleAudio}
           guidesEnabled={showGuides}
           onToggleGuides={() => setShowGuides(v => !v)}
           bodyLabelsEnabled={bodyLabelsEnabled}
           onToggleBodyLabels={() => setBodyLabelsEnabled(v => !v)}
+          satellitesEnabled={satellitesEnabled}
+          onToggleSatellites={() => setSatellitesEnabled(v => !v)}
           onFlySun={() => spaceViewRef.current?.flyToSun()}
           onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
           onFlyEarth={() => spaceViewRef.current?.flyToEarth()}
+          onJumpNow={handleJumpNow}
           onExportView={handleExportView}
           exportingView={exportingView}
           onExportReport={handleExport}
@@ -271,7 +328,7 @@ export function Cockpit() {
  * chevauchent (ex. fiches de rapport à droite).
  */
 function SidePanel({
-  side, open, onToggle, label, panelId, widthClass, autoHeight,
+  side, open, onToggle, label, panelId, widthClass, autoHeight, tabVisible = true,
   tabTopClass = 'top-1/2',
   children,
 }: {
@@ -282,6 +339,7 @@ function SidePanel({
   panelId: string;
   widthClass: string;
   autoHeight?: boolean;
+  tabVisible?: boolean;
   tabTopClass?: string;
   children: React.ReactNode;
 }) {
@@ -314,20 +372,21 @@ function SidePanel({
     >
       {/* Onglet qui dépasse du bord intérieur. Positionné hors de la
           bounding-box du panel pour rester visible une fois le panel fermé. */}
-      <button
-        type="button"
+      <Button
         onClick={onToggle}
-        className={`cockpit-focus absolute ${tabTopClass} -translate-y-1/2
-                    ${isLeft ? 'left-full' : 'right-full'}
-                    min-h-11 min-w-10 px-1.5 py-3.5 sm:min-h-0 sm:min-w-0
-                    ${isLeft ? 'rounded-r-sm border-l-0' : 'rounded-l-sm border-r-0'}
-                    border
-                    backdrop-blur-2xl
-                    text-[10px] tracking-[0.18em] font-medium
-                    transition-colors duration-200
-                    ${open
-                      ? 'border-violet-300/55 bg-violet-500/20 text-violet-50'
-                      : 'border-violet-400/30 bg-[#100828]/95 text-violet-200/85 hover:text-violet-50 hover:bg-violet-500/15 hover:border-violet-300/45'}`}
+        variant={open ? 'solid' : 'outline'}
+        size="sm"
+        className={cn(
+          `absolute ${tabTopClass} -translate-y-1/2`,
+          isLeft ? 'left-full' : 'right-full',
+          'h-auto min-h-11 min-w-10 px-1.5 py-3.5 sm:min-h-0 sm:min-w-0',
+          isLeft ? 'rounded-r-sm border-l-0' : 'rounded-l-sm border-r-0',
+          'backdrop-blur-2xl text-[11.5px] tracking-widest font-medium transition-[opacity,colors] duration-200',
+          tabVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
+          open
+            ? 'border-violet-300/55 bg-violet-500/20 text-violet-50'
+            : 'border-violet-400/30 bg-[#100828]/95 text-violet-200/85 hover:text-violet-50 hover:bg-violet-500/15 hover:border-violet-300/45',
+        )}
         style={{ writingMode: 'vertical-rl' as const }}
         aria-label={`${open ? 'Fermer' : 'Ouvrir'} ${label}`}
         aria-expanded={open}
@@ -336,7 +395,7 @@ function SidePanel({
         <span style={{ transform: isLeft ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
           {label}
         </span>
-      </button>
+      </Button>
 
       <div
         className={`${autoHeight ? 'max-h-full' : 'h-full'} min-h-0 overflow-hidden flex flex-col`}

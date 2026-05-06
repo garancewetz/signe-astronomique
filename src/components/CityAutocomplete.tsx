@@ -27,8 +27,18 @@ export function CityAutocomplete({ value, onSelect }: Props) {
   const [highlighted, setHighlighted] = useState(0);
   const [loading, setLoading] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const reqIdRef = useRef(0);
   const listboxId = useId();
+
+  useEffect(() => {
+    const isInputFocused = document.activeElement === inputRef.current;
+    if (isInputFocused) return;
+    setQuery(value.label);
+    setResults([]);
+    setOpen(false);
+    setLoading(false);
+  }, [value.label]);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -114,6 +124,7 @@ export function CityAutocomplete({ value, onSelect }: Props) {
   return (
     <div ref={wrapRef} className="relative">
       <input
+        ref={inputRef}
         type="text"
         value={query}
         placeholder="Ville de naissance…"

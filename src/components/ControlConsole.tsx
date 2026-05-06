@@ -1,20 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import type { CelestialReading } from '../utils/astroEngine';
 import { PLANETS_META } from '../utils/astroEngine';
 import { ExploreSpacePopover, InfoCircleIcon } from './ExploreSpacePopover';
+import { SATELLITE_RELICS } from '../data/satellitesDB';
 
 interface Props {
-  reading: CelestialReading | null;
   audioEnabled: boolean;
   onToggleAudio: () => void;
   guidesEnabled: boolean;
   onToggleGuides: () => void;
   bodyLabelsEnabled: boolean;
   onToggleBodyLabels: () => void;
+  satellitesEnabled: boolean;
+  onToggleSatellites: () => void;
   onFlySun: () => void;
   onFlyMoon: () => void;
   onFlyEarth: () => void;
+  onJumpNow: () => void;
   onExportView: () => void;
   exportingView: boolean;
   onExportReport: () => void;
@@ -25,11 +27,11 @@ interface Props {
 }
 
 export function ControlConsole({
-  reading,
   audioEnabled, onToggleAudio,
   guidesEnabled, onToggleGuides,
   bodyLabelsEnabled, onToggleBodyLabels,
-  onFlySun, onFlyMoon, onFlyEarth,
+  satellitesEnabled, onToggleSatellites,
+  onFlySun, onFlyMoon, onFlyEarth, onJumpNow,
   onExportView,
   exportingView,
   onExportReport,
@@ -40,42 +42,16 @@ export function ControlConsole({
 }: Props) {
   const [legendOpen, setLegendOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
-  const [liveNow, setLiveNow] = useState(() => new Date());
-  useEffect(() => {
-    if (reading) return;
-    const id = window.setInterval(() => setLiveNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, [reading]);
-
-  const natalUtcLine = reading
-    ? new Intl.DateTimeFormat('fr-FR', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-        timeZone: 'UTC',
-      }).format(reading.input.date) + ' UTC'
-    : null;
-
-  const liveLine = !reading
-    ? new Intl.DateTimeFormat('fr-FR', {
-        dateStyle: 'medium',
-        timeStyle: 'medium',
-      }).format(liveNow)
-    : null;
 
   return (
     <div className="relative h-full min-h-0 flex flex-col justify-center">
       <div
-        className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-5 py-2.5 overflow-x-auto overflow-y-visible
-                   overscroll-x-contain [-webkit-overflow-scrolling:touch]"
+        className="mx-2 sm:mx-4 mb-2 sm:mb-3 rounded-xl border border-violet-400/20
+                   bg-[#09031a]/88 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]
+                   flex items-center gap-2 sm:gap-2.5 px-2.5 sm:px-3.5 py-2
+                   overflow-x-auto overflow-y-visible overscroll-x-contain
+                   [-webkit-overflow-scrolling:touch]"
       >
-        <StatusBlock
-          reading={reading}
-          natalUtcLine={natalUtcLine}
-          liveLine={liveLine}
-        />
-
-        <Divider />
-
         {/* CAMÉRA */}
         <Cluster ariaLabel="Caméra">
           <IconButton
@@ -128,12 +104,30 @@ export function ControlConsole({
           >
             <LabelsIcon />
           </IconButton>
+          <IconButton
+            active={satellitesEnabled}
+            activeColor="sky"
+            onClick={onToggleSatellites}
+            title="Reliques orbitales — satellites historiques visibles à la date natale (Spoutnik, Hubble, ISS…)"
+            ariaLabel="Activer ou désactiver les reliques orbitales"
+            label="RELIQUES"
+          >
+            <SatelliteIcon />
+          </IconButton>
         </Cluster>
 
         <Divider />
 
         {/* OUTILS */}
         <Cluster ariaLabel="Outils">
+          <IconButton
+            onClick={onJumpNow}
+            title="Calculer et afficher le ciel à l'instant présent"
+            ariaLabel="Calculer le ciel d'aujourd'hui"
+            label="AUJOURD’HUI"
+          >
+            <NowIcon />
+          </IconButton>
           <IconButton
             active={exploreOpen}
             activeColor="sky"
@@ -143,16 +137,6 @@ export function ControlConsole({
             label="LIENS"
           >
             <InfoCircleIcon />
-          </IconButton>
-          <IconButton
-            active={fullscreenActive}
-            activeColor="sky"
-            onClick={onToggleFullscreen}
-            title={fullscreenActive ? 'Quitter le plein écran' : 'Plein écran'}
-            ariaLabel={fullscreenActive ? 'Quitter le plein écran' : 'Passer en plein écran'}
-            label={fullscreenActive ? 'QUITTER' : 'ÉCRAN'}
-          >
-            {fullscreenActive ? <FullscreenExitIcon /> : <FullscreenIcon />}
           </IconButton>
           <IconButton
             onClick={onExportView}
@@ -177,19 +161,40 @@ export function ControlConsole({
         <div className="flex-1 min-w-2" />
 
         {/* AUDIO (secondaire) */}
-        <IconButton
-          active={audioEnabled}
-          activeColor="emerald"
-          onClick={onToggleAudio}
-          title={audioEnabled ? 'Couper le son' : 'Activer le son'}
-          ariaLabel={audioEnabled ? 'Couper le son' : 'Activer le son'}
-          label="SON"
-        >
-          {audioEnabled ? <SpeakerOn /> : <SpeakerOff />}
-        </IconButton>
+        <Cluster ariaLabel="Réglages rapides">
+          <IconButton
+            active={fullscreenActive}
+            activeColor="sky"
+            onClick={onToggleFullscreen}
+            title={fullscreenActive ? 'Quitter le plein écran' : 'Plein écran'}
+            ariaLabel={fullscreenActive ? 'Quitter le plein écran' : 'Passer en plein écran'}
+            label={fullscreenActive ? 'QUITTER' : 'ÉCRAN'}
+          >
+            {fullscreenActive ? <FullscreenExitIcon /> : <FullscreenIcon />}
+          </IconButton>
+          <IconButton
+            active={audioEnabled}
+            activeColor="emerald"
+            onClick={onToggleAudio}
+            title={audioEnabled ? 'Couper le son' : 'Activer le son'}
+            ariaLabel={audioEnabled ? 'Couper le son' : 'Activer le son'}
+            label="SON"
+          >
+            {audioEnabled ? <SpeakerOn /> : <SpeakerOff />}
+          </IconButton>
+        </Cluster>
       </div>
 
-      <LegendDock open={legendOpen} onOpenChange={setLegendOpen} />
+      <LegendDock
+        open={legendOpen}
+        onOpenChange={setLegendOpen}
+        guidesEnabled={guidesEnabled}
+        onToggleGuides={onToggleGuides}
+        bodyLabelsEnabled={bodyLabelsEnabled}
+        onToggleBodyLabels={onToggleBodyLabels}
+        satellitesEnabled={satellitesEnabled}
+        onToggleSatellites={onToggleSatellites}
+      />
       <AnimatePresence>
         {exploreOpen && (
           <ExploreSpacePopover onClose={() => setExploreOpen(false)} />
@@ -203,7 +208,12 @@ export function ControlConsole({
 
 function Cluster({ children, ariaLabel }: { children: React.ReactNode; ariaLabel: string }) {
   return (
-    <div role="group" aria-label={ariaLabel} className="flex items-center gap-1 shrink-0">
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className="flex items-center gap-1 shrink-0 rounded-lg border border-violet-400/20
+                 bg-[#100828]/65 px-1 py-1"
+    >
       {children}
     </div>
   );
@@ -213,7 +223,7 @@ function Divider() {
   return (
     <span
       aria-hidden="true"
-      className="shrink-0 h-7 w-px bg-linear-to-b from-transparent via-violet-400/25 to-transparent"
+      className="shrink-0 h-8 w-px bg-linear-to-b from-transparent via-violet-300/25 to-transparent"
     />
   );
 }
@@ -235,19 +245,19 @@ function IconButton({
 }) {
   const activeClasses =
     activeColor === 'amber'
-      ? 'border-amber-400/55 text-amber-200 bg-amber-500/12'
+      ? 'border-amber-300/65 text-amber-100 bg-amber-400/14 shadow-[0_0_0_1px_rgba(251,191,36,0.15)_inset]'
       : activeColor === 'sky'
-        ? 'border-sky-400/55 text-sky-100 bg-sky-500/12'
+        ? 'border-sky-300/65 text-sky-100 bg-sky-400/14 shadow-[0_0_0_1px_rgba(56,189,248,0.14)_inset]'
         : activeColor === 'emerald'
-          ? 'border-emerald-400/55 text-emerald-200 bg-emerald-500/10'
-          : 'border-violet-300/60 text-violet-100 bg-violet-500/15';
+          ? 'border-emerald-300/65 text-emerald-100 bg-emerald-400/12 shadow-[0_0_0_1px_rgba(52,211,153,0.14)_inset]'
+          : 'border-violet-300/65 text-violet-100 bg-violet-500/16 shadow-[0_0_0_1px_rgba(167,139,250,0.14)_inset]';
 
   const inactive =
-    'border-violet-400/20 text-slate-400 hover:border-violet-300/55 hover:text-slate-100 hover:bg-violet-500/10';
+    'border-violet-400/20 text-slate-300/90 bg-transparent hover:border-violet-300/55 hover:text-slate-100 hover:bg-violet-500/10';
 
   const sizing = label
-    ? 'inline-flex items-center gap-2 h-9 px-3 text-[10px] tracking-[0.22em]'
-    : 'grid place-items-center h-9 w-9';
+    ? 'inline-flex items-center gap-2 h-9.5 px-3 text-[10px] tracking-[0.22em]'
+    : 'grid place-items-center h-9.5 w-9.5';
 
   return (
     <button
@@ -257,8 +267,9 @@ function IconButton({
       aria-label={ariaLabel}
       aria-pressed={active}
       disabled={disabled}
-      className={`cockpit-focus shrink-0 ${sizing} rounded-md border transition
-                  disabled:opacity-40 disabled:cursor-not-allowed
+      className={`cockpit-focus shrink-0 ${sizing} rounded-md border transition-[colors,transform,box-shadow] duration-200
+                  disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none
+                  enabled:active:scale-[0.98]
                   ${active ? activeClasses : inactive}`}
     >
       {children}
@@ -267,69 +278,48 @@ function IconButton({
   );
 }
 
-function StatusBlock({
-  reading, natalUtcLine, liveLine,
-}: {
-  reading: CelestialReading | null;
-  natalUtcLine: string | null;
-  liveLine: string | null;
-}) {
-  const isNatal = !!reading;
-  const mode = isNatal ? 'CIEL NATAL' : 'CIEL EN DIRECT';
-  const main = reading
-    ? `${reading.trueConstellation} · ${reading.moon.constellation}`
-    : 'En attente de tes coordonnées';
-  const sub = reading
-    ? `${reading.input.placeLabel ?? 'Ciel natal'} · ${natalUtcLine}`
-    : `Ciel actuel · ${liveLine}`;
-
-  return (
-    <div
-      className="flex shrink-0 items-center gap-2.5 min-w-0
-                 max-w-[46vw] sm:max-w-none sm:min-w-56"
-    >
-      <span
-        aria-hidden="true"
-        className={`shrink-0 w-1.5 h-1.5 rounded-full animate-shimmer
-                    ${isNatal ? 'bg-violet-400' : 'bg-emerald-400/85'}`}
-      />
-      <div className="min-w-0">
-        <div className="flex items-center gap-2 leading-tight min-w-0">
-          <span className="shrink-0 text-[8px] tracking-[0.28em] uppercase text-violet-300/85">
-            {mode}
-          </span>
-          <span className="text-[10px] tracking-[0.04em] text-slate-200 truncate">
-            {main}
-          </span>
-        </div>
-        <div className="text-[8px] tracking-[0.06em] text-slate-500 truncate mt-0.5">
-          {sub}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ─────────────────────────── légende (coin bas-gauche) ─────────────────────────── */
 
 function LegendDock({
   open,
   onOpenChange,
+  guidesEnabled,
+  onToggleGuides,
+  bodyLabelsEnabled,
+  onToggleBodyLabels,
+  satellitesEnabled,
+  onToggleSatellites,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  guidesEnabled: boolean;
+  onToggleGuides: () => void;
+  bodyLabelsEnabled: boolean;
+  onToggleBodyLabels: () => void;
+  satellitesEnabled: boolean;
+  onToggleSatellites: () => void;
 }) {
   const reduceMotion = useReducedMotion();
 
   return (
     <div
       className="pointer-events-none fixed z-40 left-3 max-w-[calc(100vw-1.5rem)]
-                 bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))]"
+                 bottom-[calc(5.25rem+env(safe-area-inset-bottom,0))]"
     >
       <div className="pointer-events-auto flex flex-col items-start gap-2">
         <AnimatePresence mode="popLayout" initial={false}>
           {open ? (
-            <LegendExpandedPanel key="open" onClose={() => onOpenChange(false)} reduceMotion={!!reduceMotion} />
+            <LegendExpandedPanel
+              key="open"
+              onClose={() => onOpenChange(false)}
+              reduceMotion={!!reduceMotion}
+              guidesEnabled={guidesEnabled}
+              onToggleGuides={onToggleGuides}
+              bodyLabelsEnabled={bodyLabelsEnabled}
+              onToggleBodyLabels={onToggleBodyLabels}
+              satellitesEnabled={satellitesEnabled}
+              onToggleSatellites={onToggleSatellites}
+            />
           ) : (
             <LegendCollapsedTrigger key="closed" onOpen={() => onOpenChange(true)} reduceMotion={!!reduceMotion} />
           )}
@@ -349,7 +339,6 @@ function LegendCollapsedTrigger({
   return (
     <motion.button
       type="button"
-      layout
       initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.92 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.92 }}
@@ -371,9 +360,21 @@ function LegendCollapsedTrigger({
 function LegendExpandedPanel({
   onClose,
   reduceMotion,
+  guidesEnabled,
+  onToggleGuides,
+  bodyLabelsEnabled,
+  onToggleBodyLabels,
+  satellitesEnabled,
+  onToggleSatellites,
 }: {
   onClose: () => void;
   reduceMotion: boolean;
+  guidesEnabled: boolean;
+  onToggleGuides: () => void;
+  bodyLabelsEnabled: boolean;
+  onToggleBodyLabels: () => void;
+  satellitesEnabled: boolean;
+  onToggleSatellites: () => void;
 }) {
   const planetEntries = Object.values(PLANETS_META);
   return (
@@ -381,10 +382,9 @@ function LegendExpandedPanel({
       role="dialog"
       aria-modal="true"
       aria-labelledby="cockpit-legend-title"
-      layout
-      initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.94, y: reduceMotion ? 0 : 6 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.94, y: reduceMotion ? 0 : 6 }}
+      initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
       transition={{ duration: reduceMotion ? 0 : 0.22 }}
       style={{ transformOrigin: 'bottom left' }}
       className="w-[min(18rem,calc(100vw-1.5rem))] max-h-[min(56vh,26rem)] overflow-y-auto overscroll-contain
@@ -409,7 +409,17 @@ function LegendExpandedPanel({
       </div>
 
       <div className="space-y-3 text-[10px]">
-        <Section title="ASTRES">
+        <Section
+          title="ASTRES"
+          action={
+            <LegendToggle
+              active={bodyLabelsEnabled}
+              onClick={onToggleBodyLabels}
+              label="NOMS"
+              ariaLabel="Afficher ou masquer les noms des astres sur la sphère"
+            />
+          }
+        >
           <Row glyph="☀" color="#fcd34d" name="Soleil" />
           <Row glyph="☾" color="#e2e8f0" name="Lune" />
           {planetEntries.map(p => (
@@ -417,24 +427,127 @@ function LegendExpandedPanel({
           ))}
         </Section>
 
-        <Section title="REPÈRES (guides ⊕)">
+        <Section
+          title="REPÈRES (guides ⊕)"
+          action={
+            <LegendToggle
+              active={guidesEnabled}
+              onClick={onToggleGuides}
+              label="AFFICHER"
+              ariaLabel="Afficher ou masquer les repères du ciel"
+            />
+          }
+        >
           <LineRow color="#fde68a" label="Axe terrestre (rotation)" />
           <LineRow color="#60a5fa" label="Équateur céleste" />
           <LineRow color="#fbbf24" label="Écliptique (chemin du Soleil)" />
+        </Section>
+
+        <Section
+          title="RELIQUES ORBITALES"
+          action={
+            <LegendToggle
+              active={satellitesEnabled}
+              onClick={onToggleSatellites}
+              label="AFFICHER"
+              ariaLabel="Afficher ou masquer les reliques orbitales"
+            />
+          }
+        >
+          {SATELLITE_RELICS.map((r) => (
+            <DotRow
+              key={r.id}
+              color={r.glowColor}
+              label={r.name}
+              year={new Date(r.launchDate).getUTCFullYear()}
+            />
+          ))}
         </Section>
       </div>
     </motion.div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function DotRow({
+  color,
+  label,
+  year,
+}: {
+  color: string;
+  label: string;
+  year: number;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        aria-hidden="true"
+        className="shrink-0 inline-block w-2 h-2 rounded-full"
+        style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
+      />
+      <span className="text-slate-300 truncate">{label}</span>
+      <span className="text-slate-500 ml-auto text-[9px]">{year}</span>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
   return (
     <div>
-      <div className="text-[8px] tracking-[0.3em] text-violet-400/70 mb-1.5">
-        {title}
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <div className="text-[8px] tracking-[0.3em] text-violet-400/70">
+          {title}
+        </div>
+        {action}
       </div>
       <div className="space-y-1">{children}</div>
     </div>
+  );
+}
+
+function LegendToggle({
+  active,
+  onClick,
+  label,
+  ariaLabel,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={ariaLabel}
+      onClick={onClick}
+      className={`cockpit-focus shrink-0 inline-flex items-center gap-1.5 h-6 pl-1 pr-2 rounded
+                  border text-[8px] tracking-[0.2em] transition-colors
+                  ${active
+                    ? 'border-amber-300/60 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15'
+                    : 'border-violet-400/25 bg-transparent text-slate-400 hover:border-violet-300/45 hover:text-slate-200'}`}
+    >
+      <span
+        aria-hidden="true"
+        className={`relative inline-block w-5 h-2.5 rounded-full transition-colors
+                    ${active ? 'bg-amber-300/70' : 'bg-slate-600/60'}`}
+      >
+        <span
+          className={`absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white shadow transition-[left]
+                      ${active ? 'left-[calc(100%-0.5rem-1px)]' : 'left-px'}`}
+        />
+      </span>
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -504,6 +617,16 @@ function LabelsIcon() {
   );
 }
 
+
+function SatelliteIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="9" r="2.4" />
+      <path d="M9 4.6V2 M9 13.4V16 M4.6 9H2 M13.4 9H16" />
+      <path d="M5.5 5.5L4 4 M12.5 12.5L14 14 M5.5 12.5L4 14 M12.5 5.5L14 4" strokeOpacity="0.55" />
+    </svg>
+  );
+}
 
 function FullscreenIcon() {
   return (
@@ -593,3 +716,13 @@ function CloseIcon() {
     </svg>
   );
 }
+
+function NowIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <circle cx="9" cy="9" r="6" />
+      <path d="M9 5.3v3.7l2.5 1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+

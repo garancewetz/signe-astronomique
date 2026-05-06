@@ -1,4 +1,3 @@
-import { motion, useReducedMotion } from 'framer-motion';
 import { type ReactNode } from 'react';
 import { RadarWheel } from './RadarWheel';
 import {
@@ -11,8 +10,13 @@ import {
   ResumeCard,
   ScientificFooter,
 } from './MissionLog';
-import { PanelPlaceholder } from './ui/PanelPlaceholder';
+import { PanelPlaceholder, PanelShell } from './ui';
 import type { CelestialReading } from '../utils/astroEngine';
+import {
+  SPACE_AGE_START_YEAR,
+  isSilentEra,
+  relicsAvailableOn,
+} from '../data/satellitesDB';
 
 export type ReportPanelKey = 'resume' | 'carte' | 'lecture' | 'donnees';
 
@@ -21,13 +25,18 @@ interface PanelProps {
   onClose: () => void;
 }
 
+interface LecturePanelProps extends PanelProps {
+  /** True when the orbital relics layer is on. */
+  satellitesEnabled: boolean;
+}
+
 // ─── Panneau RÉSUMÉ ──────────────────────────────────────────────────────────
 
 export function ResumePanel({ reading, onClose }: PanelProps) {
   return (
-    <PanelShell title="RÉSUMÉ" subtitle="L’ESSENTIEL DE TON CIEL" onClose={onClose}>
+    <ReportPanelShell title="RÉSUMÉ" subtitle="L’ESSENTIEL DE TON CIEL" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[11.5px]">
+        <div className="space-y-3 text-[13px] leading-relaxed">
           <BirthHeader reading={reading} />
           <ResumeCard reading={reading} />
           <AscendantCard reading={reading} />
@@ -35,7 +44,7 @@ export function ResumePanel({ reading, onClose }: PanelProps) {
       ) : (
         <Empty />
       )}
-    </PanelShell>
+    </ReportPanelShell>
   );
 }
 
@@ -43,33 +52,98 @@ export function ResumePanel({ reading, onClose }: PanelProps) {
 
 export function CartePanel({ reading, onClose }: PanelProps) {
   return (
-    <PanelShell title="CARTE" subtitle="ROUE DES CONSTELLATIONS" onClose={onClose}>
+    <ReportPanelShell title="CARTE" subtitle="ROUE DES CONSTELLATIONS" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[11.5px]">
+        <div className="space-y-3 text-[13px] leading-relaxed">
           <RadarWheel reading={reading} />
           <PlanetTable reading={reading} />
         </div>
       ) : (
         <CarteStub />
       )}
-    </PanelShell>
+    </ReportPanelShell>
   );
 }
 
 // ─── Panneau LECTURE ─────────────────────────────────────────────────────────
 
-export function LecturePanel({ reading, onClose }: PanelProps) {
+export function LecturePanel({ reading, satellitesEnabled, onClose }: LecturePanelProps) {
   return (
-    <PanelShell title="LECTURE" subtitle="COMPRENDRE TA CARTE" onClose={onClose}>
+    <ReportPanelShell title="LECTURE" subtitle="COMPRENDRE TA CARTE" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[11.5px]">
+        <div className="space-y-3 text-[13px] leading-relaxed">
           <HowToRead />
           <NotesCard reading={reading} />
+          {satellitesEnabled && (
+            <RelicsOracleCard birthDate={reading.input.date} />
+          )}
         </div>
       ) : (
         <LectureStub />
       )}
-    </PanelShell>
+    </ReportPanelShell>
+  );
+}
+
+/**
+ * "Oracle" card for orbital relics — shown in LECTURE while the layer is
+ * active. Two states:
+ *   - silence: birth before 1957 (Sputnik hadn't launched yet);
+ *   - list   : every relic launched on or before the natal date.
+ */
+function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
+  if (isSilentEra(birthDate)) {
+    return (
+      <div className="rounded-sm border border-violet-400/25 bg-[#0d0820]/70
+                      p-4 space-y-2">
+        <div className="text-[8.5px] tracking-[0.3em] text-violet-300/75">
+          ORACLE · RELIQUES ORBITALES
+        </div>
+        <p className="text-amber-100/85 italic text-[13px] leading-relaxed">
+          « En cette année, l’orbite de la Terre n’appartenait qu’au silence. »
+        </p>
+        <p className="text-slate-400 text-[10.5px] leading-relaxed">
+          Aucun objet humain n’avait encore quitté l’atmosphère — le premier,
+          Spoutnik 1, ne serait lancé qu’en {SPACE_AGE_START_YEAR}.
+        </p>
+      </div>
+    );
+  }
+
+  const relics = relicsAvailableOn(birthDate);
+  return (
+    <div className="rounded-sm border border-cyan-400/20 bg-[#0a1424]/60
+                    p-4 space-y-3">
+      <div className="text-[8.5px] tracking-[0.3em] text-cyan-300/75">
+        ORACLE · RELIQUES ORBITALES
+      </div>
+      <p className="text-slate-300 text-[12px] leading-relaxed">
+        Au moment de ta naissance, ces objets humains tournaient (ou
+        avaient déjà tourné) autour de la Terre :
+      </p>
+      <ul className="space-y-1.5 text-[11.5px]">
+        {relics.map((r) => (
+          <li key={r.id} className="flex items-start gap-2">
+            <span
+              aria-hidden="true"
+              className="mt-1.5 inline-block w-1.5 h-1.5 rounded-full shrink-0"
+              style={{ backgroundColor: r.glowColor }}
+            />
+            <div className="min-w-0">
+              <div className="text-slate-100">
+                {r.name}
+                <span className="text-slate-500 ml-1.5">
+                  · {new Date(r.launchDate).getUTCFullYear()}
+                </span>
+              </div>
+              <div className="text-slate-400 italic text-[10.5px] leading-snug">
+                {r.blurb}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -77,16 +151,16 @@ export function LecturePanel({ reading, onClose }: PanelProps) {
 
 export function DonneesPanel({ reading, onClose }: PanelProps) {
   return (
-    <PanelShell title="DONNÉES" subtitle="ASTRONOMIE BRUTE" onClose={onClose}>
+    <ReportPanelShell title="DONNÉES" subtitle="ASTRONOMIE BRUTE" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[11.5px]">
+        <div className="space-y-3 text-[13px] leading-relaxed">
           <AstroInfoCard reading={reading} />
           <ScientificFooter />
         </div>
       ) : (
         <DonneesStub />
       )}
-    </PanelShell>
+    </ReportPanelShell>
   );
 }
 
@@ -98,7 +172,7 @@ export function DonneesPanel({ reading, onClose }: PanelProps) {
  */
 export function FullReport({ reading }: { reading: CelestialReading }) {
   return (
-    <div className="space-y-3 text-[11.5px] px-4 py-4">
+    <div className="space-y-3 text-[13px] leading-relaxed px-4 py-4">
       <BirthHeader reading={reading} />
       <ResumeCard reading={reading} />
       <AscendantCard reading={reading} />
@@ -114,44 +188,22 @@ export function FullReport({ reading }: { reading: CelestialReading }) {
 
 // ─── Coque commune (en-tête + corps scrollable + animation) ─────────────────
 
-function PanelShell({
+function ReportPanelShell({
   title, subtitle, onClose, children,
 }: { title: string; subtitle: string; onClose: () => void; children: ReactNode }) {
-  const reduceMotion = useReducedMotion();
   return (
-    <div className="h-full flex flex-col">
-      <header className="flex items-start justify-between gap-2 px-4 py-3 border-b border-violet-400/25">
-        <div className="min-w-0">
-          <div className="text-[9px] tracking-[0.35em] text-violet-400 mb-0.5">
-            {subtitle}
-          </div>
-          <h2 className="text-[11px] tracking-[0.2em] text-violet-100">
-            {title}
-          </h2>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="cockpit-focus shrink-0 inline-flex items-center justify-center
-                     h-8 w-8 rounded-sm border border-violet-400/30
-                     hover:border-violet-300 hover:bg-violet-500/15
-                     text-slate-300 hover:text-white transition"
-          aria-label={`Fermer le panneau ${title.toLowerCase()}`}
-        >
-          <CloseIcon />
-        </button>
-      </header>
-
-      <motion.div
-        key={title}
-        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.3 }}
-        className="flex-1 overflow-y-auto px-4 py-4"
-      >
-        {children}
-      </motion.div>
-    </div>
+    <PanelShell
+      title={title}
+      subtitle={subtitle}
+      onClose={onClose}
+      closeAriaLabel={`Fermer le panneau ${title.toLowerCase()}`}
+      closeContent={<CloseIcon />}
+      closeButtonClassName="h-8 w-8 p-0"
+      bodyClassName="overflow-y-auto px-4 py-4 text-slate-200"
+      animationKey={title}
+    >
+      {children}
+    </PanelShell>
   );
 }
 
@@ -159,12 +211,12 @@ function PanelShell({
 
 function Empty() {
   return (
-    <div className="text-slate-400 text-xs leading-relaxed mt-4 px-1">
+    <div className="text-slate-300 text-[13px] leading-relaxed mt-4 px-1">
       <div className="text-4xl mb-4 opacity-25 text-center">◇</div>
-      <h2 className="text-violet-200 text-[11px] tracking-[0.2em] font-medium mb-3 text-center uppercase">
+      <h2 className="text-violet-100 text-[12.5px] tracking-[0.14em] font-medium mb-3 text-center uppercase">
         Ton vrai signe, lu dans le ciel réel
       </h2>
-      <p className="mb-2.5 text-slate-300">
+      <p className="mb-2.5 text-slate-200">
         Ton <strong className="text-violet-200 font-medium">signe astrologique</strong>{' '}
         vient d&apos;un découpage du zodiaque figé il y a 2&nbsp;000 ans, à
         l&apos;époque de Ptolémée. Depuis, la <em>précession des équinoxes</em> —
@@ -172,21 +224,21 @@ function Empty() {
         en environ 26&nbsp;000 ans — a décalé le ciel d&apos;à peu près un
         signe entier.
       </p>
-      <p className="mb-2.5 text-slate-300">
+      <p className="mb-2.5 text-slate-200">
         Le jour de ta naissance, le Soleil ne se trouvait donc presque jamais
         dans la constellation annoncée par ton horoscope. Sa vraie position,
         c&apos;est ton{' '}
         <strong className="text-amber-200 font-medium">signe astronomique</strong>{' '}
         — la constellation IAU réellement traversée sur l&apos;écliptique.
       </p>
-      <p className="mb-2.5 text-slate-300">
+      <p className="mb-2.5 text-slate-200">
         Saisis ta date, ton heure et ton lieu de naissance : on dessine ta{' '}
         <strong className="text-violet-200 font-medium">carte du ciel</strong>{' '}
         avec le Soleil, la Lune, les planètes et ton{' '}
         <strong className="text-emerald-200 font-medium">ascendant</strong>{' '}
         astronomique, calculés en astronomie de position.
       </p>
-      <p className="text-slate-500 text-[10px] italic">
+      <p className="text-slate-400 text-[11px] italic">
         Ophiuchus — le 13ᵉ signe écarté par les douze cases du calendrier — est
         inclus : le Soleil y passe environ 18&nbsp;jours par an, c&apos;est un
         fait observable, pas une opinion.
@@ -249,8 +301,6 @@ function DonneesStub() {
     </PanelPlaceholder>
   );
 }
-
-// ─── Icône ───────────────────────────────────────────────────────────────────
 
 function CloseIcon() {
   return (

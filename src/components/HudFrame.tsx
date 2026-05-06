@@ -1,4 +1,35 @@
-export function HudFrame() {
+import { useEffect, useState } from 'react';
+import type { CelestialReading } from '../utils/astroEngine';
+
+interface HudFrameProps {
+  reading: CelestialReading | null;
+}
+
+export function HudFrame({ reading }: HudFrameProps) {
+  const [liveNow, setLiveNow] = useState(() => new Date());
+
+  useEffect(() => {
+    if (reading) return;
+    const id = window.setInterval(() => setLiveNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, [reading]);
+
+  const isNatal = !!reading;
+  const mode = isNatal ? 'CIEL NATAL' : 'CIEL EN DIRECT';
+  const main = reading
+    ? `${reading.trueConstellation} · ${reading.moon.constellation}`
+    : 'En attente de tes coordonnées';
+  const sub = reading
+    ? `${reading.input.placeLabel ?? 'Ciel natal'} · ${new Intl.DateTimeFormat('fr-FR', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: 'UTC',
+      }).format(reading.input.date)} UTC`
+    : `Ciel actuel · ${new Intl.DateTimeFormat('fr-FR', {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+      }).format(liveNow)}`;
+
   return (
     <>
       {/* ─── Barre du haut — identitaire (titre + cartouche IAU) ────── */}
@@ -7,6 +38,21 @@ export function HudFrame() {
         <div className="absolute bottom-0 inset-x-0 h-px
                         bg-linear-to-r from-transparent via-violet-400/40 to-transparent" />
         <div className="flex items-center justify-between h-full px-5 sm:px-6">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-24">
+            <div className="min-w-0 max-w-2xl text-center leading-tight">
+              <div className="flex items-center justify-center gap-2 min-w-0">
+                <span className="shrink-0 text-[8px] tracking-[0.28em] uppercase text-violet-300/85">
+                  {mode}
+                </span>
+                <span className="text-[10px] tracking-[0.04em] text-slate-200 truncate">
+                  {main}
+                </span>
+              </div>
+              <div className="text-[8px] tracking-[0.06em] text-slate-500 truncate mt-0.5">
+                {sub}
+              </div>
+            </div>
+          </div>
 
           <div className="flex items-center gap-2 text-[10px] tracking-[0.35em]">
             <MoonGlyph />

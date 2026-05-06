@@ -3,6 +3,7 @@ import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { computeReading, type CelestialReading } from '../utils/astroEngine';
 import { localBirthToUtc } from '../utils/timezone';
 import { useState } from 'react';
+import { Field, Input, PanelShell } from './ui';
 
 interface Props {
   date: string;
@@ -41,42 +42,42 @@ export function LeftPanel({
   };
 
   return (
-    <div className="h-full flex flex-col min-h-0">
-      <header className="flex items-center justify-between px-4 py-2.5 border-b border-violet-400/25">
-        <h2 className="text-[10.5px] tracking-[0.28em] text-violet-100">
-          <span className="text-violet-400">✦</span> COORDONNÉES DE NAISSANCE
-        </h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="cockpit-focus inline-flex items-center gap-2 h-9 px-2.5 rounded-sm
-                     border border-violet-400/30 hover:border-violet-300
-                     hover:bg-violet-500/15 transition text-slate-300
-                     hover:text-white text-[9px] tracking-[0.18em]"
-          aria-label="Fermer le panneau coordonnées"
-        >
+    <PanelShell
+      title={<><span className="text-violet-400">✦</span> COORDONNÉES DE NAISSANCE</>}
+      titleClassName="text-[10.5px] tracking-[0.28em] text-violet-100"
+      headerClassName="items-center px-4 py-2.5"
+      onClose={onClose}
+      closeAriaLabel="Fermer le panneau coordonnées"
+      closeContent={
+        <>
           <CloseIcon />
           <span>FERMER</span>
-        </button>
-      </header>
-
-      <form onSubmit={handleSubmit} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-2.5">
+        </>
+      }
+      animated={false}
+      bodyClassName="overflow-hidden"
+      footer={(
+        <footer className="px-4 py-1.5 border-t border-violet-400/15
+                           text-[8.5px] tracking-[0.2em] text-violet-400/60 font-mono">
+          Meeus 1998 · JPL · IAU 1930
+        </footer>
+      )}
+    >
+      <form onSubmit={handleSubmit} className="h-full overflow-y-auto px-4 py-3 space-y-2.5">
         <Field label="DATE DE NAISSANCE">
-          <input
+          <Input
             type="date"
             value={date}
             onChange={e => onDateChange(e.target.value)}
-            className="cockpit-input w-full"
             required
           />
         </Field>
 
         <Field label="HEURE LOCALE">
-          <input
+          <Input
             type="time"
             value={time}
             onChange={e => onTimeChange(e.target.value)}
-            className="cockpit-input w-full"
             required
           />
         </Field>
@@ -115,12 +116,7 @@ export function LeftPanel({
                            pointer-events-none" />
         </motion.button>
       </form>
-
-      <footer className="px-4 py-1.5 border-t border-violet-400/15
-                         text-[8.5px] tracking-[0.2em] text-violet-400/60 font-mono">
-        Meeus 1998 · JPL · IAU 1930
-      </footer>
-    </div>
+    </PanelShell>
   );
 }
 
@@ -132,11 +128,3 @@ function CloseIcon() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-[9px] tracking-[0.3em] text-violet-400">{label}</span>
-      {children}
-    </label>
-  );
-}

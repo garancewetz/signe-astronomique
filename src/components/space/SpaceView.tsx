@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import {
   Cartesian3,
   ClockRange,
@@ -28,7 +28,13 @@ import { mountSunLayer } from './cesium/mountSunLayer';
 import { mountMoonLayer } from './cesium/mountMoonLayer';
 import { mountPlanetsLayer } from './cesium/mountPlanetsLayer';
 import { mountReferenceLines } from './cesium/mountReferenceLines';
-import { flyToOrbital, flyToCelestialDirection } from './cesium/cameraDirector';
+import { mountSatellitesLayer } from './cesium/mountSatellitesLayer';
+import {
+  flyToOrbital,
+  flyToCelestialDirection,
+  flyToRelicsView,
+} from './cesium/cameraDirector';
+import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
 
 export interface SpaceViewHandle {
   /**
@@ -51,6 +57,16 @@ interface Props {
   showGuides: boolean;
   /** Étiquettes Soleil / Lune / planètes dans la scène. */
   showBodyLabels: boolean;
+  /** Enables the orbital relics layer (historical satellites). */
+  showSatellites: boolean;
+  /**
+   * Observer latitude, used for the "live" pre-JUMP sky. Has no impact on
+   * body rendering (which is geocentric), but matters for the ascendant
+   * and for semantic consistency of `liveReading.input`.
+   */
+  liveLatitude: number;
+  /** Observer longitude (see liveLatitude). */
+  liveLongitude: number;
   /** Référence impérative pour le capture-canvas. */
   ref?: Ref<SpaceViewHandle>;
 }
@@ -76,6 +92,9 @@ export function SpaceView({
   reading,
   showGuides,
   showBodyLabels,
+  showSatellites,
+  liveLatitude,
+  liveLongitude,
   ref,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,23 +146,39 @@ export function SpaceView({
     [],
   );
 
-  // Reading "live" mis à jour chaque minute quand pas de JUMP.
-  // La latitude/longitude n'influencent que l'ascendant (qu'on n'utilise pas
-  // dans le rendu 3D), donc 0/0 est sans conséquence pour Sun/Moon/planètes.
-  const [liveReading, setLiveReading] = useState<CelestialReading>(() =>
-    computeReading({ date: new Date(), latitude: 0, longitude: 0 }),
-  );
-
+  // "Live" reading: we keep the current `Date` in state and the reading
+  // derives from it + the observer coordinates. Bodies are geocentric so
+  // lat/lon only changes the ascendant — we pass them anyway for the
+  // semantic consistency of `liveReading.input`.
+  const [liveNow, setLiveNow] = useState<Date>(() => new Date());
   useEffect(() => {
-    if (reading) return; // pas besoin de live tant qu'on a un reading natal
-    const tick = () => {
-      setLiveReading(
-        computeReading({ date: new Date(), latitude: 0, longitude: 0 }),
-      );
-    };
-    const id = window.setInterval(tick, LIVE_REFRESH_MS);
+    if (reading) return; // no need to tick while a natal reading is set
+    const id = window.setInterval(
+      () => setLiveNow(new Date()),
+      LIVE_REFRESH_MS,
+    );
     return () => window.clearInterval(id);
   }, [reading]);
+
+  const liveReading = useMemo<CelestialReading>(
+    () =>
+      computeReading({
+        date: liveNow,
+        latitude: liveLatitude,
+        longitude: liveLongitude,
+      }),
+    [liveNow, liveLatitude, liveLongitude],
+  );
+
+  // Orbital relics: the *date* drives only the launch-date filter (and the
+  // silent-era check). The hook returns parsed satrecs; actual SGP4
+  // propagation happens inside the layer so live mode can update positions
+  // every frame via a CallbackProperty.
+  const activeForRelics = reading ?? liveReading;
+  const { satellites: trackedSatellites } = useSatelliteTracker({
+    selectedDate: activeForRelics.input.date,
+    enabled: showSatellites,
+  });
 
   // 1. Création unique du Viewer
   useEffect(() => {
@@ -392,7 +427,48 @@ export function SpaceView({
     }
 
     previousReadingRef.current = reading;
-  }, [reading, liveReading, showGuides, showBodyLabels]);
+  }, [
+    reading,
+    liveReading,
+    showGuides,
+    showBodyLabels,
+  ]);
+
+  // Relics layer: kept on its own effect so it doesn't re-mount on every
+  // live tick (which would reset the pulse phase and the layer-internal
+  // last-known-position cache every minute).
+  // Only re-mounts when the set of relics changes, or when natal ↔ live
+  // mode flips (i.e. `reading` becomes non-null or null).
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !showSatellites || trackedSatellites.length === 0) {
+      return;
+    }
+    const cleanup = mountSatellitesLayer(viewer, {
+      satellites: trackedSatellites,
+      // Natal: frozen date. Live: now, re-evaluated each frame by the
+      // layer's internal CallbackProperty.
+      getTime: () => reading?.input.date ?? new Date(),
+      live: !reading,
+    });
+    return cleanup;
+  }, [showSatellites, trackedSatellites, reading]);
+
+  // When the user turns relics on (live mode only), fly closer to Earth
+  // so LEO satellites are visible *and* their motion is perceptible. From
+  // the default 100 000 km orbital camera, ISS would be sub-pixel.
+  // In natal mode we leave the camera alone — the user just JUMPed and
+  // the camera is already framing the natal sky direction.
+  const wasShowingSatellitesRef = useRef(false);
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    const turnedOn = showSatellites && !wasShowingSatellitesRef.current;
+    wasShowingSatellitesRef.current = showSatellites;
+    if (turnedOn && !reading) {
+      flyToRelicsView(viewer);
+    }
+  }, [showSatellites, reading]);
 
   return (
     <div

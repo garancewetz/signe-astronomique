@@ -14,6 +14,11 @@ import {
 // (à ~284 000 km de la caméra côté Terre) et la sphère céleste (200 000 km).
 const ORBITAL_ALTITUDE_M = 100_000_000;
 
+// 8 000 km — Earth fills ~half the FOV, LEO satellites are visibly
+// orbiting (~1 px/s at this distance), and the camera is still far enough
+// out to keep the celestial backdrop legible.
+const RELICS_ALTITUDE_M = 8_000_000;
+
 /**
  * Vue par défaut : orbite équatoriale à 30 000 km, regard nadir vers le
  * point (lat 0, lon 0). À cette altitude, la Terre occupe ~24° du champ et
@@ -23,6 +28,25 @@ const ORBITAL_ALTITUDE_M = 100_000_000;
 export function flyToOrbital(viewer: Viewer, duration = 1.5): void {
   viewer.camera.flyTo({
     destination: Cartesian3.fromDegrees(0, 0, ORBITAL_ALTITUDE_M),
+    orientation: {
+      heading: 0,
+      pitch: -Math.PI / 2,
+      roll: 0,
+    },
+    duration,
+    easingFunction: EasingFunction.QUADRATIC_IN_OUT,
+  });
+}
+
+/**
+ * Closer orbital view, used when the user enables the orbital relics layer.
+ * From the default 100 000 km, LEO satellites are sub-pixel and don't
+ * appear to move. At 8 000 km altitude, Earth fills roughly half the FOV
+ * and ISS-like satellites visibly drift across.
+ */
+export function flyToRelicsView(viewer: Viewer, duration = 2.2): void {
+  viewer.camera.flyTo({
+    destination: Cartesian3.fromDegrees(0, 0, RELICS_ALTITUDE_M),
     orientation: {
       heading: 0,
       pitch: -Math.PI / 2,
