@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  background: #060210;
+  color: #ede9fe;
+  overscroll-behavior: none;
+}
+
+@supports (padding: env(safe-area-inset-left)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+body {
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Vignette douce sur les bords — conteneur de la vue 3D */
+.crystal-vignette {
+  background: radial-gradient(
+    ellipse 72% 72% at center,
+    transparent 28%,
+    rgba(6, 2, 16, 0.25) 52%,
+    rgba(6, 2, 16, 0.72) 76%,
+    rgba(6, 2, 16, 0.96) 100%
+  );
+}
+
+/* Inputs cockpit */
+.cockpit-input {
+  background: rgba(6, 2, 16, 0.65);
+  border: 1px solid rgba(109, 40, 217, 0.3);
+  color: #ede9fe;
+  padding: 0.4rem 0.7rem;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.cockpit-input:focus {
+  border-color: rgba(139, 92, 246, 0.65);
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.18);
+}
+.cockpit-input:focus-visible {
+  border-color: rgba(196, 181, 253, 0.85);
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.45);
+}
+
+.cockpit-focus:focus {
+  outline: none;
+}
+.cockpit-focus:focus-visible {
+  outline: 2px solid rgb(196 181 253 / 0.95);
+  outline-offset: 2px;
+}
+.cockpit-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.5) sepia(1) saturate(6) hue-rotate(240deg);
+  opacity: 0.6;
+}
+
+/* Option background for select */
+.cockpit-input option {
+  background: #0d0820;
+}
+
+/* Bouton sweep */
+@keyframes sweep {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* Pulsation douce pour l'indicateur de status */
+@keyframes shimmer {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+.animate-shimmer { animation: shimmer 3s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
+/* Scrollbar discrète */
+*::-webkit-scrollbar { width: 3px; height: 3px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(109, 40, 217, 0.3);
+  border-radius: 2px;
+}
+*::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
+
+.skip-to-main {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  z-index: 100;
+}
+.skip-to-main:focus {
+  clip: auto;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.65rem 1rem;
+  top: 0.75rem;
+  left: 0.75rem;
+  background: #100828;
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  color: #ede9fe;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  border-radius: 3px;
+  text-decoration: none;
+}
+.skip-to-main:focus-visible {
+  outline: 2px solid rgb(196 181 253);
+  outline-offset: 2px;
+}
+
+#cockpit-main:focus {
+  outline: none;
+}
+#cockpit-main:focus-visible {
+  outline: 2px solid rgb(196 181 253 / 0.65);
+  outline-offset: 2px;
+}

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#1a0b3d"/>
+      <stop offset="100%" stop-color="#060210"/>
+    </radialGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef3c7" stop-opacity=".95"/>
+      <stop offset="45%" stop-color="#fbbf24" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sunCore" cx="40%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="55%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <g fill="#ede9fe" opacity=".55">
+    <circle cx="9"  cy="11" r=".8"/>
+    <circle cx="55" cy="13" r=".7"/>
+    <circle cx="7"  cy="49" r=".7"/>
+    <circle cx="57" cy="53" r=".8"/>
+    <circle cx="22" cy="57" r=".5"/>
+    <circle cx="48" cy="6"  r=".5"/>
+  </g>
+
+  <path d="M 4 40 Q 32 16 60 28"
+        stroke="#7c3aed" stroke-width="1" fill="none"
+        stroke-linecap="round" opacity=".5"
+        stroke-dasharray="2 2"/>
+
+  <g stroke="#a78bfa" stroke-width="1.1" fill="none"
+     stroke-linecap="round" opacity=".75">
+    <line x1="13" y1="22" x2="44" y2="18"/>
+    <line x1="44" y1="18" x2="51" y2="40"/>
+    <line x1="51" y1="40" x2="35" y2="51"/>
+    <line x1="35" y1="51" x2="13" y2="22"/>
+  </g>
+
+  <g fill="#ede9fe">
+    <circle cx="13" cy="22" r="1.7"/>
+    <circle cx="44" cy="18" r="2"/>
+    <circle cx="51" cy="40" r="1.6"/>
+    <circle cx="35" cy="51" r="1.5"/>
+  </g>
+
+  <circle cx="32" cy="32" r="14" fill="url(#sunGlow)"/>
+  <circle cx="32" cy="32" r="6"  fill="url(#sunCore)"/>
+</svg>

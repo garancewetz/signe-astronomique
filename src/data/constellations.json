@@ -1,0 +1,421 @@
+[
+  {
+    "name": "Orion",
+    "abbreviation": "Ori",
+    "stars": [
+      { "name": "Betelgeuse",  "bayer": "α", "ra": 88.793, "dec":  7.407, "mag": 0.50 },
+      { "name": "Rigel",       "bayer": "β", "ra": 78.634, "dec": -8.202, "mag": 0.18 },
+      { "name": "Bellatrix",   "bayer": "γ", "ra": 81.283, "dec":  6.350, "mag": 1.64 },
+      { "name": "Mintaka",     "bayer": "δ", "ra": 83.002, "dec": -0.299, "mag": 2.23 },
+      { "name": "Alnilam",     "bayer": "ε", "ra": 84.053, "dec": -1.202, "mag": 1.69 },
+      { "name": "Alnitak",     "bayer": "ζ", "ra": 85.190, "dec": -1.943, "mag": 1.79 },
+      { "name": "Saiph",       "bayer": "κ", "ra": 86.939, "dec": -9.670, "mag": 2.06 }
+    ],
+    "lines": [[0, 2], [3, 4], [4, 5], [2, 3], [0, 5], [1, 3], [6, 5]]
+  },
+  {
+    "name": "Ursa Major",
+    "abbreviation": "UMa",
+    "stars": [
+      { "name": "Dubhe",   "bayer": "α", "ra": 165.932, "dec": 61.751, "mag": 1.79 },
+      { "name": "Merak",   "bayer": "β", "ra": 165.460, "dec": 56.382, "mag": 2.37 },
+      { "name": "Phecda",  "bayer": "γ", "ra": 178.458, "dec": 53.694, "mag": 2.44 },
+      { "name": "Megrez",  "bayer": "δ", "ra": 183.857, "dec": 57.033, "mag": 3.31 },
+      { "name": "Alioth",  "bayer": "ε", "ra": 193.507, "dec": 55.960, "mag": 1.77 },
+      { "name": "Mizar",   "bayer": "ζ", "ra": 200.981, "dec": 54.925, "mag": 2.04 },
+      { "name": "Alkaid",  "bayer": "η", "ra": 206.885, "dec": 49.313, "mag": 1.86 }
+    ],
+    "lines": [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4], [4, 5], [5, 6]]
+  },
+  {
+    "name": "Ursa Minor",
+    "abbreviation": "UMi",
+    "stars": [
+      { "name": "Polaris", "bayer": "α", "ra":  37.954, "dec": 89.264, "mag": 1.97 },
+      { "name": "Kochab",  "bayer": "β", "ra": 222.676, "dec": 74.156, "mag": 2.07 },
+      { "name": "Pherkad", "bayer": "γ", "ra": 230.182, "dec": 71.834, "mag": 3.00 },
+      { "name": "Yildun",  "bayer": "δ", "ra": 263.054, "dec": 86.586, "mag": 4.36 },
+      { "name": "Eps UMi", "bayer": "ε", "ra": 251.493, "dec": 82.037, "mag": 4.21 },
+      { "name": "Zeta UMi","bayer": "ζ", "ra": 236.014, "dec": 77.794, "mag": 4.32 },
+      { "name": "Eta UMi", "bayer": "η", "ra": 244.350, "dec": 75.755, "mag": 4.95 }
+    ],
+    "lines": [[0, 3], [3, 4], [4, 5], [5, 6], [6, 2], [2, 1], [1, 5]]
+  },
+  {
+    "name": "Cassiopeia",
+    "abbreviation": "Cas",
+    "stars": [
+      { "name": "Schedar",  "bayer": "α", "ra": 10.127, "dec": 56.537, "mag": 2.24 },
+      { "name": "Caph",     "bayer": "β", "ra":  2.295, "dec": 59.150, "mag": 2.27 },
+      { "name": "Gamma Cas","bayer": "γ", "ra": 14.177, "dec": 60.717, "mag": 2.47 },
+      { "name": "Ruchbah",  "bayer": "δ", "ra": 21.454, "dec": 60.235, "mag": 2.68 },
+      { "name": "Segin",    "bayer": "ε", "ra": 28.599, "dec": 63.670, "mag": 3.38 }
+    ],
+    "lines": [[1, 0], [0, 2], [2, 3], [3, 4]]
+  },
+  {
+    "name": "Cygnus",
+    "abbreviation": "Cyg",
+    "stars": [
+      { "name": "Deneb",     "bayer": "α", "ra": 310.358, "dec": 45.280, "mag": 1.25 },
+      { "name": "Albireo",   "bayer": "β", "ra": 292.680, "dec": 27.960, "mag": 3.05 },
+      { "name": "Sadr",      "bayer": "γ", "ra": 305.557, "dec": 40.257, "mag": 2.23 },
+      { "name": "Delta Cyg", "bayer": "δ", "ra": 296.244, "dec": 45.131, "mag": 2.86 },
+      { "name": "Gienah",    "bayer": "ε", "ra": 311.553, "dec": 33.970, "mag": 2.46 }
+    ],
+    "lines": [[0, 2], [2, 1], [3, 2], [2, 4]]
+  },
+  {
+    "name": "Lyra",
+    "abbreviation": "Lyr",
+    "stars": [
+      { "name": "Vega",       "bayer": "α", "ra": 279.234, "dec": 38.784, "mag": 0.03 },
+      { "name": "Sheliak",    "bayer": "β", "ra": 282.520, "dec": 33.363, "mag": 3.52 },
+      { "name": "Sulafat",    "bayer": "γ", "ra": 284.737, "dec": 32.689, "mag": 3.24 },
+      { "name": "Delta2 Lyr", "bayer": "δ", "ra": 283.626, "dec": 36.899, "mag": 4.22 },
+      { "name": "Zeta1 Lyr",  "bayer": "ζ", "ra": 281.193, "dec": 37.605, "mag": 4.34 }
+    ],
+    "lines": [[0, 4], [4, 3], [3, 2], [2, 1], [1, 4]]
+  },
+  {
+    "name": "Aquila",
+    "abbreviation": "Aql",
+    "stars": [
+      { "name": "Altair",  "bayer": "α", "ra": 297.696, "dec":  8.868, "mag": 0.77 },
+      { "name": "Tarazed", "bayer": "γ", "ra": 296.565, "dec": 10.613, "mag": 2.72 },
+      { "name": "Alshain", "bayer": "β", "ra": 298.828, "dec":  6.407, "mag": 3.71 },
+      { "name": "Zeta Aql","bayer": "ζ", "ra": 286.353, "dec": 13.864, "mag": 2.99 },
+      { "name": "Theta Aql","bayer":"θ", "ra": 301.022, "dec": -0.821, "mag": 3.24 },
+      { "name": "Delta Aql","bayer":"δ", "ra": 291.375, "dec":  3.115, "mag": 3.36 },
+      { "name": "Lambda Aql","bayer":"λ","ra": 286.562, "dec": -4.882, "mag": 3.43 },
+      { "name": "Eta Aql", "bayer": "η", "ra": 298.118, "dec":  1.006, "mag": 3.87 }
+    ],
+    "lines": [[1, 0], [0, 2], [3, 1], [5, 0], [0, 7], [7, 4], [6, 5]]
+  },
+  {
+    "name": "Canis Major",
+    "abbreviation": "CMa",
+    "stars": [
+      { "name": "Sirius",    "bayer": "α", "ra": 101.287, "dec": -16.716, "mag": -1.46 },
+      { "name": "Adhara",    "bayer": "ε", "ra": 104.656, "dec": -28.972, "mag":  1.50 },
+      { "name": "Wezen",     "bayer": "δ", "ra": 107.098, "dec": -26.393, "mag":  1.83 },
+      { "name": "Mirzam",    "bayer": "β", "ra":  95.675, "dec": -17.956, "mag":  1.98 },
+      { "name": "Aludra",    "bayer": "η", "ra": 111.024, "dec": -29.303, "mag":  2.45 },
+      { "name": "Furud",     "bayer": "ζ", "ra":  95.078, "dec": -30.063, "mag":  3.02 },
+      { "name": "Muliphein", "bayer": "γ", "ra": 105.940, "dec": -15.633, "mag":  4.10 }
+    ],
+    "lines": [[3, 0], [0, 6], [0, 5], [5, 1], [1, 2], [2, 4]]
+  },
+  {
+    "name": "Canis Minor",
+    "abbreviation": "CMi",
+    "stars": [
+      { "name": "Procyon", "bayer": "α", "ra": 114.825, "dec": 5.225, "mag": 0.34 },
+      { "name": "Gomeisa", "bayer": "β", "ra": 111.788, "dec": 8.289, "mag": 2.89 }
+    ],
+    "lines": [[0, 1]]
+  },
+  {
+    "name": "Andromeda",
+    "abbreviation": "And",
+    "stars": [
+      { "name": "Alpheratz", "bayer": "α",  "ra":  2.097, "dec": 29.090, "mag": 2.07 },
+      { "name": "Mirach",    "bayer": "β",  "ra": 17.433, "dec": 35.621, "mag": 2.05 },
+      { "name": "Almach",    "bayer": "γ",  "ra": 30.975, "dec": 42.330, "mag": 2.10 },
+      { "name": "Delta And", "bayer": "δ",  "ra":  9.832, "dec": 30.861, "mag": 3.27 },
+      { "name": "51 And",    "bayer": "51", "ra": 28.665, "dec": 48.628, "mag": 3.57 }
+    ],
+    "lines": [[0, 3], [3, 1], [1, 2], [2, 4]]
+  },
+  {
+    "name": "Perseus",
+    "abbreviation": "Per",
+    "stars": [
+      { "name": "Mirfak",  "bayer": "α", "ra": 51.081, "dec": 49.861, "mag": 1.79 },
+      { "name": "Algol",   "bayer": "β", "ra": 47.042, "dec": 40.956, "mag": 2.12 },
+      { "name": "Zeta Per","bayer": "ζ", "ra": 58.533, "dec": 31.884, "mag": 2.85 },
+      { "name": "Eps Per", "bayer": "ε", "ra": 59.463, "dec": 40.011, "mag": 2.88 },
+      { "name": "Gamma Per","bayer":"γ", "ra": 46.291, "dec": 53.506, "mag": 2.93 },
+      { "name": "Delta Per","bayer":"δ", "ra": 55.731, "dec": 47.788, "mag": 3.01 }
+    ],
+    "lines": [[4, 0], [0, 5], [5, 3], [3, 2], [0, 1]]
+  },
+  {
+    "name": "Auriga",
+    "abbreviation": "Aur",
+    "stars": [
+      { "name": "Capella",     "bayer": "α", "ra": 79.172, "dec": 45.998, "mag": 0.08 },
+      { "name": "Menkalinan",  "bayer": "β", "ra": 89.882, "dec": 44.947, "mag": 1.90 },
+      { "name": "Mahasim",     "bayer": "θ", "ra": 89.930, "dec": 37.213, "mag": 2.62 },
+      { "name": "Hassaleh",    "bayer": "ι", "ra": 74.248, "dec": 33.166, "mag": 2.69 },
+      { "name": "Almaaz",      "bayer": "ε", "ra": 75.492, "dec": 43.823, "mag": 2.99 },
+      { "name": "Haedus",      "bayer": "η", "ra": 74.949, "dec": 41.235, "mag": 3.18 }
+    ],
+    "lines": [[0, 4], [0, 1], [1, 2], [2, 3], [3, 5], [5, 0]]
+  },
+  {
+    "name": "Bootes",
+    "abbreviation": "Boo",
+    "stars": [
+      { "name": "Arcturus", "bayer": "α", "ra": 213.915, "dec": 19.182, "mag": -0.05 },
+      { "name": "Izar",     "bayer": "ε", "ra": 221.247, "dec": 27.074, "mag":  2.37 },
+      { "name": "Muphrid",  "bayer": "η", "ra": 208.671, "dec": 18.398, "mag":  2.68 },
+      { "name": "Seginus",  "bayer": "γ", "ra": 218.020, "dec": 38.308, "mag":  3.03 },
+      { "name": "Delta Boo","bayer": "δ", "ra": 227.971, "dec": 33.315, "mag":  3.46 },
+      { "name": "Nekkar",   "bayer": "β", "ra": 225.486, "dec": 40.390, "mag":  3.49 }
+    ],
+    "lines": [[0, 2], [2, 3], [3, 5], [5, 4], [4, 1], [1, 0]]
+  },
+  {
+    "name": "Hercules",
+    "abbreviation": "Her",
+    "stars": [
+      { "name": "Kornephoros","bayer":"β", "ra": 247.555, "dec": 21.490, "mag": 2.78 },
+      { "name": "Zeta Her",  "bayer": "ζ", "ra": 250.323, "dec": 31.602, "mag": 2.81 },
+      { "name": "Delta Her", "bayer": "δ", "ra": 258.762, "dec": 24.839, "mag": 3.12 },
+      { "name": "Pi Her",    "bayer": "π", "ra": 258.762, "dec": 36.809, "mag": 3.16 },
+      { "name": "Mu Her",    "bayer": "μ", "ra": 266.615, "dec": 27.721, "mag": 3.42 },
+      { "name": "Eta Her",   "bayer": "η", "ra": 250.722, "dec": 38.922, "mag": 3.53 },
+      { "name": "Rasalgethi","bayer": "α", "ra": 258.662, "dec": 14.390, "mag": 3.48 },
+      { "name": "Eps Her",   "bayer": "ε", "ra": 255.072, "dec": 30.927, "mag": 3.92 }
+    ],
+    "lines": [[1, 7], [7, 3], [3, 5], [5, 1], [1, 0], [0, 6], [3, 4], [1, 2]]
+  },
+  {
+    "name": "Pegasus",
+    "abbreviation": "Peg",
+    "stars": [
+      { "name": "Markab",  "bayer": "α", "ra": 346.190, "dec": 15.205, "mag": 2.49 },
+      { "name": "Scheat",  "bayer": "β", "ra": 345.944, "dec": 28.083, "mag": 2.42 },
+      { "name": "Algenib", "bayer": "γ", "ra":   3.309, "dec": 15.184, "mag": 2.83 },
+      { "name": "Enif",    "bayer": "ε", "ra": 326.046, "dec":  9.875, "mag": 2.39 },
+      { "name": "Homam",   "bayer": "ζ", "ra": 340.366, "dec": 10.831, "mag": 3.40 },
+      { "name": "Matar",   "bayer": "η", "ra": 340.751, "dec": 30.221, "mag": 2.93 }
+    ],
+    "lines": [[0, 1], [0, 2], [1, 5], [5, 3], [0, 4], [4, 3]]
+  },
+  {
+    "name": "Draco",
+    "abbreviation": "Dra",
+    "stars": [
+      { "name": "Eltanin",  "bayer": "γ", "ra": 269.151, "dec": 51.488, "mag": 2.23 },
+      { "name": "Aldhibah", "bayer": "η", "ra": 245.997, "dec": 61.514, "mag": 2.74 },
+      { "name": "Rastaban", "bayer": "β", "ra": 262.608, "dec": 52.301, "mag": 2.79 },
+      { "name": "Altais",   "bayer": "δ", "ra": 288.139, "dec": 67.661, "mag": 3.07 },
+      { "name": "Zeta Dra", "bayer": "ζ", "ra": 257.197, "dec": 65.715, "mag": 3.17 },
+      { "name": "Edasich",  "bayer": "ι", "ra": 231.232, "dec": 58.966, "mag": 3.29 },
+      { "name": "Thuban",   "bayer": "α", "ra": 211.097, "dec": 64.376, "mag": 3.65 },
+      { "name": "Kappa Dra","bayer": "κ", "ra": 188.371, "dec": 69.788, "mag": 3.87 }
+    ],
+    "lines": [[0, 2], [2, 4], [4, 1], [1, 5], [5, 6], [6, 7], [4, 3]]
+  },
+  {
+    "name": "Crux",
+    "abbreviation": "Cru",
+    "stars": [
+      { "name": "Acrux",  "bayer": "α", "ra": 186.650, "dec": -63.099, "mag": 0.77 },
+      { "name": "Mimosa", "bayer": "β", "ra": 191.930, "dec": -59.689, "mag": 1.25 },
+      { "name": "Gacrux", "bayer": "γ", "ra": 187.791, "dec": -57.113, "mag": 1.59 },
+      { "name": "Imai",   "bayer": "δ", "ra": 183.786, "dec": -58.749, "mag": 2.79 }
+    ],
+    "lines": [[0, 2], [1, 3]]
+  },
+  {
+    "name": "Centaurus",
+    "abbreviation": "Cen",
+    "stars": [
+      { "name": "Rigil Kentaurus","bayer":"α","ra": 219.902, "dec": -60.834, "mag": -0.27 },
+      { "name": "Hadar",         "bayer": "β","ra": 210.956, "dec": -60.373, "mag":  0.61 },
+      { "name": "Menkent",       "bayer": "θ","ra": 211.671, "dec": -36.370, "mag":  2.06 },
+      { "name": "Gamma Cen",     "bayer": "γ","ra": 190.379, "dec": -48.960, "mag":  2.17 },
+      { "name": "Eps Cen",       "bayer": "ε","ra": 204.972, "dec": -53.466, "mag":  2.30 },
+      { "name": "Zeta Cen",      "bayer": "ζ","ra": 208.885, "dec": -47.288, "mag":  2.55 },
+      { "name": "Eta Cen",       "bayer": "η","ra": 218.876, "dec": -42.158, "mag":  2.31 },
+      { "name": "Delta Cen",     "bayer": "δ","ra": 182.090, "dec": -50.722, "mag":  2.58 },
+      { "name": "Iota Cen",      "bayer": "ι","ra": 200.149, "dec": -36.712, "mag":  2.75 }
+    ],
+    "lines": [[0, 1], [1, 4], [4, 3], [3, 7], [4, 5], [5, 6], [6, 2], [6, 8]]
+  },
+  {
+    "name": "Aries",
+    "abbreviation": "Ari",
+    "stars": [
+      { "name": "Hamal",     "bayer": "α", "ra": 31.793, "dec": 23.463, "mag": 2.00 },
+      { "name": "Sheratan",  "bayer": "β", "ra": 28.660, "dec": 20.808, "mag": 2.65 },
+      { "name": "Mesarthim", "bayer": "γ", "ra": 28.380, "dec": 19.294, "mag": 3.86 },
+      { "name": "41 Ari",    "bayer": "41","ra": 42.396, "dec": 27.260, "mag": 3.61 }
+    ],
+    "lines": [[2, 1], [1, 0], [0, 3]]
+  },
+  {
+    "name": "Taurus",
+    "abbreviation": "Tau",
+    "stars": [
+      { "name": "Aldebaran","bayer": "α", "ra": 68.980, "dec": 16.509, "mag": 0.85 },
+      { "name": "Elnath",   "bayer": "β", "ra": 81.573, "dec": 28.608, "mag": 1.65 },
+      { "name": "Alcyone",  "bayer": "η", "ra": 56.871, "dec": 24.105, "mag": 2.87 },
+      { "name": "Zeta Tau", "bayer": "ζ", "ra": 84.411, "dec": 21.143, "mag": 3.00 },
+      { "name": "Eps Tau",  "bayer": "ε", "ra": 67.154, "dec": 19.180, "mag": 3.53 },
+      { "name": "Gamma Tau","bayer": "γ", "ra": 64.948, "dec": 15.628, "mag": 3.65 }
+    ],
+    "lines": [[5, 4], [4, 0], [0, 1], [0, 3]]
+  },
+  {
+    "name": "Gemini",
+    "abbreviation": "Gem",
+    "stars": [
+      { "name": "Pollux",  "bayer": "β", "ra": 116.329, "dec": 28.026, "mag": 1.14 },
+      { "name": "Castor",  "bayer": "α", "ra": 113.650, "dec": 31.888, "mag": 1.58 },
+      { "name": "Alhena",  "bayer": "γ", "ra":  99.428, "dec": 16.399, "mag": 1.93 },
+      { "name": "Tejat",   "bayer": "μ", "ra":  95.740, "dec": 22.514, "mag": 2.87 },
+      { "name": "Mebsuta", "bayer": "ε", "ra": 100.983, "dec": 25.131, "mag": 2.98 }
+    ],
+    "lines": [[1, 4], [4, 3], [3, 2], [0, 2], [1, 0]]
+  },
+  {
+    "name": "Cancer",
+    "abbreviation": "Cnc",
+    "stars": [
+      { "name": "Tarf",      "bayer": "β", "ra": 124.128, "dec":  9.186, "mag": 3.52 },
+      { "name": "Asellus Aus","bayer":"δ", "ra": 131.171, "dec": 18.154, "mag": 3.94 },
+      { "name": "Asellus Bor","bayer":"γ", "ra": 131.674, "dec": 21.469, "mag": 4.66 },
+      { "name": "Acubens",   "bayer": "α", "ra": 134.622, "dec": 11.858, "mag": 4.20 },
+      { "name": "Iota Cnc",  "bayer": "ι", "ra": 131.673, "dec": 28.760, "mag": 4.02 }
+    ],
+    "lines": [[0, 1], [1, 2], [2, 4], [1, 3]]
+  },
+  {
+    "name": "Leo",
+    "abbreviation": "Leo",
+    "stars": [
+      { "name": "Regulus",   "bayer": "α", "ra": 152.093, "dec": 11.967, "mag": 1.40 },
+      { "name": "Denebola",  "bayer": "β", "ra": 177.265, "dec": 14.572, "mag": 2.14 },
+      { "name": "Algieba",   "bayer": "γ", "ra": 154.993, "dec": 19.842, "mag": 2.08 },
+      { "name": "Zosma",     "bayer": "δ", "ra": 168.527, "dec": 20.524, "mag": 2.56 },
+      { "name": "Chort",     "bayer": "θ", "ra": 168.560, "dec": 15.430, "mag": 3.33 },
+      { "name": "Adhafera",  "bayer": "ζ", "ra": 154.173, "dec": 23.417, "mag": 3.43 },
+      { "name": "Eta Leo",   "bayer": "η", "ra": 151.834, "dec": 16.762, "mag": 3.48 }
+    ],
+    "lines": [[0, 6], [6, 2], [2, 5], [0, 4], [4, 3], [3, 1], [4, 1]]
+  },
+  {
+    "name": "Virgo",
+    "abbreviation": "Vir",
+    "stars": [
+      { "name": "Spica",        "bayer": "α", "ra": 201.298, "dec": -11.161, "mag": 1.04 },
+      { "name": "Porrima",      "bayer": "γ", "ra": 190.415, "dec":  -1.449, "mag": 2.74 },
+      { "name": "Vindemiatrix", "bayer": "ε", "ra": 195.544, "dec":  10.959, "mag": 2.85 },
+      { "name": "Heze",         "bayer": "ζ", "ra": 203.673, "dec":  -0.596, "mag": 3.37 },
+      { "name": "Auva",         "bayer": "δ", "ra": 193.901, "dec":   3.398, "mag": 3.39 },
+      { "name": "Zavijava",     "bayer": "β", "ra": 177.674, "dec":   1.765, "mag": 3.59 }
+    ],
+    "lines": [[0, 3], [3, 1], [1, 4], [4, 2], [1, 5]]
+  },
+  {
+    "name": "Libra",
+    "abbreviation": "Lib",
+    "stars": [
+      { "name": "Zubeneschamali", "bayer": "β", "ra": 229.252, "dec":  -9.383, "mag": 2.61 },
+      { "name": "Zubenelgenubi",  "bayer": "α", "ra": 222.720, "dec": -16.042, "mag": 2.75 },
+      { "name": "Brachium",       "bayer": "σ", "ra": 226.018, "dec": -25.282, "mag": 3.29 },
+      { "name": "Gamma Lib",      "bayer": "γ", "ra": 234.667, "dec": -14.789, "mag": 3.91 }
+    ],
+    "lines": [[0, 1], [1, 2], [0, 3], [3, 1]]
+  },
+  {
+    "name": "Scorpius",
+    "abbreviation": "Sco",
+    "stars": [
+      { "name": "Antares",  "bayer": "α", "ra": 247.352, "dec": -26.432, "mag": 1.06 },
+      { "name": "Dschubba", "bayer": "δ", "ra": 240.083, "dec": -22.622, "mag": 2.32 },
+      { "name": "Acrab",    "bayer": "β", "ra": 241.359, "dec": -19.806, "mag": 2.62 },
+      { "name": "Pi Sco",   "bayer": "π", "ra": 239.713, "dec": -26.114, "mag": 2.89 },
+      { "name": "Tau Sco",  "bayer": "τ", "ra": 248.971, "dec": -28.216, "mag": 2.82 },
+      { "name": "Eps Sco",  "bayer": "ε", "ra": 252.541, "dec": -34.293, "mag": 2.31 },
+      { "name": "Mu Sco",   "bayer": "μ", "ra": 252.968, "dec": -38.048, "mag": 3.00 },
+      { "name": "Zeta Sco", "bayer": "ζ", "ra": 253.499, "dec": -42.362, "mag": 3.62 },
+      { "name": "Sargas",   "bayer": "θ", "ra": 264.330, "dec": -42.998, "mag": 1.86 },
+      { "name": "Shaula",   "bayer": "λ", "ra": 263.402, "dec": -37.104, "mag": 1.62 },
+      { "name": "Girtab",   "bayer": "κ", "ra": 265.622, "dec": -39.030, "mag": 2.39 }
+    ],
+    "lines": [
+      [2, 1], [1, 3], [1, 0], [0, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10]
+    ]
+  },
+  {
+    "name": "Ophiuchus",
+    "abbreviation": "Oph",
+    "stars": [
+      { "name": "Rasalhague",  "bayer": "α", "ra": 263.734, "dec":  12.560, "mag": 2.07 },
+      { "name": "Sabik",       "bayer": "η", "ra": 257.594, "dec": -15.725, "mag": 2.43 },
+      { "name": "Zeta Oph",    "bayer": "ζ", "ra": 249.290, "dec": -10.567, "mag": 2.54 },
+      { "name": "Yed Prior",   "bayer": "δ", "ra": 243.586, "dec":  -3.694, "mag": 2.73 },
+      { "name": "Cebalrai",    "bayer": "β", "ra": 265.868, "dec":   4.567, "mag": 2.76 },
+      { "name": "Kappa Oph",   "bayer": "κ", "ra": 254.466, "dec":   9.375, "mag": 3.20 },
+      { "name": "Yed Posterior","bayer":"ε", "ra": 244.580, "dec":  -4.692, "mag": 3.23 },
+      { "name": "Theta Oph",   "bayer": "θ", "ra": 257.594, "dec": -24.999, "mag": 3.27 },
+      { "name": "Nu Oph",      "bayer": "ν", "ra": 269.756, "dec":  -9.773, "mag": 3.34 }
+    ],
+    "lines": [
+      [0, 5], [5, 3], [3, 6], [6, 2], [2, 1], [1, 7], [5, 4], [4, 0], [1, 8]
+    ]
+  },
+  {
+    "name": "Sagittarius",
+    "abbreviation": "Sgr",
+    "stars": [
+      { "name": "Kaus Australis","bayer":"ε", "ra": 276.043, "dec": -34.385, "mag": 1.85 },
+      { "name": "Nunki",         "bayer": "σ", "ra": 283.816, "dec": -26.297, "mag": 2.05 },
+      { "name": "Ascella",       "bayer": "ζ", "ra": 285.653, "dec": -29.880, "mag": 2.59 },
+      { "name": "Kaus Media",    "bayer": "δ", "ra": 275.249, "dec": -29.828, "mag": 2.70 },
+      { "name": "Kaus Borealis", "bayer": "λ", "ra": 276.993, "dec": -25.421, "mag": 2.81 },
+      { "name": "Albaldah",      "bayer": "π", "ra": 287.441, "dec": -21.024, "mag": 2.88 },
+      { "name": "Phi Sgr",       "bayer": "φ", "ra": 281.413, "dec": -26.991, "mag": 3.17 },
+      { "name": "Tau Sgr",       "bayer": "τ", "ra": 286.736, "dec": -27.671, "mag": 3.32 }
+    ],
+    "lines": [[4, 3], [3, 0], [0, 2], [2, 7], [7, 1], [1, 4], [4, 6], [6, 2], [5, 1]]
+  },
+  {
+    "name": "Capricornus",
+    "abbreviation": "Cap",
+    "stars": [
+      { "name": "Deneb Algedi","bayer":"δ", "ra": 326.760, "dec": -16.127, "mag": 2.85 },
+      { "name": "Dabih",       "bayer": "β", "ra": 305.253, "dec": -14.781, "mag": 3.05 },
+      { "name": "Algedi",      "bayer": "α", "ra": 304.514, "dec": -12.545, "mag": 3.57 },
+      { "name": "Nashira",     "bayer": "γ", "ra": 325.023, "dec": -16.662, "mag": 3.69 },
+      { "name": "Omega Cap",   "bayer": "ω", "ra": 312.955, "dec": -26.919, "mag": 4.12 },
+      { "name": "Psi Cap",     "bayer": "ψ", "ra": 311.524, "dec": -25.271, "mag": 4.13 },
+      { "name": "Zeta Cap",    "bayer": "ζ", "ra": 321.667, "dec": -22.411, "mag": 3.74 },
+      { "name": "Theta Cap",   "bayer": "θ", "ra": 318.242, "dec": -17.233, "mag": 4.07 }
+    ],
+    "lines": [[2, 1], [1, 5], [5, 4], [4, 6], [6, 0], [0, 3], [3, 7], [7, 1]]
+  },
+  {
+    "name": "Aquarius",
+    "abbreviation": "Aqr",
+    "stars": [
+      { "name": "Sadalsuud",  "bayer": "β", "ra": 322.890, "dec": -5.571, "mag": 2.91 },
+      { "name": "Sadalmelik", "bayer": "α", "ra": 331.446, "dec": -0.320, "mag": 2.95 },
+      { "name": "Skat",       "bayer": "δ", "ra": 343.663, "dec": -15.821,"mag": 3.27 },
+      { "name": "Zeta Aqr",   "bayer": "ζ", "ra": 337.208, "dec": -0.020, "mag": 3.65 },
+      { "name": "Gamma Aqr",  "bayer": "γ", "ra": 336.328, "dec": -1.387, "mag": 3.86 },
+      { "name": "Eta Aqr",    "bayer": "η", "ra": 343.155, "dec": -0.118, "mag": 4.04 },
+      { "name": "Lambda Aqr", "bayer": "λ", "ra": 343.154, "dec": -7.580, "mag": 3.74 },
+      { "name": "Pi Aqr",     "bayer": "π", "ra": 332.532, "dec":  1.374, "mag": 4.66 }
+    ],
+    "lines": [[0, 1], [1, 7], [1, 3], [3, 4], [3, 5], [3, 6], [6, 2]]
+  },
+  {
+    "name": "Pisces",
+    "abbreviation": "Psc",
+    "stars": [
+      { "name": "Alpherg",  "bayer": "η", "ra":  16.521, "dec": 15.346, "mag": 3.62 },
+      { "name": "Gamma Psc","bayer": "γ", "ra": 349.292, "dec":  3.282, "mag": 3.69 },
+      { "name": "Omega Psc","bayer": "ω", "ra": 359.838, "dec":  6.863, "mag": 4.01 },
+      { "name": "Iota Psc", "bayer": "ι", "ra": 354.991, "dec":  5.626, "mag": 4.13 },
+      { "name": "Alrescha", "bayer": "α", "ra":  30.512, "dec":  2.764, "mag": 3.82 },
+      { "name": "Eps Psc",  "bayer": "ε", "ra":  22.811, "dec":  7.890, "mag": 4.27 }
+    ],
+    "lines": [[0, 5], [5, 4], [4, 3], [3, 1], [1, 2]]
+  }
+]
