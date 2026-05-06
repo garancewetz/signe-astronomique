@@ -29,12 +29,14 @@ import { mountMoonLayer } from './cesium/mountMoonLayer';
 import { mountPlanetsLayer } from './cesium/mountPlanetsLayer';
 import { mountReferenceLines } from './cesium/mountReferenceLines';
 import { mountSatellitesLayer } from './cesium/mountSatellitesLayer';
+import { mountOrbitalLayer } from './cesium/mountOrbitalLayer';
 import {
   flyToOrbital,
   flyToCelestialDirection,
   flyToRelicsView,
 } from './cesium/cameraDirector';
 import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
+import type { OrbitalSat } from '../../hooks/useOrbitalPopulation';
 
 export interface SpaceViewHandle {
   /**
@@ -60,6 +62,17 @@ interface Props {
   /** Enables the orbital relics layer (historical satellites). */
   showSatellites: boolean;
   /**
+   * Full orbital population from useOrbitalPopulation. Empty = overlay off or
+   * still loading. The layer handles its own birthYear filtering at mount time.
+   */
+  orbitalSatellites: OrbitalSat[];
+  /**
+   * 'modern'     → show all active satellites (Modern Clutter).
+   * 'historical' → show only satellites launched ≤ birth year (Historical View).
+   * Ignored when reading is null (no natal date to derive birth year from).
+   */
+  constellationMode: 'modern' | 'historical';
+  /**
    * Observer latitude, used for the "live" pre-JUMP sky. Has no impact on
    * body rendering (which is geocentric), but matters for the ascendant
    * and for semantic consistency of `liveReading.input`.
@@ -71,7 +84,9 @@ interface Props {
   ref?: Ref<SpaceViewHandle>;
 }
 
-// Cesium fonctionne sans token Ion tant qu'on ne demande pas d'assets premium.
+// No Ion token: imagery comes from NASA GIBS, terrain from the default
+// ellipsoid, and `baseLayer: false` on the Viewer prevents the default
+// World Imagery fetch that would otherwise 401.
 Ion.defaultAccessToken = '';
 
 // Rafraîchissement de la position des corps "live" avant JUMP.
@@ -93,6 +108,8 @@ export function SpaceView({
   showGuides,
   showBodyLabels,
   showSatellites,
+  orbitalSatellites,
+  constellationMode,
   liveLatitude,
   liveLongitude,
   ref,
@@ -195,6 +212,9 @@ export function SpaceView({
       infoBox: false,
       selectionIndicator: false,
       sceneMode: SceneMode.SCENE3D,
+      // Skip the default Ion World Imagery / Terrain fetch (no token configured;
+      // would 401). NASA Blue Marble + VIIRS layers are added explicitly below.
+      baseLayer: false,
       // Indispensable pour pouvoir relire le canvas WebGL côté export PNG.
       contextOptions: {
         webgl: { preserveDrawingBuffer: true },
@@ -453,6 +473,20 @@ export function SpaceView({
     });
     return cleanup;
   }, [showSatellites, trackedSatellites, reading]);
+
+  // Orbital population overlay: always live (new Date()), independent of natal
+  // mode. birthYear drives the Historical / Modern filter at mount time — the
+  // effect re-runs (and the layer remounts) whenever birthYear changes.
+  const birthYear =
+    constellationMode === 'historical'
+      ? (reading?.input.date.getFullYear() ?? null)
+      : null;
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || orbitalSatellites.length === 0) return;
+    return mountOrbitalLayer(viewer, orbitalSatellites, birthYear);
+  }, [orbitalSatellites, birthYear]);
 
   // When the user turns relics on (live mode only), fly closer to Earth
   // so LEO satellites are visible *and* their motion is perceptible. From

@@ -3,6 +3,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { PLANETS_META } from '../utils/astroEngine';
 import { ExploreSpacePopover, InfoCircleIcon } from './ExploreSpacePopover';
 import { SATELLITE_RELICS } from '../data/satellitesDB';
+import { ORBITAL_CATEGORIES } from '../data/orbitalCategories';
+import type { OrbitalStatus } from '../hooks/useOrbitalPopulation';
 
 interface Props {
   audioEnabled: boolean;
@@ -13,6 +15,13 @@ interface Props {
   onToggleBodyLabels: () => void;
   satellitesEnabled: boolean;
   onToggleSatellites: () => void;
+  constellationOverlayEnabled: boolean;
+  onToggleConstellationOverlay: () => void;
+  constellationMode: 'modern' | 'historical';
+  onToggleConstellationMode: () => void;
+  /** True when a natal reading is active — enables Historical View mode. */
+  canUseHistoricalMode: boolean;
+  orbitalStatus: OrbitalStatus;
   onFlySun: () => void;
   onFlyMoon: () => void;
   onFlyEarth: () => void;
@@ -31,6 +40,9 @@ export function ControlConsole({
   guidesEnabled, onToggleGuides,
   bodyLabelsEnabled, onToggleBodyLabels,
   satellitesEnabled, onToggleSatellites,
+  constellationOverlayEnabled, onToggleConstellationOverlay,
+  constellationMode, onToggleConstellationMode, canUseHistoricalMode,
+  orbitalStatus,
   onFlySun, onFlyMoon, onFlyEarth, onJumpNow,
   onExportView,
   exportingView,
@@ -114,6 +126,42 @@ export function ControlConsole({
           >
             <SatelliteIcon />
           </IconButton>
+          <IconButton
+            active={constellationOverlayEnabled}
+            activeColor="sky"
+            onClick={onToggleConstellationOverlay}
+            title={
+              orbitalStatus === 'error'
+                ? 'Celestrak injoignable — cliquez pour réessayer'
+                : 'Constellation Overlay — Population orbitale complète en temps réel (SGP4 · Celestrak)'
+            }
+            ariaLabel="Activer ou désactiver la population orbitale en temps réel"
+            label={
+              orbitalStatus === 'loading'
+                ? 'CHARGEMENT'
+                : orbitalStatus === 'error'
+                  ? 'RETRY'
+                  : 'ORBITAL'
+            }
+          >
+            {orbitalStatus === 'loading' ? <Spinner /> : <ConstellationOverlayIcon />}
+          </IconButton>
+          {constellationOverlayEnabled && canUseHistoricalMode && (
+            <IconButton
+              active={constellationMode === 'historical'}
+              activeColor="amber"
+              onClick={onToggleConstellationMode}
+              title={
+                constellationMode === 'historical'
+                  ? 'Vue Naissance — uniquement les satellites existants à la date natale'
+                  : 'Vue Actuelle — tous les satellites actifs aujourd\'hui'
+              }
+              ariaLabel="Basculer entre vue naissance et vue actuelle"
+              label={constellationMode === 'historical' ? 'NAISSANCE' : 'ACTUEL'}
+            >
+              <HistoricalModeIcon />
+            </IconButton>
+          )}
         </Cluster>
 
         <Divider />
@@ -194,6 +242,9 @@ export function ControlConsole({
         onToggleBodyLabels={onToggleBodyLabels}
         satellitesEnabled={satellitesEnabled}
         onToggleSatellites={onToggleSatellites}
+        constellationOverlayEnabled={constellationOverlayEnabled}
+        onToggleConstellationOverlay={onToggleConstellationOverlay}
+        orbitalStatus={orbitalStatus}
       />
       <AnimatePresence>
         {exploreOpen && (
@@ -289,6 +340,9 @@ function LegendDock({
   onToggleBodyLabels,
   satellitesEnabled,
   onToggleSatellites,
+  constellationOverlayEnabled,
+  onToggleConstellationOverlay,
+  orbitalStatus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -298,6 +352,9 @@ function LegendDock({
   onToggleBodyLabels: () => void;
   satellitesEnabled: boolean;
   onToggleSatellites: () => void;
+  constellationOverlayEnabled: boolean;
+  onToggleConstellationOverlay: () => void;
+  orbitalStatus: OrbitalStatus;
 }) {
   const reduceMotion = useReducedMotion();
 
@@ -319,6 +376,9 @@ function LegendDock({
               onToggleBodyLabels={onToggleBodyLabels}
               satellitesEnabled={satellitesEnabled}
               onToggleSatellites={onToggleSatellites}
+              constellationOverlayEnabled={constellationOverlayEnabled}
+              onToggleConstellationOverlay={onToggleConstellationOverlay}
+              orbitalStatus={orbitalStatus}
             />
           ) : (
             <LegendCollapsedTrigger key="closed" onOpen={() => onOpenChange(true)} reduceMotion={!!reduceMotion} />
@@ -366,6 +426,9 @@ function LegendExpandedPanel({
   onToggleBodyLabels,
   satellitesEnabled,
   onToggleSatellites,
+  constellationOverlayEnabled,
+  onToggleConstellationOverlay,
+  orbitalStatus,
 }: {
   onClose: () => void;
   reduceMotion: boolean;
@@ -375,6 +438,9 @@ function LegendExpandedPanel({
   onToggleBodyLabels: () => void;
   satellitesEnabled: boolean;
   onToggleSatellites: () => void;
+  constellationOverlayEnabled: boolean;
+  onToggleConstellationOverlay: () => void;
+  orbitalStatus: OrbitalStatus;
 }) {
   const planetEntries = Object.values(PLANETS_META);
   return (
@@ -463,6 +529,36 @@ function LegendExpandedPanel({
             />
           ))}
         </Section>
+
+        <Section
+          title="CONSTELLATION_OVERLAY"
+          action={
+            orbitalStatus !== 'error' ? (
+              <LegendToggle
+                active={constellationOverlayEnabled}
+                onClick={onToggleConstellationOverlay}
+                label="AFFICHER"
+                ariaLabel="Afficher ou masquer la population orbitale en temps réel"
+              />
+            ) : (
+              <span className="text-[8px] tracking-[0.2em] text-red-400/80">ERREUR</span>
+            )
+          }
+        >
+          {Object.values(ORBITAL_CATEGORIES).map((cat) => (
+            <DotRow key={cat.label} color={cat.hex} label={cat.label} note="temps réel" />
+          ))}
+          {orbitalStatus === 'loading' && (
+            <div className="text-slate-500 text-[9px] tracking-[0.15em]">
+              Chargement Celestrak…
+            </div>
+          )}
+          {orbitalStatus === 'error' && (
+            <div className="text-red-400/80 text-[9px] tracking-[0.15em]">
+              Impossible de joindre Celestrak.
+            </div>
+          )}
+        </Section>
       </div>
     </motion.div>
   );
@@ -472,10 +568,12 @@ function DotRow({
   color,
   label,
   year,
+  note,
 }: {
   color: string;
   label: string;
-  year: number;
+  year?: number;
+  note?: string;
 }) {
   return (
     <div className="flex items-center gap-3">
@@ -485,7 +583,8 @@ function DotRow({
         style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
       />
       <span className="text-slate-300 truncate">{label}</span>
-      <span className="text-slate-500 ml-auto text-[9px]">{year}</span>
+      {note && <span className="text-slate-500 ml-auto text-[9px] shrink-0">{note}</span>}
+      {year !== undefined && !note && <span className="text-slate-500 ml-auto text-[9px]">{year}</span>}
     </div>
   );
 }
@@ -617,6 +716,39 @@ function LabelsIcon() {
   );
 }
 
+
+function HistoricalModeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="9" r="6" />
+      {/* clock hands pointing to "birth time" */}
+      <line x1="9" y1="9" x2="9" y2="5.5" />
+      <line x1="9" y1="9" x2="12" y2="10.5" strokeOpacity="0.6" />
+      {/* small rewind arrow */}
+      <path d="M4.5 5.5 A5.5 5.5 0 0 1 9 3.5" strokeOpacity="0.7" />
+      <polyline points="4.5,3.5 4.5,5.5 6.5,5.5" strokeOpacity="0.7" />
+    </svg>
+  );
+}
+
+function ConstellationOverlayIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+      {/* dots */}
+      <circle cx="4"  cy="4"  r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="3"  r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="9"  cy="9"  r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="3"  cy="14" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="14" r="1.1" fill="currentColor" stroke="none" />
+      {/* lines */}
+      <line x1="4"  y1="4"  x2="14" y2="3"  strokeOpacity="0.55" />
+      <line x1="14" y1="3"  x2="9"  y2="9"  strokeOpacity="0.55" />
+      <line x1="9"  y1="9"  x2="3"  y2="14" strokeOpacity="0.55" />
+      <line x1="9"  y1="9"  x2="14" y2="14" strokeOpacity="0.55" />
+      <line x1="4"  y1="4"  x2="3"  y2="14" strokeOpacity="0.30" />
+    </svg>
+  );
+}
 
 function SatelliteIcon() {
   return (

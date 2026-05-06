@@ -24,6 +24,7 @@ import { computeReading, type CelestialReading } from '../utils/astroEngine';
 import type { CityResult } from './CityAutocomplete';
 import { timezoneFromLatLon } from '../utils/timezone';
 import { Button, cn } from './ui';
+import { useOrbitalPopulation } from '../hooks/useOrbitalPopulation';
 
 const DEFAULT_CITY: CityResult = {
   label: 'Paris, France',
@@ -70,7 +71,15 @@ export function Cockpit() {
   const [showGuides, setShowGuides] = useState(false);
   const [bodyLabelsEnabled, setBodyLabelsEnabled] = useState(false);
   const [satellitesEnabled, setSatellitesEnabled] = useState(false);
+  const [constellationOverlayEnabled, setConstellationOverlayEnabled] = useState(false);
+  const [constellationMode, setConstellationMode] = useState<'modern' | 'historical'>('modern');
   const [fullscreenActive, setFullscreenActive] = useState(false);
+
+  const {
+    satellites: orbitalSatellites,
+    status: orbitalStatus,
+    retry: retryOrbital,
+  } = useOrbitalPopulation(constellationOverlayEnabled);
 
   // État du formulaire — vit dans Cockpit pour survivre à la fermeture du panel.
   const [date, setDate] = useState('1990-06-15');
@@ -203,6 +212,8 @@ export function Cockpit() {
           showGuides={showGuides}
           showBodyLabels={bodyLabelsEnabled}
           showSatellites={satellitesEnabled}
+          orbitalSatellites={constellationOverlayEnabled ? orbitalSatellites : []}
+          constellationMode={constellationMode}
           liveLatitude={city.lat}
           liveLongitude={city.lon}
         />
@@ -300,6 +311,22 @@ export function Cockpit() {
           onToggleBodyLabels={() => setBodyLabelsEnabled(v => !v)}
           satellitesEnabled={satellitesEnabled}
           onToggleSatellites={() => setSatellitesEnabled(v => !v)}
+          constellationOverlayEnabled={constellationOverlayEnabled}
+          onToggleConstellationOverlay={() => {
+            // After an error, treat the click as a retry rather than a toggle.
+            if (orbitalStatus === 'error') {
+              retryOrbital();
+              if (!constellationOverlayEnabled) setConstellationOverlayEnabled(true);
+              return;
+            }
+            setConstellationOverlayEnabled(v => !v);
+          }}
+          constellationMode={constellationMode}
+          onToggleConstellationMode={() =>
+            setConstellationMode(m => m === 'modern' ? 'historical' : 'modern')
+          }
+          canUseHistoricalMode={!!reading}
+          orbitalStatus={orbitalStatus}
           onFlySun={() => spaceViewRef.current?.flyToSun()}
           onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
           onFlyEarth={() => spaceViewRef.current?.flyToEarth()}

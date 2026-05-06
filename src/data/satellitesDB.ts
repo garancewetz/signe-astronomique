@@ -89,10 +89,9 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
     launchDate: '1990-04-24',
     blurb: 'L\'œil hors de l\'atmosphère qui nous a appris la profondeur du temps.',
     glowColor: '#a78bfa',
-    // Recent epoch (day 100 of 2025 ≈ 2025-04-10). Hubble is still active
-    // at ~535 km, 28.47° inclination.
+    // Epoch: day 126 of 2026 = 2026-05-06. Hubble at ~535 km, 28.47° incl.
     tle: [
-      '1 20580U 90037B   25100.50000000  .00001000  00000-0  50000-4 0  9999',
+      '1 20580U 90037B   26126.50000000  .00001000  00000-0  50000-4 0  9999',
       '2 20580  28.4690 123.0000 0002500 100.0000 260.0000 15.10000000    01',
     ],
   },
@@ -102,9 +101,9 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
     launchDate: '1998-11-20',
     blurb: 'Un avant-poste habité en permanence depuis l\'an 2000.',
     glowColor: '#67e8f9',
-    // Recent epoch (2025-04-10) — ISS at ~420 km, 51.64° inclination.
+    // Epoch: day 126 of 2026 = 2026-05-06. ISS at ~420 km, 51.64° incl.
     tle: [
-      '1 25544U 98067A   25100.50000000  .00010000  00000-0  20000-3 0  9999',
+      '1 25544U 98067A   26126.50000000  .00010000  00000-0  20000-3 0  9999',
       '2 25544  51.6400 100.0000 0003000  50.0000 300.0000 15.50000000    01',
     ],
   },
@@ -114,11 +113,11 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
     launchDate: '2019-05-24',
     blurb: 'Le premier maillage commercial à grande échelle de l\'orbite basse.',
     glowColor: '#22d3ee',
-    // Recent epoch (2025-04-10) — representative Starlink LEO at ~550 km,
-    // 53° inclination. The constellation has thousands of birds; we only
+    // Epoch: day 126 of 2026 = 2026-05-06. Representative Starlink LEO at
+    // ~550 km, 53° incl. The constellation has thousands of birds; we only
     // render one as a token of the whole.
     tle: [
-      '1 44713U 19074A   25100.50000000  .00005000  00000-0  30000-3 0  9999',
+      '1 44713U 19074A   26126.50000000  .00005000  00000-0  30000-3 0  9999',
       '2 44713  53.0000  50.0000 0001500  90.0000 270.0000 15.06000000    01',
     ],
   },
