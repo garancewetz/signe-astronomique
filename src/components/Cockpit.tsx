@@ -72,7 +72,6 @@ export function Cockpit() {
   const [bodyLabelsEnabled, setBodyLabelsEnabled] = useState(false);
   const [satellitesEnabled, setSatellitesEnabled] = useState(false);
   const [constellationOverlayEnabled, setConstellationOverlayEnabled] = useState(false);
-  const [constellationMode, setConstellationMode] = useState<'modern' | 'historical'>('modern');
   const [fullscreenActive, setFullscreenActive] = useState(false);
 
   const {
@@ -213,7 +212,7 @@ export function Cockpit() {
           showBodyLabels={bodyLabelsEnabled}
           showSatellites={satellitesEnabled}
           orbitalSatellites={constellationOverlayEnabled ? orbitalSatellites : []}
-          constellationMode={constellationMode}
+          constellationMode="modern"
           liveLatitude={city.lat}
           liveLongitude={city.lon}
         />
@@ -224,7 +223,10 @@ export function Cockpit() {
 
       {/* === CADRE HUD === */}
       <div className="absolute inset-0 z-10 pointer-events-none">
-        <HudFrame reading={reading} />
+        <HudFrame
+          reading={reading}
+          onOpenSummary={() => setActiveRight('resume')}
+        />
       </div>
 
       {/* === PANEL GAUCHE — formulaire natal (onglet intégré qui dépasse) === */}
@@ -321,11 +323,6 @@ export function Cockpit() {
             }
             setConstellationOverlayEnabled(v => !v);
           }}
-          constellationMode={constellationMode}
-          onToggleConstellationMode={() =>
-            setConstellationMode(m => m === 'modern' ? 'historical' : 'modern')
-          }
-          canUseHistoricalMode={!!reading}
           orbitalStatus={orbitalStatus}
           onFlySun={() => spaceViewRef.current?.flyToSun()}
           onFlyMoon={() => spaceViewRef.current?.flyToMoon()}

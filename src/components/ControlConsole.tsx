@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { PLANETS_META } from '../utils/astroEngine';
 import { ExploreSpacePopover, InfoCircleIcon } from './ExploreSpacePopover';
@@ -10,7 +11,6 @@ import {
   Download,
   FileText,
   Globe2,
-  History,
   List,
   Loader2,
   Maximize2,
@@ -36,10 +36,6 @@ interface Props {
   onToggleSatellites: () => void;
   constellationOverlayEnabled: boolean;
   onToggleConstellationOverlay: () => void;
-  constellationMode: 'modern' | 'historical';
-  onToggleConstellationMode: () => void;
-  /** True when a natal reading is active — enables Historical View mode. */
-  canUseHistoricalMode: boolean;
   orbitalStatus: OrbitalStatus;
   onFlySun: () => void;
   onFlyMoon: () => void;
@@ -60,7 +56,6 @@ export function ControlConsole({
   bodyLabelsEnabled, onToggleBodyLabels,
   satellitesEnabled, onToggleSatellites,
   constellationOverlayEnabled, onToggleConstellationOverlay,
-  constellationMode, onToggleConstellationMode, canUseHistoricalMode,
   orbitalStatus,
   onFlySun, onFlyMoon, onFlyEarth, onJumpNow,
   onExportView,
@@ -74,6 +69,16 @@ export function ControlConsole({
   const [legendOpen, setLegendOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
 
+  const orbitalLabel =
+    orbitalStatus === 'loading'
+      ? 'CHARGEMENT'
+      : orbitalStatus === 'error'
+        ? 'RETRY'
+        : 'ORBITAL';
+  const orbitalTooltip =
+    orbitalStatus === 'error'
+      ? 'Celestrak injoignable — clique pour réessayer'
+      : 'Population orbitale complète en temps réel (SGP4 · Celestrak)';
   return (
     <div className="relative h-full min-h-0 flex flex-col justify-center">
       <div
@@ -83,11 +88,11 @@ export function ControlConsole({
                    overflow-x-auto overflow-y-visible overscroll-x-contain
                    [-webkit-overflow-scrolling:touch]"
       >
-        {/* CAMÉRA */}
+        {/* CAMÉRA — fly-to actions (one-shot, no toggle state) */}
         <Cluster ariaLabel="Caméra">
           <IconButton
             onClick={onFlySun}
-            title="Centrer la caméra sur le Soleil"
+            tooltip="Centre la caméra sur le Soleil"
             ariaLabel="Centrer la caméra sur le Soleil"
             label="SOLEIL"
           >
@@ -95,7 +100,7 @@ export function ControlConsole({
           </IconButton>
           <IconButton
             onClick={onFlyMoon}
-            title="Centrer la caméra sur la Lune"
+            tooltip="Centre la caméra sur la Lune"
             ariaLabel="Centrer la caméra sur la Lune"
             label="LUNE"
           >
@@ -103,7 +108,7 @@ export function ControlConsole({
           </IconButton>
           <IconButton
             onClick={onFlyEarth}
-            title="Vue orbitale par défaut — équateur, Terre centrée"
+            tooltip="Vue orbitale par défaut — équateur, Terre centrée"
             ariaLabel="Revenir à la vue orbitale par défaut"
             label="TERRE"
           >
@@ -113,13 +118,26 @@ export function ControlConsole({
 
         <Divider />
 
-        {/* AFFICHAGE */}
-        <Cluster ariaLabel="Affichage">
+        {/* AUJOURD'HUI — primary CTA, visually elevated */}
+        <IconButton
+          variant="primary"
+          onClick={onJumpNow}
+          tooltip="Calcule et affiche le ciel à l'instant présent"
+          ariaLabel="Calculer le ciel d'aujourd'hui"
+          label="AUJOURD’HUI"
+        >
+          <NowIcon />
+        </IconButton>
+
+        <Divider />
+
+        {/* ANNOTATIONS — décorations sur la sphère (amber = on-globe markers) */}
+        <Cluster ariaLabel="Annotations">
           <IconButton
             active={guidesEnabled}
             activeColor="amber"
             onClick={onToggleGuides}
-            title="Repères du ciel : axe terrestre, équateur céleste, écliptique"
+            tooltip="Repères du ciel : axe terrestre, équateur céleste, écliptique"
             ariaLabel="Afficher ou masquer les repères du ciel"
             label="REPÈRES"
           >
@@ -129,17 +147,33 @@ export function ControlConsole({
             active={bodyLabelsEnabled}
             activeColor="amber"
             onClick={onToggleBodyLabels}
-            title="Affiche ou masque les noms du Soleil, de la Lune, des planètes et des constellations sur la vue 3D"
+            tooltip="Affiche les noms du Soleil, de la Lune, des planètes et des constellations"
             ariaLabel="Afficher ou masquer les noms des astres sur la sphère"
             label="NOMS"
           >
             <LabelsIcon />
           </IconButton>
           <IconButton
+            active={legendOpen}
+            activeColor="amber"
+            onClick={() => setLegendOpen(v => !v)}
+            tooltip="Affiche la signification des symboles et des couleurs"
+            ariaLabel="Ouvrir ou fermer la légende des symboles"
+            label="LÉGENDE"
+          >
+            <LegendIcon />
+          </IconButton>
+        </Cluster>
+
+        <Divider />
+
+        {/* SATELLITES — couches data (sky = orbital data layers) */}
+        <Cluster ariaLabel="Satellites">
+          <IconButton
             active={satellitesEnabled}
             activeColor="sky"
             onClick={onToggleSatellites}
-            title="Reliques orbitales — satellites historiques visibles à la date natale (Spoutnik, Hubble, ISS…)"
+            tooltip="Reliques orbitales — satellites historiques visibles à la date natale (Spoutnik, Hubble, ISS…)"
             ariaLabel="Activer ou désactiver les reliques orbitales"
             label="RELIQUES"
           >
@@ -149,77 +183,38 @@ export function ControlConsole({
             active={constellationOverlayEnabled}
             activeColor="sky"
             onClick={onToggleConstellationOverlay}
-            title={
-              orbitalStatus === 'error'
-                ? 'Celestrak injoignable — cliquez pour réessayer'
-                : 'Constellation Overlay — Population orbitale complète en temps réel (SGP4 · Celestrak)'
-            }
+            tooltip={orbitalTooltip}
             ariaLabel="Activer ou désactiver la population orbitale en temps réel"
-            label={
-              orbitalStatus === 'loading'
-                ? 'CHARGEMENT'
-                : orbitalStatus === 'error'
-                  ? 'RETRY'
-                  : 'ORBITAL'
-            }
+            label={orbitalLabel}
+            minWidthClass="min-w-[9.5rem]"
           >
             {orbitalStatus === 'loading' ? <Spinner /> : <ConstellationOverlayIcon />}
           </IconButton>
-          {constellationOverlayEnabled && canUseHistoricalMode && (
-            <IconButton
-              active={constellationMode === 'historical'}
-              activeColor="amber"
-              onClick={onToggleConstellationMode}
-              title={
-                constellationMode === 'historical'
-                  ? 'Vue Naissance — uniquement les satellites existants à la date natale'
-                  : 'Vue Actuelle — tous les satellites actifs aujourd\'hui'
-              }
-              ariaLabel="Basculer entre vue naissance et vue actuelle"
-              label={constellationMode === 'historical' ? 'NAISSANCE' : 'ACTUEL'}
-            >
-              <HistoricalModeIcon />
-            </IconButton>
-          )}
         </Cluster>
 
         <Divider />
 
-        {/* OUTILS */}
-        <Cluster ariaLabel="Outils">
-          <IconButton
-            onClick={onJumpNow}
-            title="Calculer et afficher le ciel à l'instant présent"
-            ariaLabel="Calculer le ciel d'aujourd'hui"
-            label="AUJOURD’HUI"
-          >
-            <NowIcon />
-          </IconButton>
-          <IconButton
-            active={exploreOpen}
-            activeColor="sky"
-            onClick={() => setExploreOpen(v => !v)}
-            title="Ressources externes : cartes du ciel, éphémérides, vulgarisation…"
-            ariaLabel="Ouvrir la liste de liens utiles"
-            label="LIENS"
-          >
-            <InfoCircleIcon />
-          </IconButton>
+        {/* EXPORTS */}
+        <Cluster ariaLabel="Exports">
           <IconButton
             onClick={onExportView}
             disabled={exportingView}
-            title="Enregistrer la vue 3D actuelle dans un fichier image (PNG)"
+            tooltip="Enregistre la vue 3D actuelle dans un fichier image PNG"
             ariaLabel="Exporter la vue 3D en image PNG"
-            label={exportingView ? 'CAPTURE' : 'IMAGE'}
           >
             {exportingView ? <Spinner /> : <DownloadIcon />}
           </IconButton>
           <IconButton
             onClick={onExportReport}
             disabled={!canExportReport || exportingReport}
-            title="Enregistrer la vue 3D et le rapport complet dans un fichier PNG"
+            tooltip={
+              canExportReport
+                ? 'Enregistre la vue 3D et le rapport complet dans un fichier PNG'
+                : 'Calcule d\'abord un thème natal pour exporter le rapport complet'
+            }
             ariaLabel="Exporter la vue 3D et le rapport complet en PNG"
             label={exportingReport ? 'CAPTURE' : 'RAPPORT'}
+            minWidthClass="min-w-[7.5rem]"
           >
             {exportingReport ? <Spinner /> : <ReportIcon />}
           </IconButton>
@@ -227,15 +222,23 @@ export function ControlConsole({
 
         <div className="flex-1 min-w-2" />
 
-        {/* AUDIO (secondaire) */}
-        <Cluster ariaLabel="Réglages rapides">
+        {/* AIDE & RÉGLAGES — secondaires */}
+        <Cluster ariaLabel="Aide et réglages">
+          <IconButton
+            active={exploreOpen}
+            activeColor="sky"
+            onClick={() => setExploreOpen(v => !v)}
+            tooltip="Ressources externes : cartes du ciel, éphémérides, vulgarisation…"
+            ariaLabel="Ouvrir la liste de liens utiles"
+          >
+            <InfoCircleIcon />
+          </IconButton>
           <IconButton
             active={fullscreenActive}
             activeColor="sky"
             onClick={onToggleFullscreen}
-            title={fullscreenActive ? 'Quitter le plein écran' : 'Plein écran'}
+            tooltip={fullscreenActive ? 'Quitter le plein écran' : 'Passer en plein écran'}
             ariaLabel={fullscreenActive ? 'Quitter le plein écran' : 'Passer en plein écran'}
-            label={fullscreenActive ? 'QUITTER' : 'ÉCRAN'}
           >
             {fullscreenActive ? <FullscreenExitIcon /> : <FullscreenIcon />}
           </IconButton>
@@ -243,9 +246,8 @@ export function ControlConsole({
             active={audioEnabled}
             activeColor="emerald"
             onClick={onToggleAudio}
-            title={audioEnabled ? 'Couper le son' : 'Activer le son'}
+            tooltip={audioEnabled ? 'Couper le son' : 'Activer le son'}
             ariaLabel={audioEnabled ? 'Couper le son' : 'Activer le son'}
-            label="SON"
           >
             {audioEnabled ? <SpeakerOn /> : <SpeakerOff />}
           </IconButton>
@@ -254,7 +256,7 @@ export function ControlConsole({
 
       <LegendDock
         open={legendOpen}
-        onOpenChange={setLegendOpen}
+        onClose={() => setLegendOpen(false)}
         guidesEnabled={guidesEnabled}
         onToggleGuides={onToggleGuides}
         bodyLabelsEnabled={bodyLabelsEnabled}
@@ -278,12 +280,7 @@ export function ControlConsole({
 
 function Cluster({ children, ariaLabel }: { children: React.ReactNode; ariaLabel: string }) {
   return (
-    <div
-      role="group"
-      aria-label={ariaLabel}
-      className="flex items-center gap-1 shrink-0 rounded-lg border border-border-hud-subtle
-                 bg-surface-raised/65 px-1 py-1"
-    >
+    <div role="group" aria-label={ariaLabel} className="flex items-center gap-1 shrink-0">
       {children}
     </div>
   );
@@ -299,19 +296,26 @@ function Divider() {
 }
 
 type ActiveColor = 'amber' | 'violet' | 'sky' | 'emerald';
+type ButtonVariant = 'primary' | 'default';
 
 function IconButton({
-  children, onClick, title, ariaLabel,
-  active = false, activeColor = 'violet', disabled = false, label,
+  children, onClick, tooltip, ariaLabel,
+  active, activeColor = 'violet', disabled = false, label,
+  variant = 'default',
+  minWidthClass,
 }: {
   children: React.ReactNode;
   onClick: () => void;
-  title: string;
+  tooltip: string;
   ariaLabel: string;
+  /** Omit for one-shot action buttons; pass a boolean only for real toggles. */
   active?: boolean;
   activeColor?: ActiveColor;
   disabled?: boolean;
   label?: string;
+  variant?: ButtonVariant;
+  /** Override min-width for buttons whose label changes (avoids layout shift). */
+  minWidthClass?: string;
 }) {
   const activeClasses =
     activeColor === 'amber'
@@ -323,36 +327,130 @@ function IconButton({
           : 'border-violet-300/65 text-violet-100 bg-violet-500/16 shadow-[0_0_0_1px_rgba(167,139,250,0.14)_inset]';
 
   const inactive =
-    'border-border-hud-subtle text-slate-300/90 bg-transparent hover:border-accent-label/55 hover:text-slate-100 hover:bg-violet-500/10';
+    variant === 'primary'
+      ? 'border-violet-300/60 text-violet-50 bg-violet-500/22 hover:bg-violet-500/32 hover:border-violet-200/80 shadow-[0_0_0_1px_rgba(167,139,250,0.18)_inset]'
+      : 'border-border-hud-subtle text-slate-300/90 bg-transparent hover:border-accent-label/55 hover:text-slate-100 hover:bg-violet-500/10';
 
   const sizing = label
-    ? 'inline-flex items-center gap-2 h-9.5 px-3 text-cockpit-sm tracking-cockpit-wide'
-    : 'grid place-items-center h-9.5 w-9.5';
+    ? 'inline-flex items-center justify-center gap-2 h-11 px-3.5 text-cockpit-sm tracking-cockpit-wide'
+    : 'grid place-items-center h-11 w-11';
 
-  return (
+  const button = (
     <button
       type="button"
       onClick={onClick}
-      title={title}
       aria-label={ariaLabel}
-      aria-pressed={active}
+      {...(active !== undefined && { 'aria-pressed': active })}
       disabled={disabled}
-      className={`cockpit-focus shrink-0 ${sizing} rounded-md border transition-[colors,transform,box-shadow] duration-200
+      className={`cockpit-focus shrink-0 ${sizing} ${minWidthClass ?? ''} rounded-md border transition-[colors,transform,box-shadow] duration-200
                   disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none
                   enabled:active:scale-[0.98]
-                  ${active ? activeClasses : inactive}`}
+                  ${active === true ? activeClasses : inactive}`}
     >
       {children}
       {label && <span>{label}</span>}
     </button>
   );
+
+  return <TooltipWrap text={tooltip}>{button}</TooltipWrap>;
 }
 
-/* ─────────────────────────── légende (coin bas-gauche) ─────────────────────────── */
+/* ───── Tooltip — portail body + fixed (évite le clip overflow-x de la barre + pas de 2ᵉ flex item) ───── */
+
+function TooltipWrap({
+  children,
+  text,
+}: {
+  children: React.ReactNode;
+  text: string;
+}) {
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  const updatePos = () => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setPos({ left: rect.left + rect.width / 2, top: rect.top - 8 });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    updatePos();
+    const onMove = () => updatePos();
+    window.addEventListener('scroll', onMove, true);
+    window.addEventListener('resize', onMove);
+    return () => {
+      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('resize', onMove);
+    };
+  }, [open]);
+
+  const showTooltip = () => {
+    if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
+    timeoutRef.current = window.setTimeout(() => {
+      updatePos();
+      setOpen(true);
+    }, 250);
+  };
+
+  const hideTooltip = () => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setOpen(false);
+    setPos(null);
+  };
+
+  const tooltip =
+    open &&
+    pos &&
+    typeof document !== 'undefined' &&
+    createPortal(
+      <span
+        aria-hidden="true"
+        style={{ left: pos.left, top: pos.top }}
+        className="pointer-events-none fixed z-100 -translate-x-1/2 -translate-y-full
+                   whitespace-normal max-w-[min(18rem,calc(100vw-2rem))] text-balance text-center
+                   bg-surface-raised/95 backdrop-blur-md
+                   border border-border-hud-strong rounded-md shadow-cockpit-modal
+                   px-2.5 py-1.5 text-cockpit-xs tracking-cockpit leading-snug
+                   text-slate-200"
+      >
+        {text}
+      </span>,
+      document.body,
+    );
+
+  return (
+    <span
+      ref={wrapRef}
+      className="relative inline-flex shrink-0"
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onFocus={showTooltip}
+      onBlur={hideTooltip}
+    >
+      {children}
+      {tooltip}
+    </span>
+  );
+}
+
+/* ─────────────────────────── légende (popover) ─────────────────────────── */
 
 function LegendDock({
   open,
-  onOpenChange,
+  onClose,
   guidesEnabled,
   onToggleGuides,
   bodyLabelsEnabled,
@@ -364,7 +462,7 @@ function LegendDock({
   orbitalStatus,
 }: {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   guidesEnabled: boolean;
   onToggleGuides: () => void;
   bodyLabelsEnabled: boolean;
@@ -380,14 +478,14 @@ function LegendDock({
   return (
     <div
       className="pointer-events-none fixed z-40 left-3 max-w-[calc(100vw-1.5rem)]
-                 bottom-[calc(5.25rem+env(safe-area-inset-bottom,0))]"
+                 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0))]"
     >
-      <div className="pointer-events-auto flex flex-col items-start gap-2">
-        <AnimatePresence mode="popLayout" initial={false}>
-          {open ? (
+      <div className="pointer-events-auto">
+        <AnimatePresence>
+          {open && (
             <LegendExpandedPanel
               key="open"
-              onClose={() => onOpenChange(false)}
+              onClose={onClose}
               reduceMotion={!!reduceMotion}
               guidesEnabled={guidesEnabled}
               onToggleGuides={onToggleGuides}
@@ -399,40 +497,10 @@ function LegendDock({
               onToggleConstellationOverlay={onToggleConstellationOverlay}
               orbitalStatus={orbitalStatus}
             />
-          ) : (
-            <LegendCollapsedTrigger key="closed" onOpen={() => onOpenChange(true)} reduceMotion={!!reduceMotion} />
           )}
         </AnimatePresence>
       </div>
     </div>
-  );
-}
-
-function LegendCollapsedTrigger({
-  onOpen,
-  reduceMotion,
-}: {
-  onOpen: () => void;
-  reduceMotion: boolean;
-}) {
-  return (
-    <motion.button
-      type="button"
-      initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.92 }}
-      transition={{ duration: reduceMotion ? 0 : 0.2 }}
-      onClick={onOpen}
-      title="Symboles du Soleil, de la Lune, des planètes et des repères du ciel"
-      aria-label="Ouvrir la légende des symboles"
-      className="cockpit-focus inline-flex items-center gap-2 h-9 pl-2.5 pr-3 rounded-md
-                 border border-border-hud-strong bg-surface-raised/90 backdrop-blur-md
-                 text-slate-200 text-cockpit-sm tracking-cockpit-wide shadow-cockpit-dock
-                 hover:border-accent-label/60 hover:bg-violet-500/15 transition-colors"
-    >
-      <LegendIcon />
-      <span>LÉGENDE</span>
-    </motion.button>
   );
 }
 
@@ -705,10 +773,6 @@ function LabelsIcon() {
   return <Tag className={iconUi} strokeWidth={1.35} aria-hidden />;
 }
 
-function HistoricalModeIcon() {
-  return <History className={iconUi} strokeWidth={1.35} aria-hidden />;
-}
-
 function ConstellationOverlayIcon() {
   return <Network className={iconUi} strokeWidth={1.2} aria-hidden />;
 }
@@ -734,7 +798,13 @@ function ReportIcon() {
 }
 
 function Spinner() {
-  return <Loader2 className="size-3.5 shrink-0 animate-spin" strokeWidth={1.6} aria-hidden />;
+  return (
+    <Loader2
+      className="size-3.5 shrink-0 animate-spin motion-reduce:animate-none"
+      strokeWidth={1.6}
+      aria-hidden
+    />
+  );
 }
 
 function SpeakerOn() {
