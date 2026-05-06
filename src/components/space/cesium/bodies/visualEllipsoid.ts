@@ -17,7 +17,7 @@
 import { realRadiusKm, type CelestialBodyKind } from './bodyRadii';
 
 /** Multiplicateur appliqué aux rayons réels pour rester visible à l'écran. */
-export const BODY_SIZE_EXAGGERATION = 100;
+const BODY_SIZE_EXAGGERATION = 100;
 
 const MIN_RADIUS_M = 8e5;
 const MAX_FRACTION_OF_DISTANCE = 0.012;

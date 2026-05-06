@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Moon, Star } from 'lucide-react';
 import type { CelestialReading } from '../utils/astroEngine';
 
 interface HudFrameProps {
@@ -34,32 +35,32 @@ export function HudFrame({ reading }: HudFrameProps) {
     <>
       {/* ─── Barre du haut — identitaire (titre + cartouche IAU) ────── */}
       <div className="absolute top-0 inset-x-0 h-11
-                      bg-linear-to-b from-[#0d0825]/95 via-[#0d0825]/70 to-transparent">
+                      bg-linear-to-b from-hud-bar/95 via-hud-bar/70 to-transparent">
         <div className="absolute bottom-0 inset-x-0 h-px
-                        bg-linear-to-r from-transparent via-violet-400/40 to-transparent" />
+                        bg-linear-to-r from-transparent via-accent-label/40 to-transparent" />
         <div className="flex items-center justify-between h-full px-5 sm:px-6">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-24">
             <div className="min-w-0 max-w-2xl text-center leading-tight">
               <div className="flex items-center justify-center gap-2 min-w-0">
-                <span className="shrink-0 text-[8px] tracking-[0.28em] uppercase text-violet-300/85">
+                <span className="shrink-0 text-cockpit-xs tracking-cockpit-label uppercase text-accent-label/85">
                   {mode}
                 </span>
-                <span className="text-[10px] tracking-[0.04em] text-slate-200 truncate">
+                <span className="text-cockpit-sm tracking-wide text-slate-200 truncate">
                   {main}
                 </span>
               </div>
-              <div className="text-[8px] tracking-[0.06em] text-slate-500 truncate mt-0.5">
+              <div className="text-cockpit-xs tracking-wide text-slate-500 truncate mt-0.5">
                 {sub}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-[10px] tracking-[0.35em]">
+          <div className="flex items-center gap-2 text-cockpit-sm tracking-cockpit-hud">
             <MoonGlyph />
-            <span className="text-violet-100">CARTE&nbsp;DU&nbsp;CIEL&nbsp;RÉEL</span>
+            <span className="text-accent-title">CARTE&nbsp;DU&nbsp;CIEL&nbsp;RÉEL</span>
           </div>
 
-          <div className="text-[9px] tracking-[0.25em] text-slate-500 flex items-center gap-2">
+          <div className="text-cockpit-sm tracking-[0.25em] text-slate-500 flex items-center gap-2">
             <span>IAU&nbsp;1930</span>
             <StarDot />
           </div>
@@ -68,26 +69,15 @@ export function HudFrame({ reading }: HudFrameProps) {
 
       {/* ─── Séparateur bas ─────────────────────────────────────────── */}
       <div className="absolute bottom-20 inset-x-0 h-px
-                      bg-linear-to-r from-transparent via-violet-400/20 to-transparent" />
+                      bg-linear-to-r from-transparent via-border-hud-subtle to-transparent" />
     </>
   );
 }
 
 function MoonGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-violet-300">
-      <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="0.9" />
-      <path d="M7 1.5 C4.5 1.5 2.5 4 2.5 7 C2.5 10 4.5 12.5 7 12.5 C5.2 11 4.2 9.1 4.2 7 C4.2 4.9 5.2 3 7 1.5Z"
-            fill="currentColor" opacity="0.6" />
-    </svg>
-  );
+  return <Moon className="size-3.5 shrink-0 text-accent-label" strokeWidth={1.25} aria-hidden />;
 }
 
 function StarDot() {
-  return (
-    <svg width="7" height="7" viewBox="0 0 7 7" className="text-slate-500">
-      <path d="M3.5 0 L4.1 2.9 L7 3.5 L4.1 4.1 L3.5 7 L2.9 4.1 L0 3.5 L2.9 2.9 Z"
-            fill="currentColor" />
-    </svg>
-  );
+  return <Star className="size-2 shrink-0 text-slate-500 fill-current" strokeWidth={1.5} aria-hidden />;
 }

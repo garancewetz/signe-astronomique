@@ -13,10 +13,15 @@
     "cesium": "1.140.0",
     "framer-motion": "12.38.0",
     "html2canvas-pro": "2.0.2",
+    "lucide-react": "1.14.0",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "satellite.js": "5.0.0",
+    "tailwind-merge": "3.5.0",
     "tz-lookup": "6.1.25"
+  },
+  "knip": {
+    "ignore": ["src/types/tz-lookup.d.ts"]
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

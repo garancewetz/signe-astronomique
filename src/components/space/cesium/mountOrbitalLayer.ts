@@ -17,43 +17,68 @@ const CATEGORY_COLOR: Record<OrbitalCategory, Color> = Object.fromEntries(
 // well under the 16 ms frame budget even for 4 000 satellites.
 const TICK_MS = 1000;
 
+export interface OrbitalLayerHandle {
+  /** Immediate teardown — cancels any in-flight fade and removes the collection. */
+  dispose: () => void;
+  /**
+   * Ramp every point's alpha 1 → 0 over `durationMs`, then dispose. Idempotent:
+   * subsequent calls are ignored once a fade is in flight or the layer has
+   * been disposed. Used by SpaceView to "de-materialize" the modern swarm
+   * when the user JUMPs into the past.
+   */
+  fadeOutAndDispose: (durationMs: number) => void;
+}
+
 /**
  * Renders the full orbital population as a single PointPrimitiveCollection.
  *
- * Satellites are filtered at mount time:
+ * Defense-in-depth filter (kept even though SpaceView already gates by date):
  *  - birthYear = null  → show everything (Modern Clutter mode)
  *  - birthYear = N     → show only sats launched ≤ N (Historical View mode)
  *
  * Positions are updated every TICK_MS via setInterval, decoupled from the
- * Cesium render loop so frame delivery is never blocked.
- *
- * Always propagates to `new Date()` — this is a live overlay, not a natal
- * snapshot, even when viewed alongside a historical reading.
+ * Cesium render loop so frame delivery is never blocked. Always propagates
+ * to `new Date()` — this is a live overlay, not a natal snapshot.
  */
 export function mountOrbitalLayer(
   viewer: Viewer,
   satellites: OrbitalSat[],
   birthYear: number | null,
-): () => void {
+): OrbitalLayerHandle {
   const visible = birthYear !== null
     ? satellites.filter(
         (s) => s.launchYear !== null && s.launchYear <= birthYear,
       )
     : satellites;
 
-  if (visible.length === 0) return () => {};
+  if (visible.length === 0) {
+    return { dispose: () => {}, fadeOutAndDispose: () => {} };
+  }
 
   const collection = new PointPrimitiveCollection();
   viewer.scene.primitives.add(collection);
 
-  const points = visible.map((sat) =>
+  const baseAlphas = visible.map((s) => ORBITAL_CATEGORIES[s.category].alpha);
+  let alphaScale = 1;
+  let disposed = false;
+  let fading = false;
+
+  const points = visible.map((sat, i) =>
     collection.add({
       position: Cartesian3.ZERO,
-      color: CATEGORY_COLOR[sat.category],
+      color: CATEGORY_COLOR[sat.category].withAlpha(baseAlphas[i] * alphaScale),
       pixelSize: ORBITAL_CATEGORIES[sat.category].pixelSize,
       show: false,
     }),
   );
+
+  function applyAlphaScale() {
+    for (let i = 0; i < points.length; i++) {
+      points[i].color = CATEGORY_COLOR[visible[i].category].withAlpha(
+        baseAlphas[i] * alphaScale,
+      );
+    }
+  }
 
   function tick() {
     const now = new Date();
@@ -82,11 +107,36 @@ export function mountOrbitalLayer(
     }
   }
 
-  tick(); // populate immediately on enable
+  tick();
   const intervalId = window.setInterval(tick, TICK_MS);
 
-  return () => {
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
     window.clearInterval(intervalId);
-    viewer.scene.primitives.remove(collection);
-  };
+    if (!viewer.isDestroyed()) {
+      viewer.scene.primitives.remove(collection);
+    }
+  }
+
+  function fadeOutAndDispose(durationMs: number) {
+    if (fading || disposed) return;
+    fading = true;
+    const t0 = performance.now();
+    const startAlpha = alphaScale;
+    const step = () => {
+      if (disposed) return;
+      const t = Math.min(1, (performance.now() - t0) / Math.max(1, durationMs));
+      alphaScale = startAlpha * (1 - t);
+      applyAlphaScale();
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        dispose();
+      }
+    };
+    requestAnimationFrame(step);
+  }
+
+  return { dispose, fadeOutAndDispose };
 }

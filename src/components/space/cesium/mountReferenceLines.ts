@@ -16,6 +16,9 @@ import {
 
 const SPHERE_RADIUS_M = CELESTIAL_SPHERE_KM * 1000;
 const DEG = Math.PI / 180;
+// WGS84 polar radius, with a small outward bump so the axis terminates just
+// above the surface tile rather than Z-fighting with it.
+const EARTH_POLAR_RADIUS_M = 6_356_752 * 1.002;
 
 interface MountOptions {
   /** GMST en radians de la date courante. */
@@ -50,23 +53,35 @@ export function mountReferenceLines(
   const { gmstRad, obliquityDeg } = opts;
 
   // ─── 1. Axe de rotation terrestre ────────────────────────────────────────
-  // En ECEF, l'axe est strictement Z. On l'étend de -SPHERE à +SPHERE pour
-  // qu'il traverse la Terre et atteigne les deux pôles célestes.
+  // En ECEF, l'axe est strictement Z. On le rend en deux segments — pôle Sud
+  // céleste → surface Sud, et surface Nord → pôle Nord céleste — pour que la
+  // Terre occulte naturellement la portion intérieure. Une polyligne unique
+  // qui traverse le globe « phase » à travers la texture (depth-test mou des
+  // polylines Cesium contre le terrain).
   const axisColor = Color.fromCssColorString('#fde68a').withAlpha(0.55);
-  created.push(
-    viewer.entities.add({
-      polyline: {
-        positions: [
-          new Cartesian3(0, 0, -SPHERE_RADIUS_M),
-          new Cartesian3(0, 0, SPHERE_RADIUS_M),
-        ],
-        width: 1.5,
-        arcType: ArcType.NONE,
-        material: axisColor,
-      },
-      properties: { kind: 'guide', name: 'Axe terrestre' },
-    }),
-  );
+  const axisSegments: [Cartesian3, Cartesian3][] = [
+    [
+      new Cartesian3(0, 0, -SPHERE_RADIUS_M),
+      new Cartesian3(0, 0, -EARTH_POLAR_RADIUS_M),
+    ],
+    [
+      new Cartesian3(0, 0, EARTH_POLAR_RADIUS_M),
+      new Cartesian3(0, 0, SPHERE_RADIUS_M),
+    ],
+  ];
+  for (const positions of axisSegments) {
+    created.push(
+      viewer.entities.add({
+        polyline: {
+          positions,
+          width: 1.5,
+          arcType: ArcType.NONE,
+          material: axisColor,
+        },
+        properties: { kind: 'guide', name: 'Axe terrestre' },
+      }),
+    );
+  }
   // Label "Polaris" au pôle Nord céleste
   created.push(
     viewer.entities.add({

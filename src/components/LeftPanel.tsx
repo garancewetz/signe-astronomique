@@ -3,6 +3,7 @@ import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { computeReading, type CelestialReading } from '../utils/astroEngine';
 import { localBirthToUtc } from '../utils/timezone';
 import { useState } from 'react';
+import { X } from 'lucide-react';
 import { Field, Input, PanelShell } from './ui';
 
 interface Props {
@@ -44,21 +45,21 @@ export function LeftPanel({
   return (
     <PanelShell
       title={<><span className="text-violet-400">✦</span> COORDONNÉES DE NAISSANCE</>}
-      titleClassName="text-[10.5px] tracking-[0.28em] text-violet-100"
+      titleClassName="text-cockpit-lg tracking-cockpit-label text-accent-title"
       headerClassName="items-center px-4 py-2.5"
       onClose={onClose}
       closeAriaLabel="Fermer le panneau coordonnées"
       closeContent={
         <>
-          <CloseIcon />
+          <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />
           <span>FERMER</span>
         </>
       }
       animated={false}
       bodyClassName="overflow-hidden"
       footer={(
-        <footer className="px-4 py-1.5 border-t border-violet-400/15
-                           text-[8.5px] tracking-[0.2em] text-violet-400/60 font-mono">
+        <footer className="px-4 py-1.5 border-t border-border-hud-muted
+                           text-cockpit-md tracking-cockpit text-accent-label/60 font-mono">
           Meeus 1998 · JPL · IAU 1930
         </footer>
       )}
@@ -87,7 +88,7 @@ export function LeftPanel({
         </Field>
 
         <Field label="COORDONNÉES">
-          <div className="cockpit-input w-full text-[11px] flex items-center justify-between gap-1">
+          <div className="cockpit-input w-full text-cockpit-md flex items-center justify-between gap-1">
             <span>φ {city.lat.toFixed(2)}°</span>
             <span className="text-slate-600">·</span>
             <span>λ {city.lon.toFixed(2)}°</span>
@@ -99,10 +100,10 @@ export function LeftPanel({
           disabled={computing}
           whileHover={reduceMotion ? undefined : { scale: 1.02 }}
           whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-          className="cockpit-focus relative w-full mt-3 px-6 py-2.5 min-h-11 rounded-sm overflow-hidden
-                     border border-violet-400/50 bg-violet-600/15
-                     text-white text-xs tracking-[0.2em]
-                     hover:bg-violet-600/25 hover:border-violet-300
+          className="cockpit-focus relative w-full mt-3 px-6 py-2.5 min-h-11 rounded-panel overflow-hidden
+                     border border-border-control bg-violet-600/15
+                     text-white text-xs tracking-cockpit
+                     hover:bg-violet-600/25 hover:border-accent-label
                      disabled:opacity-40 disabled:cursor-wait
                      transition-all inline-flex items-center justify-center gap-2"
         >
@@ -119,12 +120,3 @@ export function LeftPanel({
     </PanelShell>
   );
 }
-
-function CloseIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" className="shrink-0" aria-hidden>
-      <path d="M5 5l8 8M13 5l-8 8" strokeLinecap="round" />
-    </svg>
-  );
-}
-

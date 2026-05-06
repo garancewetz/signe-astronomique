@@ -14,7 +14,6 @@
  */
 
 import { planetGeocentric, PLANETS_META, type PlanetId } from './planetEngine';
-export type { PlanetId } from './planetEngine';
 export { PLANETS_META } from './planetEngine';
 
 const DEG = Math.PI / 180;

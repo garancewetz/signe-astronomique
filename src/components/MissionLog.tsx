@@ -53,15 +53,15 @@ export function BirthHeader({ reading }: { reading: CelestialReading }) {
   const timeStr = date.toISOString().slice(11, 16) + ' UTC';
 
   return (
-    <div className="pb-3 border-b border-violet-400/20">
-      <div className="text-[9px] tracking-[0.35em] text-violet-400 mb-1.5">
+    <div className="pb-3 border-b border-border-hud-subtle">
+      <div className="text-cockpit-sm tracking-cockpit-hud text-violet-400 mb-1.5">
         THÈME ASTRAL · CIEL RÉEL À LA NAISSANCE
       </div>
-      <div className="text-white text-[13px] leading-snug font-medium">
+      <div className="text-white text-cockpit-xl leading-snug font-medium">
         {dateStr} à {timeStr}
       </div>
       {placeLabel && (
-        <div className="text-slate-400 text-[10px] mt-0.5 font-mono">
+        <div className="text-slate-400 text-cockpit-sm mt-0.5 font-mono">
           {placeLabel}&nbsp;
           ({latitude >= 0 ? latitude.toFixed(2) + '° N' : Math.abs(latitude).toFixed(2) + '° S'},&nbsp;
           {longitude >= 0 ? longitude.toFixed(2) + '° E' : Math.abs(longitude).toFixed(2) + '° O'})
@@ -106,8 +106,8 @@ function ResumeRow({ glyph, glyphColor, label, value, valueClass }: {
             className="w-4 text-center shrink-0 text-sm leading-none">
         {glyph}
       </span>
-      <span className="text-slate-400 shrink-0 w-36 text-[10px]">{label}</span>
-      <span className={`font-medium text-[10.5px] ${valueClass}`}>{value}</span>
+      <span className="text-slate-400 shrink-0 w-36 text-cockpit-sm">{label}</span>
+      <span className={`font-medium text-cockpit-md ${valueClass}`}>{value}</span>
     </div>
   );
 }
@@ -118,14 +118,14 @@ export function AscendantCard({ reading }: { reading: CelestialReading }) {
   const lore = CONSTELLATION_LORE[reading.ascendantConstellation];
   return (
     <div className="border border-emerald-500/30 bg-emerald-900/15 rounded-sm p-3">
-      <div className="text-[8.5px] tracking-[0.3em] text-emerald-400 mb-2">
+      <div className="text-cockpit-md tracking-cockpit-caps text-emerald-400 mb-2">
         ↑ ASCENDANT · HORIZON EST
       </div>
       <div className="flex items-baseline justify-between mb-1">
         <span className="text-emerald-300 text-sm font-medium">{lore.fr}</span>
-        <span className="text-[9px] text-emerald-400/70 font-mono italic">{lore.latin}</span>
+        <span className="text-cockpit-sm text-emerald-400/70 font-mono italic">{lore.latin}</span>
       </div>
-      <div className="text-[9px] text-emerald-400/60 grid grid-cols-2 gap-x-3 font-mono mt-1.5">
+      <div className="text-cockpit-sm text-emerald-400/60 grid grid-cols-2 gap-x-3 font-mono mt-1.5">
         <span>TS {formatRA(reading.localSiderealTime)}</span>
         <span>φ {reading.input.latitude.toFixed(2)}°</span>
       </div>
@@ -138,20 +138,20 @@ export function AscendantCard({ reading }: { reading: CelestialReading }) {
 export function HowToRead() {
   return (
     <Section label="COMMENT LIRE TA CARTE DU CIEL">
-      <div className="px-3 py-2.5 text-[10px] leading-relaxed text-slate-300 space-y-1.5">
+      <div className="px-3 py-2.5 text-cockpit-sm leading-relaxed text-slate-300 space-y-1.5">
         <p>
           Ce que tu vois est le <strong className="text-violet-100 font-medium">ciel
           réel</strong> tel qu&apos;il était au-dessus du lieu, à la date et à
           l&apos;heure de ta naissance — pas un schéma symbolique.
         </p>
-        <p className="text-[9.5px] text-slate-400">
+        <p className="text-cockpit-sm text-slate-400">
           Active les guides <span className="text-amber-300">⊕</span> dans la
           console pour voir l&apos;axe terrestre (autour duquel la Terre tourne),
           l&apos;équateur céleste (sa projection sur le ciel) et
           l&apos;écliptique — le chemin apparent du Soleil sur l&apos;année. Les
           treize constellations zodiacales sont celles que ce chemin traverse.
         </p>
-        <p className="text-[9.5px] text-slate-500">
+        <p className="text-cockpit-sm text-slate-500">
           Les frontières dessinées sont celles de l&apos;IAU (1930), tracées
           d&apos;après les positions des étoiles. Elles ne forment pas douze
           cases égales : le Soleil reste 45 jours dans la Vierge, 6 dans le
@@ -168,9 +168,9 @@ export function HowToRead() {
 export function PlanetTable({ reading }: { reading: CelestialReading }) {
   return (
     <Section label="POSITIONS DES PLANÈTES · MAISONS">
-      <table className="w-full text-[10px]">
+      <table className="w-full text-cockpit-sm">
         <thead>
-          <tr className="border-b border-violet-400/15 text-[8.5px] tracking-[0.2em] text-violet-400">
+          <tr className="border-b border-border-hud-muted text-cockpit-md tracking-cockpit text-violet-400">
             <th className="px-3 py-1.5 text-left font-normal">ASTRE</th>
             <th className="px-2 py-1.5 text-left font-normal">CONSTELLATION</th>
             <th className="px-2 py-1.5 text-right font-normal">DEG</th>
@@ -183,8 +183,8 @@ export function PlanetTable({ reading }: { reading: CelestialReading }) {
           ))}
         </tbody>
       </table>
-      <div className="px-3 py-1.5 border-t border-violet-400/10
-                      text-[8.5px] text-slate-500 italic">
+      <div className="px-3 py-1.5 border-t border-border-hud-faint
+                      text-cockpit-md text-slate-500 italic">
         Maisons égales (approx.)
       </div>
     </Section>
@@ -197,11 +197,11 @@ function PlanetRow({ body, reading }: { body: CelestialBody; reading: CelestialR
   const house = houseNumber(body.eclipticLongitude, reading.ascendantLongitude);
 
   return (
-    <tr className="border-b border-violet-400/8 hover:bg-violet-500/8 transition-colors">
+    <tr className="border-b border-border-hud-hairline hover:bg-violet-500/8 transition-colors">
       <td className="px-3 py-1.5">
         <div className="flex items-center gap-1.5">
           <span style={{ color: body.color }}
-                className="text-[13px] leading-none w-4 text-center shrink-0">
+                className="text-cockpit-xl leading-none w-4 text-center shrink-0">
             {body.glyph}
           </span>
           <span className="text-slate-200">{body.name}</span>
@@ -224,7 +224,7 @@ export function AstroInfoCard({ reading }: { reading: CelestialReading }) {
 
   return (
     <Section label="DONNÉES ASTRONOMIQUES BRUTES">
-      <div className="px-3 py-2.5 space-y-1.5 font-mono text-[10px]">
+      <div className="px-3 py-2.5 space-y-1.5 font-mono text-cockpit-sm">
         <InfoRow label="Heure sidérale locale" value={lstStr} />
         <InfoRow label="Jour julien" value={reading.julianDay.toFixed(3)} />
         <InfoRow label="Obliquité de l'écliptique" value={`${reading.obliquity.toFixed(2)}°`} />
@@ -254,7 +254,7 @@ export function NotesCard({ reading }: { reading: CelestialReading }) {
 
   return (
     <Section label="TON SIGNE : ASTROLOGIQUE vs ASTRONOMIQUE">
-      <div className="px-3 py-2.5 text-[10px] leading-relaxed space-y-2 text-slate-300">
+      <div className="px-3 py-2.5 text-cockpit-sm leading-relaxed space-y-2 text-slate-300">
         {tropicalLore ? (
           <>
             <p>
@@ -279,12 +279,12 @@ export function NotesCard({ reading }: { reading: CelestialReading }) {
             signe entier.
           </p>
         )}
-        <p className="text-[9.5px] text-slate-400">
+        <p className="text-cockpit-sm text-slate-400">
           Le calcul s&apos;appuie sur l&apos;astronomie de position : éphémérides
           de Meeus, frontières IAU/Delporte, repère ICRS&nbsp;J2000. Aucune
           interprétation symbolique — juste où étaient les astres.
         </p>
-        <p className="text-slate-500 text-[9.5px] italic leading-relaxed pt-1 border-t border-violet-400/10">
+        <p className="text-slate-500 text-cockpit-sm italic leading-relaxed pt-1 border-t border-border-hud-faint">
           {sunLore.poetic}
         </p>
       </div>
@@ -296,7 +296,7 @@ export function NotesCard({ reading }: { reading: CelestialReading }) {
 
 export function ScientificFooter() {
   return (
-    <footer className="pt-2 text-[8px] tracking-wider text-slate-600 font-mono space-y-0.5">
+    <footer className="pt-2 text-cockpit-xs tracking-wider text-slate-600 font-mono space-y-0.5">
       <div>ICRS J2000 · MEEUS 1998 · DELPORTE 1930</div>
     </footer>
   );
@@ -306,9 +306,9 @@ export function ScientificFooter() {
 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="border border-violet-400/20 rounded-sm overflow-hidden">
-      <div className="px-3 py-1.5 border-b border-violet-400/15 bg-violet-900/25
-                      text-[8.5px] tracking-[0.3em] text-violet-300">
+    <div className="border border-border-hud-subtle rounded-panel overflow-hidden">
+      <div className="px-3 py-1.5 border-b border-border-hud-muted bg-violet-900/25
+                      text-cockpit-md tracking-cockpit-caps text-violet-300">
         {label}
       </div>
       {children}

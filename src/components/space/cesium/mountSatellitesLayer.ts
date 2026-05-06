@@ -30,6 +30,18 @@ interface MountOptions {
    * once and frozen, which is what the natal sky wants.
    */
   live: boolean;
+  /**
+   * Fade-in duration in ms when the layer mounts. 0 (default) means instant.
+   * Used by SpaceView for the "discovery" reveal of historical relics after
+   * the modern swarm has de-materialized.
+   */
+  fadeInMs?: number;
+  /**
+   * Delay (ms) before the fade-in tween begins. Pairs with the orbital
+   * swarm's fade-out so the new sky reveals itself only once the old has
+   * vanished.
+   */
+  fadeInDelayMs?: number;
 }
 
 /**
@@ -53,10 +65,30 @@ export function mountSatellitesLayer(
   viewer: Viewer,
   opts: MountOptions,
 ): () => void {
-  const { satellites, getTime, live } = opts;
+  const { satellites, getTime, live, fadeInMs = 0, fadeInDelayMs = 0 } = opts;
   if (satellites.length === 0) return () => {};
 
   const created: Entity[] = [];
+  let disposed = false;
+
+  // Shared alpha tween. CallbackProperty colors below sample this each frame
+  // so the layer can rise from invisible to its full glow without re-mounting.
+  let alphaScale = fadeInMs > 0 ? 0 : 1;
+  if (fadeInMs > 0) {
+    const startFade = () => {
+      if (disposed) return;
+      const t0 = performance.now();
+      const step = () => {
+        if (disposed) return;
+        const t = Math.min(1, (performance.now() - t0) / fadeInMs);
+        alphaScale = t;
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+    if (fadeInDelayMs > 0) window.setTimeout(startFade, fadeInDelayMs);
+    else startFade();
+  }
 
   // Shared global pulse: a looping sin(t) feeding pixelSize through a
   // CallbackProperty. One function for every point → near-zero cost.
@@ -97,6 +129,24 @@ export function mountSatellitesLayer(
 
     const glow = Color.fromCssColorString(relic.glowColor);
     const showWhenValid = new CallbackProperty(() => visible, false);
+    // Colors driven through CallbackProperty so the shared `alphaScale`
+    // tween (fade-in) repaints the relic each frame without remounting.
+    const pointColor = new CallbackProperty(
+      () => glow.withAlpha(0.95 * alphaScale),
+      false,
+    );
+    const pointOutlineColor = new CallbackProperty(
+      () => glow.withAlpha(0.35 * alphaScale),
+      false,
+    );
+    const labelFillColor = new CallbackProperty(
+      () => glow.withAlpha(0.95 * alphaScale),
+      false,
+    );
+    const labelOutlineColor = new CallbackProperty(
+      () => Color.BLACK.withAlpha(0.85 * alphaScale),
+      false,
+    );
 
     const entity = viewer.entities.add({
       position,
@@ -104,8 +154,8 @@ export function mountSatellitesLayer(
         show: showWhenValid,
         // Soft 8→11 px pulse — perceptible, not distracting.
         pixelSize: pulseScale(9.5, 1.5),
-        color: glow.withAlpha(0.95),
-        outlineColor: glow.withAlpha(0.35),
+        color: pointColor,
+        outlineColor: pointOutlineColor,
         outlineWidth: 3,
         // Stays visible across the full zoom range: full size at relics-
         // view distance (~8 000 km altitude ≈ 1.4e7 m camera-to-target),
@@ -116,8 +166,8 @@ export function mountSatellitesLayer(
       label: {
         text: relic.name,
         font: "10px 'JetBrains Mono', monospace",
-        fillColor: glow.withAlpha(0.95),
-        outlineColor: Color.BLACK.withAlpha(0.85),
+        fillColor: labelFillColor,
+        outlineColor: labelOutlineColor,
         outlineWidth: 2,
         style: LabelStyle.FILL_AND_OUTLINE,
         verticalOrigin: VerticalOrigin.CENTER,
@@ -141,6 +191,7 @@ export function mountSatellitesLayer(
   }
 
   return () => {
+    disposed = true;
     for (const e of created) viewer.entities.remove(e);
   };
 }

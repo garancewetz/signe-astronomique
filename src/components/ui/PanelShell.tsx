@@ -1,7 +1,8 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { Button } from './Button';
 import { cn } from './cn';
+import { X } from 'lucide-react';
 
 interface PanelShellProps {
   title: ReactNode;
@@ -21,7 +22,7 @@ interface PanelShellProps {
   animationKey?: string;
 }
 
-export function PanelShell({
+function PanelShellRoot({
   title,
   subtitle,
   children,
@@ -57,19 +58,15 @@ export function PanelShell({
     <div className={cn('h-full flex flex-col', className)}>
       <header
         className={cn(
-          'flex items-start justify-between gap-2 px-4 py-3 border-b border-violet-400/25',
+          'flex items-start justify-between gap-2 px-4 py-3 border-b border-border-hud',
           headerClassName,
         )}
       >
         <div className="min-w-0">
           {subtitle && (
-            <div className={cn('text-[10px] tracking-[0.28em] text-violet-300 mb-0.5', subtitleClassName)}>
-              {subtitle}
-            </div>
+            <PanelShellSubtitle className={subtitleClassName}>{subtitle}</PanelShellSubtitle>
           )}
-          <h2 className={cn('text-[12.5px] tracking-[0.16em] text-violet-50', titleClassName)}>
-            {title}
-          </h2>
+          <PanelShellTitle className={titleClassName}>{title}</PanelShellTitle>
         </div>
         {onClose && (
           <Button
@@ -90,10 +87,41 @@ export function PanelShell({
   );
 }
 
-function DefaultCloseIcon() {
+function PanelShellTitle({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" className="shrink-0" aria-hidden>
-      <path d="M5 5l8 8M13 5l-8 8" strokeLinecap="round" />
-    </svg>
+    <h2
+      className={cn(
+        'text-cockpit-lg tracking-cockpit-tight text-accent-title',
+        className,
+      )}
+      {...props}
+    />
   );
 }
+
+function PanelShellSubtitle({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        'text-cockpit-sm tracking-cockpit-label text-accent-label mb-0.5',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function DefaultCloseIcon() {
+  return <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />;
+}
+
+export const PanelShell = Object.assign(PanelShellRoot, {
+  Title: PanelShellTitle,
+  Subtitle: PanelShellSubtitle,
+});

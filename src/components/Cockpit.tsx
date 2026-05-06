@@ -198,7 +198,7 @@ export function Cockpit() {
       ref={cockpitRef}
       id="cockpit-main"
       tabIndex={-1}
-      className="fixed inset-0 overflow-hidden bg-[#060210]"
+      className="fixed inset-0 overflow-hidden bg-background"
     >
       <a href="#cockpit-main" className="skip-to-main">
         Aller au contenu principal
@@ -286,7 +286,7 @@ export function Cockpit() {
         <div
           aria-hidden="true"
           className="pointer-events-none fixed top-0 left-[-12000px] w-md
-                     bg-[#100828] text-slate-200"
+                     bg-surface-raised text-slate-200"
           ref={fullReportRef}
         >
           <FullReport reading={reading} />
@@ -297,11 +297,11 @@ export function Cockpit() {
       <div
         className="absolute bottom-0 left-0 right-0 z-20
                    pb-[max(0,env(safe-area-inset-bottom))]
-                   bg-linear-to-t from-[#060210]/98 via-[#060210]/85 to-transparent
-                   backdrop-blur-md border-t border-violet-500/15"
+                   bg-linear-to-t from-background/98 via-background/85 to-transparent
+                   backdrop-blur-md border-t border-border-hud-faint"
       >
         <div className="absolute top-0 inset-x-0 h-px
-                        bg-linear-to-r from-transparent via-violet-400/25 to-transparent" />
+                        bg-linear-to-r from-transparent via-border-hud to-transparent" />
         <ControlConsole
           audioEnabled={audio.enabled}
           onToggleAudio={toggleAudio}
@@ -392,10 +392,10 @@ function SidePanel({
                     ? 'max-h-[calc(100dvh-2.75rem-6rem-env(safe-area-inset-bottom,0))]'
                     : 'bottom-[calc(6rem+env(safe-area-inset-bottom,0))]'}
                   ${isLeft ? 'left-0' : 'right-0'}
-                  bg-[#100828]/95 backdrop-blur-2xl
-                  border border-violet-400/30
+                  bg-surface-raised/95 backdrop-blur-2xl
+                  border border-border-control
                   ${isLeft ? 'rounded-r-sm border-l-0' : 'rounded-l-sm border-r-0'}
-                  shadow-[0_8px_40px_rgba(0,0,0,0.7)]`}
+                  shadow-cockpit-panel`}
     >
       {/* Onglet qui dépasse du bord intérieur. Positionné hors de la
           bounding-box du panel pour rester visible une fois le panel fermé. */}
@@ -411,8 +411,8 @@ function SidePanel({
           'backdrop-blur-2xl text-[11.5px] tracking-widest font-medium transition-[opacity,colors] duration-200',
           tabVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
           open
-            ? 'border-violet-300/55 bg-violet-500/20 text-violet-50'
-            : 'border-violet-400/30 bg-[#100828]/95 text-violet-200/85 hover:text-violet-50 hover:bg-violet-500/15 hover:border-violet-300/45',
+            ? 'border-accent-label/55 bg-violet-500/20 text-accent-title'
+            : 'border-border-control bg-surface-raised/95 text-accent-label/85 hover:text-accent-title hover:bg-violet-500/15 hover:border-accent-label/45',
         )}
         style={{ writingMode: 'vertical-rl' as const }}
         aria-label={`${open ? 'Fermer' : 'Ouvrir'} ${label}`}

@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion } from 'framer-motion';
+import { Info, X } from 'lucide-react';
 
 const SECTIONS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -101,7 +102,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
       <button
         type="button"
         aria-label="Fermer la fenêtre En savoir plus"
-        className="fixed inset-0 z-0 bg-[#030014]/75 backdrop-blur-[2px]"
+        className="fixed inset-0 z-0 bg-overlay/75 backdrop-blur-[2px]"
         onClick={onClose}
       />
       <div
@@ -111,19 +112,19 @@ export function ExploreSpacePopover({ onClose }: Props) {
         className="relative z-10 w-[min(34rem,calc(100vw-2rem))] min-h-0 min-w-0
                    max-h-[min(75vh,32rem,calc(100svh-2rem))]
                    flex flex-col
-                   bg-[#100828]/98 backdrop-blur-xl
-                   border border-violet-400/35 rounded-sm
-                   shadow-[0_12px_48px_rgba(0,0,0,0.85)] overflow-hidden"
+                   bg-surface-raised/98 backdrop-blur-xl
+                   border border-border-hud-strong rounded-panel
+                   shadow-cockpit-sheet overflow-hidden"
       >
-        <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-violet-500/15">
+        <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-border-hud-muted">
           <div>
             <div
               id="explore-space-title"
-              className="text-[10px] tracking-[0.28em] text-violet-300"
+              className="text-cockpit-lg tracking-cockpit-label text-accent-label"
             >
               CONTINUER À EXPLORER LE CIEL
             </div>
-            <p className="text-[9px] text-slate-500 mt-1 leading-snug">
+            <p className="text-cockpit-sm text-slate-500 mt-1 leading-snug">
               Si la précession et le ciel réel t’intriguent : observatoires, cartes
               du ciel interactives, éphémérides, vulgarisation. Sources officielles
               (NASA, ESA, IAU). Les liens s’ouvrent dans un nouvel onglet.
@@ -132,11 +133,11 @@ export function ExploreSpacePopover({ onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="cockpit-focus shrink-0 inline-flex items-center gap-2 h-9 px-2.5 rounded-sm border border-violet-400/20
-                       text-slate-400 hover:text-white hover:bg-violet-500/15 transition text-[9px] tracking-[0.18em]"
+            className="cockpit-focus shrink-0 inline-flex items-center gap-2 h-9 px-2.5 rounded-panel border border-border-hud-subtle
+                       text-slate-400 hover:text-white hover:bg-violet-500/15 transition text-cockpit-sm tracking-cockpit-wide"
             aria-label="Fermer"
           >
-            <CloseIcon />
+            <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />
             <span>FERMER</span>
           </button>
         </div>
@@ -144,7 +145,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-5">
           {SECTIONS.map((section) => (
             <section key={section.title}>
-              <h3 className="text-[8px] tracking-[0.35em] text-violet-400/75 mb-2">
+              <h3 className="text-cockpit-xs tracking-cockpit-hud text-accent-label/75 mb-2">
                 {section.title}
               </h3>
               <ul className="space-y-1.5">
@@ -154,7 +155,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
                       href={link.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex gap-2 text-[11px] leading-snug text-slate-300
+                      className="group flex gap-2 text-cockpit-md leading-snug text-slate-300
                                  hover:text-violet-200 transition-colors"
                     >
                       <span className="text-violet-500/80 group-hover:text-violet-400 shrink-0 mt-0.5">
@@ -176,20 +177,6 @@ export function ExploreSpacePopover({ onClose }: Props) {
   );
 }
 
-function CloseIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" className="shrink-0" aria-hidden>
-      <path d="M5 5l8 8M13 5l-8 8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export function InfoCircleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.35">
-      <circle cx="9" cy="9" r="7" />
-      <path d="M9 8v5" strokeLinecap="round" />
-      <circle cx="9" cy="5.3" r="0.55" fill="currentColor" stroke="none" />
-    </svg>
-  );
+  return <Info className="size-[18px] shrink-0" strokeWidth={1.35} aria-hidden />;
 }

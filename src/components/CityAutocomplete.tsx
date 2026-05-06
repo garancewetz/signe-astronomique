@@ -144,7 +144,7 @@ export function CityAutocomplete({ value, onSelect }: Props) {
         <span
           aria-hidden
           className="absolute right-2 top-1/2 -translate-y-1/2
-                     text-[10px] text-violet-300/70 animate-shimmer"
+                     text-cockpit-sm text-accent-label/70 animate-shimmer"
         >
           ✦
         </span>
@@ -155,9 +155,9 @@ export function CityAutocomplete({ value, onSelect }: Props) {
           role="listbox"
           className="absolute z-50 left-0 right-0 bottom-full mb-1
                      max-h-56 overflow-y-auto rounded-sm
-                     border border-violet-400/30 bg-[#0d0820]/95
-                     backdrop-blur-sm text-[11px] text-slate-200
-                     shadow-[0_-10px_30px_rgba(0,0,0,0.55)]"
+                     border border-border-control bg-surface/95
+                     backdrop-blur-sm text-cockpit-md text-slate-200
+                     shadow-cockpit-lift"
         >
           {results.map((r, i) => (
             <li

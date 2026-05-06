@@ -7,11 +7,10 @@
  */
 import type { PlanetId } from '../../../../utils/planetEngine';
 
-export const SUN_RADIUS_KM = 695_700;
-export const MOON_RADIUS_KM = 1_737.4;
-export const EARTH_RADIUS_KM = 6_378.137; // WGS84, aligné sur Cesium
+const SUN_RADIUS_KM = 695_700;
+const MOON_RADIUS_KM = 1_737.4;
 
-export const PLANET_RADII_KM: Record<PlanetId, number> = {
+const PLANET_RADII_KM: Record<PlanetId, number> = {
   mercury: 2_439.7,
   venus:   6_051.8,
   mars:    3_389.5,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export type GeolocationStatus = 'pending' | 'resolved' | 'denied' | 'unsupported';
+type GeolocationStatus = 'pending' | 'resolved' | 'denied' | 'unsupported';
 
 export interface GeolocationResult {
   lat: number;
@@ -12,7 +12,7 @@ export interface GeolocationResult {
  * Fallback coords used while the browser hasn't answered, or whenever the
  * Geolocation API is denied / unavailable.
  */
-export const PARIS_FALLBACK = { lat: 48.8566, lon: 2.3522 } as const;
+const PARIS_FALLBACK = { lat: 48.8566, lon: 2.3522 } as const;
 
 /**
  * One-shot browser geolocation request at mount. Returns the latest known

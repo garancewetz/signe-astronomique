@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import { X } from 'lucide-react';
 import { RadarWheel } from './RadarWheel';
 import {
   AscendantCard,
@@ -36,7 +37,7 @@ export function ResumePanel({ reading, onClose }: PanelProps) {
   return (
     <ReportPanelShell title="RÉSUMÉ" subtitle="L’ESSENTIEL DE TON CIEL" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[13px] leading-relaxed">
+        <div className="space-y-3 text-cockpit-xl leading-relaxed">
           <BirthHeader reading={reading} />
           <ResumeCard reading={reading} />
           <AscendantCard reading={reading} />
@@ -54,7 +55,7 @@ export function CartePanel({ reading, onClose }: PanelProps) {
   return (
     <ReportPanelShell title="CARTE" subtitle="ROUE DES CONSTELLATIONS" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[13px] leading-relaxed">
+        <div className="space-y-3 text-cockpit-xl leading-relaxed">
           <RadarWheel reading={reading} />
           <PlanetTable reading={reading} />
         </div>
@@ -71,7 +72,7 @@ export function LecturePanel({ reading, satellitesEnabled, onClose }: LecturePan
   return (
     <ReportPanelShell title="LECTURE" subtitle="COMPRENDRE TA CARTE" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[13px] leading-relaxed">
+        <div className="space-y-3 text-cockpit-xl leading-relaxed">
           <HowToRead />
           <NotesCard reading={reading} />
           {satellitesEnabled && (
@@ -94,15 +95,15 @@ export function LecturePanel({ reading, satellitesEnabled, onClose }: LecturePan
 function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
   if (isSilentEra(birthDate)) {
     return (
-      <div className="rounded-sm border border-violet-400/25 bg-[#0d0820]/70
+      <div className="rounded-panel border border-border-hud bg-surface/70
                       p-4 space-y-2">
-        <div className="text-[8.5px] tracking-[0.3em] text-violet-300/75">
+        <div className="text-cockpit-md tracking-cockpit-caps text-accent-label/75">
           ORACLE · RELIQUES ORBITALES
         </div>
-        <p className="text-amber-100/85 italic text-[13px] leading-relaxed">
+        <p className="text-amber-100/85 italic text-cockpit-xl leading-relaxed">
           « En cette année, l’orbite de la Terre n’appartenait qu’au silence. »
         </p>
-        <p className="text-slate-400 text-[10.5px] leading-relaxed">
+        <p className="text-slate-400 text-cockpit-md leading-relaxed">
           Aucun objet humain n’avait encore quitté l’atmosphère — le premier,
           Spoutnik 1, ne serait lancé qu’en {SPACE_AGE_START_YEAR}.
         </p>
@@ -114,14 +115,14 @@ function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
   return (
     <div className="rounded-sm border border-cyan-400/20 bg-[#0a1424]/60
                     p-4 space-y-3">
-      <div className="text-[8.5px] tracking-[0.3em] text-cyan-300/75">
+      <div className="text-cockpit-md tracking-cockpit-caps text-cyan-300/75">
         ORACLE · RELIQUES ORBITALES
       </div>
-      <p className="text-slate-300 text-[12px] leading-relaxed">
+      <p className="text-slate-300 text-cockpit-lg leading-relaxed">
         Au moment de ta naissance, ces objets humains tournaient (ou
         avaient déjà tourné) autour de la Terre :
       </p>
-      <ul className="space-y-1.5 text-[11.5px]">
+      <ul className="space-y-1.5 text-cockpit-md">
         {relics.map((r) => (
           <li key={r.id} className="flex items-start gap-2">
             <span
@@ -136,7 +137,7 @@ function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
                   · {new Date(r.launchDate).getUTCFullYear()}
                 </span>
               </div>
-              <div className="text-slate-400 italic text-[10.5px] leading-snug">
+              <div className="text-slate-400 italic text-cockpit-md leading-snug">
                 {r.blurb}
               </div>
             </div>
@@ -153,7 +154,7 @@ export function DonneesPanel({ reading, onClose }: PanelProps) {
   return (
     <ReportPanelShell title="DONNÉES" subtitle="ASTRONOMIE BRUTE" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-[13px] leading-relaxed">
+        <div className="space-y-3 text-cockpit-xl leading-relaxed">
           <AstroInfoCard reading={reading} />
           <ScientificFooter />
         </div>
@@ -172,7 +173,7 @@ export function DonneesPanel({ reading, onClose }: PanelProps) {
  */
 export function FullReport({ reading }: { reading: CelestialReading }) {
   return (
-    <div className="space-y-3 text-[13px] leading-relaxed px-4 py-4">
+    <div className="space-y-3 text-cockpit-xl leading-relaxed px-4 py-4">
       <BirthHeader reading={reading} />
       <ResumeCard reading={reading} />
       <AscendantCard reading={reading} />
@@ -197,7 +198,7 @@ function ReportPanelShell({
       subtitle={subtitle}
       onClose={onClose}
       closeAriaLabel={`Fermer le panneau ${title.toLowerCase()}`}
-      closeContent={<CloseIcon />}
+      closeContent={<X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />}
       closeButtonClassName="h-8 w-8 p-0"
       bodyClassName="overflow-y-auto px-4 py-4 text-slate-200"
       animationKey={title}
@@ -211,9 +212,9 @@ function ReportPanelShell({
 
 function Empty() {
   return (
-    <div className="text-slate-300 text-[13px] leading-relaxed mt-4 px-1">
+    <div className="text-slate-300 text-cockpit-xl leading-relaxed mt-4 px-1">
       <div className="text-4xl mb-4 opacity-25 text-center">◇</div>
-      <h2 className="text-violet-100 text-[12.5px] tracking-[0.14em] font-medium mb-3 text-center uppercase">
+      <h2 className="text-accent-title text-cockpit-lg tracking-cockpit-tight font-medium mb-3 text-center uppercase">
         Ton vrai signe, lu dans le ciel réel
       </h2>
       <p className="mb-2.5 text-slate-200">
@@ -238,7 +239,7 @@ function Empty() {
         <strong className="text-emerald-200 font-medium">ascendant</strong>{' '}
         astronomique, calculés en astronomie de position.
       </p>
-      <p className="text-slate-400 text-[11px] italic">
+      <p className="text-slate-400 text-cockpit-md italic">
         Ophiuchus — le 13ᵉ signe écarté par les douze cases du calendrier — est
         inclus : le Soleil y passe environ 18&nbsp;jours par an, c&apos;est un
         fait observable, pas une opinion.
@@ -257,7 +258,7 @@ function CarteStub() {
         Lune et les planètes au moment exact de ta naissance, projetées sur
         l&apos;écliptique réelle plutôt que sur le zodiaque tropical figé.
       </p>
-      <p className="text-slate-500 text-[10px]">
+      <p className="text-slate-500 text-cockpit-sm">
         Saisis tes coordonnées dans{' '}
         <span className="text-violet-200 font-medium">COORDONNÉES</span> pour
         afficher la roue, la table des planètes et l&apos;ascendant.
@@ -276,7 +277,7 @@ function LectureStub() {
         l&apos;horizon de ton lieu de naissance, et le rôle d&apos;<em>Ophiuchus</em>{' '}
         — le 13ᵉ signe écarté par l&apos;astrologie tropicale.
       </p>
-      <p className="text-slate-500 text-[10px]">
+      <p className="text-slate-500 text-cockpit-sm">
         Une fois ta carte calculée, la lecture détaillée et les notes de
         constellations s&apos;afficheront ici.
       </p>
@@ -294,7 +295,7 @@ function DonneesStub() {
         <em>Meeus 1998</em> avec les éphémérides JPL et les frontières IAU
         1930.
       </p>
-      <p className="text-slate-500 text-[10px]">
+      <p className="text-slate-500 text-cockpit-sm">
         Saisis date, heure et lieu pour générer les positions exactes au
         moment de ta naissance.
       </p>
@@ -302,10 +303,3 @@ function DonneesStub() {
   );
 }
 
-function CloseIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" className="shrink-0" aria-hidden>
-      <path d="M5 5l8 8M13 5l-8 8" strokeLinecap="round" />
-    </svg>
-  );
-}

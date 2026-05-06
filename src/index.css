@@ -2,6 +2,75 @@
 
 @theme {
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+
+  /* Structure cockpit */
+  --color-background: #060210;
+  --color-foreground: #ede9fe;
+  --color-surface: #0d0820;
+  --color-surface-raised: #100828;
+  --color-surface-console: #09031a;
+  --color-overlay: #030014;
+  --color-hud-bar: #0d0825;
+
+  /* Accents HUD (remplace la grille violet-* dispersée) */
+  --color-accent-title: #f5f3ff;
+  --color-accent-label: #c4b5fd;
+  --color-accent-muted: rgb(167 139 250 / 0.85);
+  --color-border-hud: rgb(167 139 250 / 0.25);
+  --color-border-hud-strong: rgb(167 139 250 / 0.35);
+  --color-border-hud-muted: rgb(167 139 250 / 0.15);
+  --color-border-hud-subtle: rgb(167 139 250 / 0.2);
+  --color-border-hud-faint: rgb(167 139 250 / 0.1);
+  --color-border-hud-hairline: rgb(167 139 250 / 0.08);
+  --color-border-control: rgb(167 139 250 / 0.3);
+
+  /* Glyphes barre caméra */
+  --color-glyph-sun: #fcd34d;
+  --color-glyph-moon: #e2e8f0;
+  --color-glyph-earth: #7dd3fc;
+
+  /* Anneaux / bordures formulaires (CSS global) */
+  --color-ring: #c4b5fd;
+  --color-border-strong: rgb(167 139 250 / 0.55);
+  --color-border-input: rgb(109 40 217 / 0.3);
+  --color-input-focus-border: rgb(139 92 246 / 0.65);
+  --color-input-focus-glow: rgb(139 92 246 / 0.18);
+  --color-input-focus-visible-border: rgb(196 181 253 / 0.85);
+  --color-input-focus-visible-glow: rgb(167 139 250 / 0.45);
+  --color-scrollbar-thumb: rgb(109 40 217 / 0.3);
+  --color-scrollbar-thumb-hover: rgb(139 92 246 / 0.5);
+
+  /* Rayons */
+  --radius-cockpit: 3px;
+  --radius-panel: 2px;
+  --radius-console: 0.75rem;
+
+  /*
+   * Échelle typo cockpit (6 niveaux + glyphes).
+   * xs/sm = dense HUD · md = corps & formulaires · lg = titres panneaux · xl = lecture longue.
+   */
+  --text-cockpit-xs: 8px;
+  --text-cockpit-sm: 10px;
+  --text-cockpit-md: 11px;
+  --text-cockpit-lg: 12px;
+  --text-cockpit-xl: 13px;
+  --text-cockpit-glyph: 15px;
+  --text-cockpit-input: var(--text-cockpit-md);
+
+  --tracking-cockpit-tight: 0.14em;
+  --tracking-cockpit: 0.2em;
+  --tracking-cockpit-wide: 0.22em;
+  --tracking-cockpit-label: 0.28em;
+  --tracking-cockpit-caps: 0.3em;
+  --tracking-cockpit-hud: 0.35em;
+
+  /* Ombres */
+  --shadow-cockpit-panel: 0 8px 40px rgb(0 0 0 / 0.7);
+  --shadow-cockpit-dock: 0 4px 24px rgb(0 0 0 / 0.45);
+  --shadow-cockpit-modal: 0 12px 44px rgb(0 0 0 / 0.75);
+  --shadow-cockpit-sheet: 0 12px 48px rgb(0 0 0 / 0.85);
+  --shadow-cockpit-bar: 0 8px 30px rgb(0 0 0 / 0.35);
+  --shadow-cockpit-lift: 0 -10px 30px rgb(0 0 0 / 0.55);
 }
 
 html,
@@ -10,8 +79,8 @@ body,
   height: 100%;
   width: 100%;
   margin: 0;
-  background: #060210;
-  color: #ede9fe;
+  background: var(--color-background);
+  color: var(--color-foreground);
   overscroll-behavior: none;
 }
 
@@ -33,39 +102,42 @@ body {
   background: radial-gradient(
     ellipse 72% 72% at center,
     transparent 28%,
-    rgba(6, 2, 16, 0.25) 52%,
-    rgba(6, 2, 16, 0.72) 76%,
-    rgba(6, 2, 16, 0.96) 100%
+    rgb(from var(--color-background) r g b / 0.25) 52%,
+    rgb(from var(--color-background) r g b / 0.72) 76%,
+    rgb(from var(--color-background) r g b / 0.96) 100%
   );
 }
 
-/* Inputs cockpit */
+/*
+ * Inputs cockpit — à utiliser via <Input /> (classe .cockpit-input).
+ * Évite les styles inline sur les champs du formulaire natal.
+ */
 .cockpit-input {
-  background: rgba(6, 2, 16, 0.65);
-  border: 1px solid rgba(109, 40, 217, 0.3);
-  color: #ede9fe;
+  background: rgb(from var(--color-background) r g b / 0.65);
+  border: 1px solid var(--color-border-input);
+  color: var(--color-foreground);
   padding: 0.4rem 0.7rem;
-  border-radius: 3px;
+  border-radius: var(--radius-cockpit);
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: var(--text-cockpit-input);
   letter-spacing: 0.07em;
   outline: none;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .cockpit-input:focus {
-  border-color: rgba(139, 92, 246, 0.65);
-  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.18);
+  border-color: var(--color-input-focus-border);
+  box-shadow: 0 0 0 1px var(--color-input-focus-glow);
 }
 .cockpit-input:focus-visible {
-  border-color: rgba(196, 181, 253, 0.85);
-  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.45);
+  border-color: var(--color-input-focus-visible-border);
+  box-shadow: 0 0 0 2px var(--color-input-focus-visible-glow);
 }
 
 .cockpit-focus:focus {
   outline: none;
 }
 .cockpit-focus:focus-visible {
-  outline: 2px solid rgb(196 181 253 / 0.95);
+  outline: 2px solid color-mix(in srgb, var(--color-ring) 95%, transparent);
   outline-offset: 2px;
 }
 .cockpit-input::-webkit-calendar-picker-indicator {
@@ -75,7 +147,7 @@ body {
 
 /* Option background for select */
 .cockpit-input option {
-  background: #0d0820;
+  background: var(--color-surface);
 }
 
 /* Bouton sweep */
@@ -102,10 +174,10 @@ body {
 *::-webkit-scrollbar { width: 3px; height: 3px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background: rgba(109, 40, 217, 0.3);
-  border-radius: 2px;
+  background: var(--color-scrollbar-thumb);
+  border-radius: var(--radius-panel);
 }
-*::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
+*::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-thumb-hover); }
 
 .skip-to-main {
   position: absolute;
@@ -127,17 +199,17 @@ body {
   padding: 0.65rem 1rem;
   top: 0.75rem;
   left: 0.75rem;
-  background: #100828;
-  border: 1px solid rgba(167, 139, 250, 0.55);
-  color: #ede9fe;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-foreground);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--text-cockpit-sm);
   letter-spacing: 0.08em;
-  border-radius: 3px;
+  border-radius: var(--radius-cockpit);
   text-decoration: none;
 }
 .skip-to-main:focus-visible {
-  outline: 2px solid rgb(196 181 253);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
 
@@ -145,6 +217,6 @@ body {
   outline: none;
 }
 #cockpit-main:focus-visible {
-  outline: 2px solid rgb(196 181 253 / 0.65);
+  outline: 2px solid color-mix(in srgb, var(--color-ring) 65%, transparent);
   outline-offset: 2px;
 }

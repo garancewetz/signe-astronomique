@@ -82,5 +82,3 @@ export function useSatelliteTracker({
     return { satellites, silentEra };
   }, [availableKey, enabled, silentEra]);
 }
-
-export { SATELLITE_RELICS };

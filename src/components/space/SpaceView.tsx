@@ -93,6 +93,14 @@ Ion.defaultAccessToken = '';
 // La Lune se déplace ~0.5°/h, donc 60 s donne <0.01° d'erreur — invisible.
 const LIVE_REFRESH_MS = 60_000;
 
+// Strict temporal gating for the modern Celestrak swarm. Beyond this window
+// from "now", current TLEs are no longer accurate (and most of those sats
+// didn't exist on a 1990 birth date anyway), so we hide the layer entirely.
+const LIVE_TLE_VALIDITY_MS = 14 * 24 * 60 * 60 * 1000;
+// Cinematic transition timings for the JUMP into the past.
+const SWARM_FADE_OUT_MS = 800;
+const RELICS_FADE_IN_MS = 600;
+
 /**
  * Vue 3D scientifique. Cesium gère :
  *  - le globe Terre (rotation ECEF réelle, texture VIIRS Black Marble)
@@ -197,6 +205,24 @@ export function SpaceView({
     enabled: showSatellites,
   });
 
+  // Strict temporal gating — the modern Celestrak swarm only exists when:
+  //  1. We're in live mode (no natal reading set), or
+  //  2. The natal date is within ~2 weeks of "now" (TLE validity window).
+  // For a 1990 birth date, these satellites either didn't exist yet or our
+  // current TLEs would propagate to garbage. Hide them entirely; the user
+  // sees only the few historical relics that actually watched their birth.
+  // `liveNow` (state) is used instead of Date.now() so the derivation stays
+  // pure across renders; it freezes at JUMP time, which is exactly when this
+  // comparison matters most.
+  const liveSwarmAllowed =
+    reading == null ||
+    Math.abs(reading.input.date.getTime() - liveNow.getTime()) <
+      LIVE_TLE_VALIDITY_MS;
+  // True only when the user has just JUMPed into a date too far from now —
+  // signals to the relics layer that it should reveal itself with a delay
+  // (after the swarm has finished de-materializing).
+  const relicsHistoricalReveal = reading != null && !liveSwarmAllowed;
+
   // 1. Création unique du Viewer
   useEffect(() => {
     if (!containerRef.current) return;
@@ -226,7 +252,12 @@ export function SpaceView({
     // d'après viewer.clock.currentTime (mis à active.input.date plus bas),
     // donc le terminator jour/nuit est correct pour la date de naissance.
     viewer.scene.globe.enableLighting = true;
-    viewer.scene.backgroundColor = Color.fromCssColorString('#060210');
+    const cockpitBg =
+      typeof document !== 'undefined'
+        ? getComputedStyle(document.documentElement).getPropertyValue('--color-background').trim() ||
+          '#060210'
+        : '#060210';
+    viewer.scene.backgroundColor = Color.fromCssColorString(cockpitBg);
 
     // Frustum far : la sphère céleste est à 100 AU (~1.5e13 m), les
     // planètes externes peuvent y être ~50 AU. On pousse le far à 200 AU
@@ -470,13 +501,18 @@ export function SpaceView({
       // layer's internal CallbackProperty.
       getTime: () => reading?.input.date ?? new Date(),
       live: !reading,
+      // Symmetric reveal: when entering historical mode we wait for the
+      // modern swarm to vanish before bringing the relics in.
+      fadeInMs: RELICS_FADE_IN_MS,
+      fadeInDelayMs: relicsHistoricalReveal ? SWARM_FADE_OUT_MS : 0,
     });
     return cleanup;
-  }, [showSatellites, trackedSatellites, reading]);
+  }, [showSatellites, trackedSatellites, reading, relicsHistoricalReveal]);
 
-  // Orbital population overlay: always live (new Date()), independent of natal
-  // mode. birthYear drives the Historical / Modern filter at mount time — the
-  // effect re-runs (and the layer remounts) whenever birthYear changes.
+  // Orbital population overlay: live propagation (new Date()), gated by date.
+  // birthYear is kept as a defense-in-depth filter inside mountOrbitalLayer,
+  // but the primary gate is `liveSwarmAllowed` — past dates skip the mount
+  // entirely and rely on the previous cleanup's fade-out for the transition.
   const birthYear =
     constellationMode === 'historical'
       ? (reading?.input.date.getFullYear() ?? null)
@@ -484,9 +520,15 @@ export function SpaceView({
 
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (!viewer || orbitalSatellites.length === 0) return;
-    return mountOrbitalLayer(viewer, orbitalSatellites, birthYear);
-  }, [orbitalSatellites, birthYear]);
+    if (!viewer || orbitalSatellites.length === 0 || !liveSwarmAllowed) {
+      return;
+    }
+    const handle = mountOrbitalLayer(viewer, orbitalSatellites, birthYear);
+    // Cleanup is async on purpose: ramp alpha 1 → 0, then dispose. React
+    // doesn't await cleanup, which is what we want — the next mount (if any)
+    // can begin while the old layer is still finishing its fade.
+    return () => handle.fadeOutAndDispose(SWARM_FADE_OUT_MS);
+  }, [orbitalSatellites, birthYear, liveSwarmAllowed]);
 
   // When the user turns relics on (live mode only), fly closer to Earth
   // so LEO satellites are visible *and* their motion is perceptible. From

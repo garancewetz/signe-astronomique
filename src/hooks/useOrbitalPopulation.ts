@@ -146,8 +146,8 @@ function mergePopulations(
   starlink: OrbitalSat[],
 ): OrbitalSat[] {
   const byId = new Map<number, OrbitalSat>();
-  for (const sat of general) byId.set(sat.satrec.satnum, sat);
-  for (const sat of starlink) byId.set(sat.satrec.satnum, sat);
+  for (const sat of general) byId.set(Number(sat.satrec.satnum), sat);
+  for (const sat of starlink) byId.set(Number(sat.satrec.satnum), sat);
   return [...byId.values()].slice(0, MAX_DISPLAY);
 }
 
