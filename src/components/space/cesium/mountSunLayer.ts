@@ -12,25 +12,29 @@ import {
   raDecToEcef,
   raHoursToDegrees,
 } from '../../../utils/skyCoordinates';
+import type { IauConstellation } from '../../../utils/astroEngine';
 
 interface MountOptions {
-  /** Ascension droite du Soleil, en heures (convention astroEngine) */
+  /** Sun right-ascension in hours (astroEngine convention). */
   raHours: number;
-  /** Déclinaison du Soleil, en degrés */
+  /** Sun declination in degrees. */
   decDeg: number;
-  /** GMST en radians */
+  /** GMST in radians. */
   gmstRad: number;
-  /** Étiquette texte (le disque visible reste celui de `viewer.scene.sun`). */
+  /** IAU constellation the Sun is currently in. */
+  constellation: IauConstellation;
+  /** Render the textual label next to the disk. */
   showLabels?: boolean;
 }
 
 /**
- * Soleil à 1 UA dans la direction (RA, Dec) géocentrique apparente.
- * Le rendu du Soleil dans le ciel est entièrement celui de Cesium ; on
- * n’ajoute qu’une étiquette optionnelle à cette position pour le reading.
+ * Sun at 1 AU along its apparent geocentric (RA, Dec). The visible disk is
+ * Cesium's built-in `viewer.scene.sun`; we always add an entity at the same
+ * position so click-pick has a target. The point is fully transparent but
+ * generously sized so a user clicking the visible disk lands on it.
  */
 export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
-  const { raHours, decDeg, gmstRad, showLabels = false } = opts;
+  const { raHours, decDeg, gmstRad, constellation, showLabels = false } = opts;
 
   const position = raDecToEcef(
     raHoursToDegrees(raHours),
@@ -39,22 +43,35 @@ export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
     AU_KM * 1000,
   );
 
-  if (!showLabels) {
-    return () => {};
-  }
-
   const entity: Entity = viewer.entities.add({
     position,
-    label: {
-      text: '☀ Soleil',
-      font: "10px 'JetBrains Mono', monospace",
-      fillColor: Color.fromCssColorString('#fcd34d').withAlpha(0.9),
-      style: LabelStyle.FILL,
-      verticalOrigin: VerticalOrigin.CENTER,
-      horizontalOrigin: HorizontalOrigin.LEFT,
-      pixelOffset: new Cartesian2(12, 0),
+    point: {
+      pixelSize: 28,
+      color: Color.TRANSPARENT,
+      // Without this the proxy is depth-clipped behind the celestial sphere
+      // and the click-pick misses on certain camera angles.
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
     },
-    properties: { kind: 'sun', name: 'Soleil' },
+    ...(showLabels
+      ? {
+          label: {
+            text: '☀ Soleil',
+            font: "10px 'JetBrains Mono', monospace",
+            fillColor: Color.fromCssColorString('#fcd34d').withAlpha(0.9),
+            style: LabelStyle.FILL,
+            verticalOrigin: VerticalOrigin.CENTER,
+            horizontalOrigin: HorizontalOrigin.LEFT,
+            pixelOffset: new Cartesian2(12, 0),
+          },
+        }
+      : {}),
+    properties: {
+      kind: 'sun',
+      name: 'Soleil',
+      constellation,
+      raHours,
+      decDeg,
+    },
   });
 
   return () => {

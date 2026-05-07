@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useGeolocation } from '../hooks/useGeolocation';
 import { motion, useReducedMotion } from 'framer-motion';
-import { SpaceView, type SpaceViewHandle } from './space/SpaceView';
+import { useGeolocation } from '../hooks/useGeolocation';
+import { SpaceView, type SelectedBody, type SpaceViewHandle } from './space/SpaceView';
 import { HudFrame } from './HudFrame';
+import { BodyInfoHud } from './BodyInfoHud';
 import { LeftPanel } from './LeftPanel';
+import { LeftRail } from './LeftRail';
+import { RightRail, type RightRailKey } from './RightRail';
 import {
   CartePanel,
   DonneesPanel,
   FullReport,
   LecturePanel,
   ResumePanel,
-  type ReportPanelKey,
 } from './RightPanel';
 import { ControlConsole } from './ControlConsole';
 import { useCockpitAudio } from '../hooks/useCockpitAudio';
@@ -23,7 +25,6 @@ import {
 import { computeReading, type CelestialReading } from '../utils/astroEngine';
 import type { CityResult } from './CityAutocomplete';
 import { timezoneFromLatLon } from '../utils/timezone';
-import { Button, cn } from './ui';
 import { useOrbitalPopulation } from '../hooks/useOrbitalPopulation';
 
 const DEFAULT_CITY: CityResult = {
@@ -32,6 +33,12 @@ const DEFAULT_CITY: CityResult = {
   lon: 2.3522,
   timezone: timezoneFromLatLon(48.8566, 2.3522),
 };
+
+// Layout constants. The rail is fixed at 50 px; the docked panel slides
+// out adjacent to it. Canvas insets are computed from these so Cesium
+// recenters in the visible band when a panel opens — no camera math.
+const RAIL_PX = 50;
+const DOCK_WIDTH = 'min(20rem, calc(100vw - 50px - 1rem))';
 
 function formatInputDate(now: Date): string {
   const y = now.getFullYear();
@@ -46,26 +53,10 @@ function formatInputTime(now: Date): string {
   return `${hh}:${mm}`;
 }
 
-// Onglets droits empilés verticalement le long du bord. Les `tabTop`
-// donnent le centre vertical de chaque onglet (avec -translate-y-1/2),
-// répartis pour ne pas se chevaucher.
-const RIGHT_PANELS: {
-  key: ReportPanelKey;
-  label: string;
-  tabTop: string;
-}[] = [
-  { key: 'resume',   label: '◇ RÉSUMÉ',   tabTop: 'top-[18%]' },
-  { key: 'carte',    label: '✦ CARTE',    tabTop: 'top-[36%]' },
-  { key: 'lecture',  label: '✧ LECTURE',  tabTop: 'top-[54%]' },
-  { key: 'donnees',  label: '◈ DONNÉES',  tabTop: 'top-[72%]' },
-];
-
 export function Cockpit() {
   const [reading, setReading] = useState<CelestialReading | null>(null);
-  // Panel gauche ouvert par défaut : c'est le formulaire — l'utilisateur doit
-  // pouvoir saisir ses coordonnées immédiatement.
   const [leftOpen, setLeftOpen] = useState(true);
-  const [activeRight, setActiveRight] = useState<ReportPanelKey | null>(null);
+  const [activeRight, setActiveRight] = useState<RightRailKey | null>(null);
   const [exporting, setExporting] = useState(false);
   const [exportingView, setExportingView] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
@@ -73,6 +64,20 @@ export function Cockpit() {
   const [satellitesEnabled, setSatellitesEnabled] = useState(false);
   const [constellationOverlayEnabled, setConstellationOverlayEnabled] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
+  const [selectedBody, setSelectedBody] = useState<SelectedBody | null>(null);
+  const [depthViewActive, setDepthViewActive] = useState(false);
+  const [sideViewActive, setSideViewActive] = useState(false);
+
+  // Body selection drives the right rail: a non-null body auto-opens the
+  // body slot; clearing the selection collapses it (and closes the dock
+  // if it was showing the body panel).
+  const handleBodySelect = (body: SelectedBody | null) => {
+    setSelectedBody(body);
+    setDepthViewActive(false);
+    setSideViewActive(false);
+    if (body) setActiveRight('body');
+    else setActiveRight((prev) => (prev === 'body' ? null : prev));
+  };
 
   const {
     satellites: orbitalSatellites,
@@ -80,12 +85,8 @@ export function Cockpit() {
     retry: retryOrbital,
   } = useOrbitalPopulation(constellationOverlayEnabled);
 
-  // État du formulaire — vit dans Cockpit pour survivre à la fermeture du panel.
   const [date, setDate] = useState('1990-06-15');
   const [time, setTime] = useState('14:30');
-  // `userCity` becomes non-null once the user explicitly picks a city. While
-  // it's null, `city` is derived from geolocation (Paris as a final
-  // fallback) — pure derivation, no effect-based sync.
   const [userCity, setUserCity] = useState<CityResult | null>(null);
 
   const geolocation = useGeolocation();
@@ -117,9 +118,6 @@ export function Cockpit() {
 
   const handleJump = (r: CelestialReading) => {
     setReading(r);
-    // Après le JUMP : on ferme le formulaire (saisie terminée) et on
-    // ouvre la fiche RÉSUMÉ par défaut. Les autres fiches restent
-    // accessibles via leurs onglets respectifs.
     setLeftOpen(false);
     setActiveRight('resume');
   };
@@ -143,8 +141,8 @@ export function Cockpit() {
     else audio.start();
   };
 
-  const toggleRightPanel = (key: ReportPanelKey) => {
-    setActiveRight(prev => prev === key ? null : key);
+  const toggleRightPanel = (key: RightRailKey) => {
+    setActiveRight((prev) => (prev === key ? null : key));
   };
 
   const handleExport = async () => {
@@ -192,6 +190,15 @@ export function Cockpit() {
     else void el.requestFullscreen();
   };
 
+  // Canvas left/right inset: rail-only (50 px) when no panel is open,
+  // rail + dock when a side panel slides out. CSS transitions keep the
+  // canvas in step with the panel; Cesium's render loop picks up the
+  // resize automatically each frame.
+  const canvasInsetStyle = {
+    left: leftOpen ? `calc(${RAIL_PX}px + ${DOCK_WIDTH})` : `${RAIL_PX}px`,
+    right: activeRight ? `calc(${RAIL_PX}px + ${DOCK_WIDTH})` : `${RAIL_PX}px`,
+  };
+
   return (
     <div
       ref={cockpitRef}
@@ -204,7 +211,11 @@ export function Cockpit() {
       </a>
 
       {/* === VUE 3D — sélection de texte désactivée (navigation globe / capture) === */}
-      <div className="absolute inset-0 z-0 select-none touch-manipulation">
+      <div
+        className="absolute top-0 bottom-0 z-0 select-none touch-manipulation
+                   transition-[left,right] duration-300 ease-out"
+        style={canvasInsetStyle}
+      >
         <SpaceView
           ref={spaceViewRef}
           reading={reading}
@@ -215,6 +226,13 @@ export function Cockpit() {
           constellationMode="modern"
           liveLatitude={city.lat}
           liveLongitude={city.lon}
+          markerLatitude={reading?.input.latitude ?? city.lat}
+          markerLongitude={reading?.input.longitude ?? city.lon}
+          markerLabel={reading?.input.placeLabel ?? city.label}
+          selectedBody={selectedBody}
+          onBodySelect={handleBodySelect}
+          depthViewActive={depthViewActive}
+          sideViewActive={sideViewActive}
         />
       </div>
 
@@ -229,15 +247,20 @@ export function Cockpit() {
         />
       </div>
 
-      {/* === PANEL GAUCHE — formulaire natal (onglet intégré qui dépasse) === */}
-      <SidePanel
-        side="left"
-        open={leftOpen}
-        onToggle={() => setLeftOpen(v => !v)}
-        label="✦ COORDONNÉES"
-        panelId="panel-coordonnees"
-        widthClass="w-[min(22rem,calc(100vw-2.75rem))] sm:w-88"
-      >
+      {/* === RAILS — colonnes fixes 50 px === */}
+      <LeftRail
+        coordonneesOpen={leftOpen}
+        onToggleCoordonnees={() => setLeftOpen((v) => !v)}
+        onJumpNow={handleJumpNow}
+      />
+      <RightRail
+        activeKey={activeRight}
+        onToggle={toggleRightPanel}
+        hasSelectedBody={!!selectedBody}
+      />
+
+      {/* === DOCKED PANELS — slide out adjacent to the rails === */}
+      <DockedPanel side="left" open={leftOpen} panelId="panel-coordonnees">
         <LeftPanel
           date={date}
           time={time}
@@ -249,39 +272,41 @@ export function Cockpit() {
           onBlip={audio.blip}
           onClose={() => setLeftOpen(false)}
         />
-      </SidePanel>
+      </DockedPanel>
 
-      {/* === PANELS DROITS — fiches de rapport empilées (un seul ouvert à la fois) === */}
-      {RIGHT_PANELS.map(({ key, label, tabTop }) => (
-        <SidePanel
-          key={key}
-          side="right"
-          open={activeRight === key}
-          tabVisible={!activeRight || activeRight === key}
-          onToggle={() => toggleRightPanel(key)}
-          label={label}
-          panelId={`panel-${key}`}
-          widthClass="w-[min(28rem,calc(100vw-2.5rem))] sm:w-[28rem]"
-          tabTopClass={tabTop}
-        >
-          {key === 'resume' && (
-            <ResumePanel reading={reading} onClose={() => setActiveRight(null)} />
-          )}
-          {key === 'carte' && (
-            <CartePanel reading={reading} onClose={() => setActiveRight(null)} />
-          )}
-          {key === 'lecture' && (
-            <LecturePanel
-              reading={reading}
-              satellitesEnabled={satellitesEnabled}
-              onClose={() => setActiveRight(null)}
-            />
-          )}
-          {key === 'donnees' && (
-            <DonneesPanel reading={reading} onClose={() => setActiveRight(null)} />
-          )}
-        </SidePanel>
-      ))}
+      <DockedPanel
+        side="right"
+        open={activeRight !== null}
+        panelId={activeRight ? `panel-${activeRight}` : 'panel-right'}
+      >
+        {activeRight === 'resume' && (
+          <ResumePanel reading={reading} onClose={() => setActiveRight(null)} />
+        )}
+        {activeRight === 'carte' && (
+          <CartePanel reading={reading} onClose={() => setActiveRight(null)} />
+        )}
+        {activeRight === 'lecture' && (
+          <LecturePanel
+            reading={reading}
+            satellitesEnabled={satellitesEnabled}
+            onClose={() => setActiveRight(null)}
+          />
+        )}
+        {activeRight === 'donnees' && (
+          <DonneesPanel reading={reading} onClose={() => setActiveRight(null)} />
+        )}
+        {activeRight === 'body' && selectedBody && (
+          <BodyInfoHud
+            key={bodyInfoKey(selectedBody)}
+            selected={selectedBody}
+            depthViewActive={depthViewActive}
+            onToggleDepthView={() => setDepthViewActive((v) => !v)}
+            sideViewActive={sideViewActive}
+            onToggleSideView={() => setSideViewActive((v) => !v)}
+            onClose={() => handleBodySelect(null)}
+          />
+        )}
+      </DockedPanel>
 
       {/* === RAPPORT COMPLET (hors-écran) — source de l'export PNG === */}
       {reading && (
@@ -315,7 +340,6 @@ export function Cockpit() {
           onToggleSatellites={() => setSatellitesEnabled(v => !v)}
           constellationOverlayEnabled={constellationOverlayEnabled}
           onToggleConstellationOverlay={() => {
-            // After an error, treat the click as a retry rather than a toggle.
             if (orbitalStatus === 'error') {
               retryOrbital();
               if (!constellationOverlayEnabled) setConstellationOverlayEnabled(true);
@@ -327,7 +351,6 @@ export function Cockpit() {
           onFlySun={() => spaceViewRef.current?.flyToSun()}
           onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
           onFlyEarth={() => spaceViewRef.current?.flyToEarth()}
-          onJumpNow={handleJumpNow}
           onExportView={handleExportView}
           exportingView={exportingView}
           onExportReport={handleExport}
@@ -341,92 +364,63 @@ export function Cockpit() {
   );
 }
 
+// Stable key per selection so React tears down and re-mounts the HUD when
+// the user picks a different body — avoids stale local state inside the panel.
+function bodyInfoKey(body: SelectedBody): string {
+  switch (body.kind) {
+    case 'star':
+      return `star-${body.constellationAbbr}-${body.starIndex}`;
+    case 'sun':
+      return 'sun';
+    case 'moon':
+      return 'moon';
+    case 'planet':
+      return `planet-${body.id}`;
+  }
+}
+
 /**
- * Panel latéral (gauche ou droit) avec onglet intégré qui dépasse de la
- * bordure intérieure du panel. L'onglet suit le panel : ouvert, il dépasse
- * vers le centre de l'écran ; fermé, il reste collé au bord de l'écran et
- * sert de poignée pour rouvrir. Pas de bouton flottant qui gêne la vue.
- *
- * `tabTopClass` — position verticale de l'onglet le long du panel ; sert
- * à empiler plusieurs panels du même côté sans que leurs onglets se
- * chevauchent (ex. fiches de rapport à droite).
+ * Docked side panel that slides out from inside the rail. Owns the
+ * surrounding chrome (background, border, blur) so panel content
+ * components stay focused on their own structure. Width is clamped on
+ * narrow viewports so the canvas always keeps a visible strip.
  */
-function SidePanel({
-  side, open, onToggle, label, panelId, widthClass, autoHeight, tabVisible = true,
-  tabTopClass = 'top-1/2',
+function DockedPanel({
+  side,
+  open,
+  panelId,
   children,
 }: {
   side: 'left' | 'right';
   open: boolean;
-  onToggle: () => void;
-  label: string;
   panelId: string;
-  widthClass: string;
-  autoHeight?: boolean;
-  tabVisible?: boolean;
-  tabTopClass?: string;
   children: React.ReactNode;
 }) {
   const isLeft = side === 'left';
   const reduceMotion = useReducedMotion();
-  // Quand fermé, on translate le panel hors-écran. L'onglet, positionné
-  // hors du conteneur (à `left-full` pour le gauche, `right-full` pour le
-  // droit), reste alors visible au bord de l'écran.
   const closedX = isLeft ? '-100%' : '100%';
 
   return (
     <motion.aside
       id={panelId}
       initial={false}
-      animate={{ x: open ? 0 : closedX }}
+      animate={{ x: open ? '0%' : closedX }}
       transition={
-        reduceMotion
-          ? { duration: 0 }
-          : { type: 'spring', stiffness: 180, damping: 30 }
+        reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 220, damping: 32 }
       }
-      className={`absolute top-11 z-20 ${widthClass}
-                  ${autoHeight
-                    ? 'max-h-[calc(100dvh-2.75rem-6rem-env(safe-area-inset-bottom,0))]'
-                    : 'bottom-[calc(6rem+env(safe-area-inset-bottom,0))]'}
-                  ${isLeft ? 'left-0' : 'right-0'}
+      aria-hidden={!open}
+      className={`absolute top-11 z-25
+                  bottom-[calc(6rem+env(safe-area-inset-bottom,0))]
                   bg-surface-raised/95 backdrop-blur-2xl
                   border border-border-control
                   ${isLeft ? 'rounded-r-sm border-l-0' : 'rounded-l-sm border-r-0'}
                   shadow-cockpit-panel`}
+      style={{
+        width: DOCK_WIDTH,
+        [isLeft ? 'left' : 'right']: `${RAIL_PX}px`,
+      }}
     >
-      {/* Onglet qui dépasse du bord intérieur. Positionné hors de la
-          bounding-box du panel pour rester visible une fois le panel fermé. */}
-      <Button
-        onClick={onToggle}
-        variant={open ? 'solid' : 'outline'}
-        size="sm"
-        className={cn(
-          `absolute ${tabTopClass} -translate-y-1/2`,
-          isLeft ? 'left-full' : 'right-full',
-          'h-auto min-h-11 min-w-10 px-1.5 py-3.5 sm:min-h-0 sm:min-w-0',
-          isLeft ? 'rounded-r-sm border-l-0' : 'rounded-l-sm border-r-0',
-          'backdrop-blur-2xl text-[11.5px] tracking-widest font-medium transition-[opacity,colors] duration-200',
-          tabVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
-          open
-            ? 'border-accent-label/55 bg-violet-500/20 text-accent-title'
-            : 'border-border-control bg-surface-raised/95 text-accent-label/85 hover:text-accent-title hover:bg-violet-500/15 hover:border-accent-label/45',
-        )}
-        style={{ writingMode: 'vertical-rl' as const }}
-        aria-label={`${open ? 'Fermer' : 'Ouvrir'} ${label}`}
-        aria-expanded={open}
-        aria-controls={panelId}
-      >
-        <span style={{ transform: isLeft ? 'rotate(180deg)' : 'rotate(0deg)', display: 'inline-block' }}>
-          {label}
-        </span>
-      </Button>
-
-      <div
-        className={`${autoHeight ? 'max-h-full' : 'h-full'} min-h-0 overflow-hidden flex flex-col`}
-        aria-hidden={!open}
-      >
-        {children}
-      </div>
+      <div className="h-full min-h-0 overflow-hidden flex flex-col">{children}</div>
     </motion.aside>
   );
 }

@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { PLANETS_META } from '../utils/astroEngine';
 import { ExploreSpacePopover, InfoCircleIcon } from './ExploreSpacePopover';
 import { SATELLITE_RELICS } from '../data/satellitesDB';
 import { ORBITAL_CATEGORIES } from '../data/orbitalCategories';
+import { TooltipWrap } from './Tooltip';
 import type { OrbitalStatus } from '../hooks/useOrbitalPopulation';
 import {
-  Clock,
   Download,
   FileText,
   Globe2,
@@ -40,7 +39,6 @@ interface Props {
   onFlySun: () => void;
   onFlyMoon: () => void;
   onFlyEarth: () => void;
-  onJumpNow: () => void;
   onExportView: () => void;
   exportingView: boolean;
   onExportReport: () => void;
@@ -57,7 +55,7 @@ export function ControlConsole({
   satellitesEnabled, onToggleSatellites,
   constellationOverlayEnabled, onToggleConstellationOverlay,
   orbitalStatus,
-  onFlySun, onFlyMoon, onFlyEarth, onJumpNow,
+  onFlySun, onFlyMoon, onFlyEarth,
   onExportView,
   exportingView,
   onExportReport,
@@ -94,7 +92,6 @@ export function ControlConsole({
             onClick={onFlySun}
             tooltip="Centre la caméra sur le Soleil"
             ariaLabel="Centrer la caméra sur le Soleil"
-            label="SOLEIL"
           >
             <span className="text-cockpit-glyph leading-none text-glyph-sun">☀</span>
           </IconButton>
@@ -102,7 +99,6 @@ export function ControlConsole({
             onClick={onFlyMoon}
             tooltip="Centre la caméra sur la Lune"
             ariaLabel="Centrer la caméra sur la Lune"
-            label="LUNE"
           >
             <span className="text-cockpit-glyph leading-none text-glyph-moon">☾</span>
           </IconButton>
@@ -110,24 +106,10 @@ export function ControlConsole({
             onClick={onFlyEarth}
             tooltip="Vue orbitale par défaut — équateur, Terre centrée"
             ariaLabel="Revenir à la vue orbitale par défaut"
-            label="TERRE"
           >
             <span className="text-cockpit-glyph leading-none text-glyph-earth">⊕</span>
           </IconButton>
         </Cluster>
-
-        <Divider />
-
-        {/* AUJOURD'HUI — primary CTA, visually elevated */}
-        <IconButton
-          variant="primary"
-          onClick={onJumpNow}
-          tooltip="Calcule et affiche le ciel à l'instant présent"
-          ariaLabel="Calculer le ciel d'aujourd'hui"
-          label="AUJOURD’HUI"
-        >
-          <NowIcon />
-        </IconButton>
 
         <Divider />
 
@@ -139,7 +121,6 @@ export function ControlConsole({
             onClick={onToggleGuides}
             tooltip="Repères du ciel : axe terrestre, équateur céleste, écliptique"
             ariaLabel="Afficher ou masquer les repères du ciel"
-            label="REPÈRES"
           >
             <GuidesIcon />
           </IconButton>
@@ -149,7 +130,6 @@ export function ControlConsole({
             onClick={onToggleBodyLabels}
             tooltip="Affiche les noms du Soleil, de la Lune, des planètes et des constellations"
             ariaLabel="Afficher ou masquer les noms des astres sur la sphère"
-            label="NOMS"
           >
             <LabelsIcon />
           </IconButton>
@@ -353,97 +333,6 @@ function IconButton({
   );
 
   return <TooltipWrap text={tooltip}>{button}</TooltipWrap>;
-}
-
-/* ───── Tooltip — portail body + fixed (évite le clip overflow-x de la barre + pas de 2ᵉ flex item) ───── */
-
-function TooltipWrap({
-  children,
-  text,
-}: {
-  children: React.ReactNode;
-  text: string;
-}) {
-  const wrapRef = useRef<HTMLSpanElement>(null);
-  const timeoutRef = useRef<number | null>(null);
-  const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-
-  const updatePos = () => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setPos({ left: rect.left + rect.width / 2, top: rect.top - 8 });
-  };
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    updatePos();
-    const onMove = () => updatePos();
-    window.addEventListener('scroll', onMove, true);
-    window.addEventListener('resize', onMove);
-    return () => {
-      window.removeEventListener('scroll', onMove, true);
-      window.removeEventListener('resize', onMove);
-    };
-  }, [open]);
-
-  const showTooltip = () => {
-    if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => {
-      updatePos();
-      setOpen(true);
-    }, 250);
-  };
-
-  const hideTooltip = () => {
-    if (timeoutRef.current !== null) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    setOpen(false);
-    setPos(null);
-  };
-
-  const tooltip =
-    open &&
-    pos &&
-    typeof document !== 'undefined' &&
-    createPortal(
-      <span
-        aria-hidden="true"
-        style={{ left: pos.left, top: pos.top }}
-        className="pointer-events-none fixed z-100 -translate-x-1/2 -translate-y-full
-                   whitespace-normal max-w-[min(18rem,calc(100vw-2rem))] text-balance text-center
-                   bg-surface-raised/95 backdrop-blur-md
-                   border border-border-hud-strong rounded-md shadow-cockpit-modal
-                   px-2.5 py-1.5 text-cockpit-xs tracking-cockpit leading-snug
-                   text-slate-200"
-      >
-        {text}
-      </span>,
-      document.body,
-    );
-
-  return (
-    <span
-      ref={wrapRef}
-      className="relative inline-flex shrink-0"
-      onMouseEnter={showTooltip}
-      onMouseLeave={hideTooltip}
-      onFocus={showTooltip}
-      onBlur={hideTooltip}
-    >
-      {children}
-      {tooltip}
-    </span>
-  );
 }
 
 /* ─────────────────────────── légende (popover) ─────────────────────────── */
@@ -813,8 +702,4 @@ function SpeakerOn() {
 
 function SpeakerOff() {
   return <VolumeX className={iconUi} strokeWidth={1.35} aria-hidden />;
-}
-
-function NowIcon() {
-  return <Clock className={iconUi} strokeWidth={1.35} aria-hidden />;
 }

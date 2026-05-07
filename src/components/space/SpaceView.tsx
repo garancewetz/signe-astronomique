@@ -20,7 +20,9 @@ import 'cesium/Build/Cesium/Widgets/widgets.css';
 import {
   computeReading,
   type CelestialReading,
+  type IauConstellation,
 } from '../../utils/astroEngine';
+import type { PlanetId } from '../../utils/planetEngine';
 import { gmstRadians } from '../../utils/skyCoordinates';
 
 import { mountStarsLayer } from './cesium/mountStarsLayer';
@@ -30,6 +32,18 @@ import { mountPlanetsLayer } from './cesium/mountPlanetsLayer';
 import { mountReferenceLines } from './cesium/mountReferenceLines';
 import { mountSatellitesLayer } from './cesium/mountSatellitesLayer';
 import { mountOrbitalLayer } from './cesium/mountOrbitalLayer';
+import { mountDepthLines } from './cesium/mountDepthLines';
+import { mountDistanceRuler } from './cesium/mountDistanceRuler';
+import { mountExplodedConstellation } from './cesium/mountExplodedConstellation';
+import { mountSelectedConstellation } from './cesium/mountSelectedConstellation';
+import { mountObserverMarker } from './cesium/mountObserverMarker';
+import {
+  captureCameraSnapshot,
+  flyToCameraSnapshot,
+  flyToSideView,
+  type CameraSnapshot,
+} from './cesium/sideView';
+import { useBodyPicker } from './cesium/useBodyPicker';
 import {
   flyToOrbital,
   flyToCelestialDirection,
@@ -51,6 +65,57 @@ export interface SpaceViewHandle {
   flyToMoon: () => void;
   /** Replace la caméra en orbite équatoriale par défaut (Terre centrée). */
   flyToEarth: () => void;
+}
+
+/**
+ * Discriminated union of every clickable body in the scene. Stars carry
+ * only a reference into the static catalog; sun/moon/planets carry a
+ * snapshot of their dynamic state (constellation, distance, phase…) taken
+ * at click time.
+ */
+export type SelectedBody =
+  | SelectedStar
+  | SelectedSun
+  | SelectedMoon
+  | SelectedPlanet;
+
+export interface SelectedStar {
+  kind: 'star';
+  /** IAU 3-letter constellation abbreviation (e.g. 'Ori'). */
+  constellationAbbr: string;
+  /** Index of the star inside the catalog's `stars` array. */
+  starIndex: number;
+}
+
+export interface SelectedSun {
+  kind: 'sun';
+  name: string;
+  constellation: IauConstellation;
+  raHours: number;
+  decDeg: number;
+}
+
+export interface SelectedMoon {
+  kind: 'moon';
+  name: string;
+  constellation: IauConstellation;
+  raHours: number;
+  decDeg: number;
+  distanceKm: number;
+  illumination: number;
+  phaseName: string;
+}
+
+export interface SelectedPlanet {
+  kind: 'planet';
+  id: PlanetId;
+  name: string;
+  glyph: string;
+  color: string;
+  constellation: IauConstellation;
+  raHours: number;
+  decDeg: number;
+  distanceAU: number;
 }
 
 interface Props {
@@ -80,6 +145,29 @@ interface Props {
   liveLatitude: number;
   /** Observer longitude (see liveLatitude). */
   liveLongitude: number;
+  /**
+   * "You are here" marker on the globe. Birth location when a natal reading
+   * is set, otherwise the live observer position (form city → navigator
+   * geolocation → fallback). Null hides the marker.
+   */
+  markerLatitude: number | null;
+  markerLongitude: number | null;
+  markerLabel?: string;
+  /** Currently selected body (null = none). */
+  selectedBody: SelectedBody | null;
+  /** Fires when the user clicks a body or empty space (deselects). */
+  onBodySelect: (body: SelectedBody | null) => void;
+  /**
+   * Renders the Earth→star vectors for the selected constellation.
+   * No-op unless a star is selected.
+   */
+  depthViewActive: boolean;
+  /**
+   * Side View: flies the camera 90° around the constellation, swaps in
+   * the exploded shell + distance ruler, and dims the rest of the sky.
+   * No-op unless a star is selected.
+   */
+  sideViewActive: boolean;
   /** Référence impérative pour le capture-canvas. */
   ref?: Ref<SpaceViewHandle>;
 }
@@ -120,6 +208,13 @@ export function SpaceView({
   constellationMode,
   liveLatitude,
   liveLongitude,
+  markerLatitude,
+  markerLongitude,
+  markerLabel,
+  selectedBody,
+  onBodySelect,
+  depthViewActive,
+  sideViewActive,
   ref,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -130,6 +225,12 @@ export function SpaceView({
   // commandes caméra impératives (boutons ☀ ☾ ⊕ de la console).
   const activeReadingRef = useRef<CelestialReading | null>(null);
   const activeGmstRef = useRef<number>(0);
+  // Mirror of the `sideViewActive` prop for read-access from the keyboard
+  // tick (which is set up once on mount and so cannot close over the prop).
+  const sideViewActiveRef = useRef(false);
+  useEffect(() => {
+    sideViewActiveRef.current = sideViewActive;
+  }, [sideViewActive]);
 
   useImperativeHandle(
     ref,
@@ -252,6 +353,11 @@ export function SpaceView({
     // d'après viewer.clock.currentTime (mis à active.input.date plus bas),
     // donc le terminator jour/nuit est correct pour la date de naissance.
     viewer.scene.globe.enableLighting = true;
+    // Shadow maps: Earth-on-satellite occlusion. Does not paint lunar craters
+    // (those would need a normal map); the moon's terminator comes from its
+    // own Lambert shader in mountMoonLayer.
+    viewer.shadows = true;
+    viewer.scene.globe.shadows = 1; // ShadowMode.ENABLED
     const cockpitBg =
       typeof document !== 'undefined'
         ? getComputedStyle(document.documentElement).getPropertyValue('--color-background').trim() ||
@@ -259,13 +365,14 @@ export function SpaceView({
         : '#060210';
     viewer.scene.backgroundColor = Color.fromCssColorString(cockpitBg);
 
-    // Frustum far : la sphère céleste est à 100 AU (~1.5e13 m), les
-    // planètes externes peuvent y être ~50 AU. On pousse le far à 200 AU
-    // (3e13 m) pour garder une marge. Le logarithmicDepthBuffer (activé
-    // par défaut en WebGL2) garantit la précision de profondeur sur cette
-    // dynamique (~1 m près du globe, comparable près du far).
+    // Far frustum: the side-view feature places stars on an expanded
+    // shell up to ~800 AU (vs 100 AU in normal mode), and the off-axis
+    // camera positions add ~100 AU more. We set the far plane to 1500 AU
+    // unconditionally so the universe stays continuous when toggling
+    // perspectives — Cesium's logarithmic depth buffer (WebGL2 default)
+    // keeps near-globe precision intact across this range.
     if (viewer.camera.frustum instanceof PerspectiveFrustum) {
-      viewer.camera.frustum.far = 200 * AU_KM * 1000;
+      viewer.camera.frustum.far = 1500 * AU_KM * 1000;
     }
     viewer.cesiumWidget.creditContainer.setAttribute(
       'style',
@@ -349,6 +456,36 @@ export function SpaceView({
     const tickCamera = () => {
       if (pressedKeys.size === 0) return;
       const camera = viewer.camera;
+      const dist = Cartesian3.magnitude(camera.position);
+
+      // Side View has the camera parked far from Earth, looking sideways
+      // along a constellation timeline. Earth-centric orbit/zoom (below)
+      // would swing the camera in a huge arc and lurch on zoom — useless
+      // for inspecting a diagram. Switch to camera-local pan + view-axis
+      // zoom, both scaled to current distance so steps stay perceptible.
+      if (sideViewActiveRef.current) {
+        const panStep = dist * 0.015;
+        const zoomStep = dist * 0.02;
+        if (pressedKeys.has('ArrowLeft'))  camera.moveLeft(panStep);
+        if (pressedKeys.has('ArrowRight')) camera.moveRight(panStep);
+        if (pressedKeys.has('ArrowUp'))    camera.moveUp(panStep);
+        if (pressedKeys.has('ArrowDown'))  camera.moveDown(panStep);
+        // A/E heading rotation is intentionally skipped here: spinning
+        // the camera around its own up vector would tilt the timeline
+        // off horizontal and break the diagram framing.
+        if (pressedKeys.has('+') || pressedKeys.has('=') ||
+            pressedKeys.has('z') || pressedKeys.has('Z') ||
+            pressedKeys.has('PageUp')) {
+          camera.zoomIn(zoomStep);
+        }
+        if (pressedKeys.has('-') || pressedKeys.has('_') ||
+            pressedKeys.has('s') || pressedKeys.has('S') ||
+            pressedKeys.has('PageDown')) {
+          camera.zoomOut(zoomStep);
+        }
+        return;
+      }
+
       // Vitesses calibrées pour un mouvement perceptible sans être brutal,
       // proportionnelles au pas (~16 ms à 60 fps mais on s'en moque, Cesium
       // tourne à fréquence variable — les valeurs sont par frame).
@@ -365,7 +502,6 @@ export function SpaceView({
       if (pressedKeys.has('a') || pressedKeys.has('A')) camera.lookLeft(lookStep);
       if (pressedKeys.has('e') || pressedKeys.has('E')) camera.lookRight(lookStep);
       // Zoom : on rapproche/éloigne en bornant la distance au centre Terre.
-      const dist = Cartesian3.magnitude(camera.position);
       if (pressedKeys.has('+') || pressedKeys.has('=') ||
           pressedKeys.has('z') || pressedKeys.has('Z') ||
           pressedKeys.has('PageUp')) {
@@ -429,6 +565,11 @@ export function SpaceView({
         gmstRad,
         highlight: reading?.trueConstellation ?? null,
         showConstellationArt: showBodyLabels,
+        // Side View fades the rest of the sky to ~5 % so the timeline
+        // reads as a clean diagram rather than a starfield. The
+        // constellation pattern lines (drawn by the exploded layer with
+        // a glow material) still pop above this floor.
+        dimFactor: sideViewActive ? 0.05 : 1.0,
       }),
     );
     cleanupsRef.current.push(
@@ -436,6 +577,7 @@ export function SpaceView({
         raHours: active.sunRA,
         decDeg: active.sunDec,
         gmstRad,
+        constellation: active.trueConstellation,
         showLabels: showBodyLabels,
       }),
     );
@@ -445,6 +587,10 @@ export function SpaceView({
         decDeg: active.moon.dec,
         distanceKm: active.moon.distanceKm,
         illumination: active.moon.illumination,
+        phaseName: active.moon.phaseName,
+        constellation: active.moon.constellation,
+        sunRaHours: active.sunRA,
+        sunDecDeg: active.sunDec,
         gmstRad,
         showLabels: showBodyLabels,
       }),
@@ -483,6 +629,7 @@ export function SpaceView({
     liveReading,
     showGuides,
     showBodyLabels,
+    sideViewActive,
   ]);
 
   // Relics layer: kept on its own effect so it doesn't re-mount on every
@@ -545,6 +692,119 @@ export function SpaceView({
       flyToRelicsView(viewer);
     }
   }, [showSatellites, reading]);
+
+  // Observer marker: pinned to the globe surface at the natal birth
+  // location (or live observer position). Independent effect so changing
+  // the marker doesn't re-mount the sky.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (
+      !viewer ||
+      markerLatitude == null ||
+      markerLongitude == null
+    ) {
+      return;
+    }
+    return mountObserverMarker(viewer, {
+      latitude: markerLatitude,
+      longitude: markerLongitude,
+      label: markerLabel,
+    });
+  }, [markerLatitude, markerLongitude, markerLabel]);
+
+  // Click-pick installed once; emits a SelectedBody (or null) on click.
+  useBodyPicker(viewerRef, onBodySelect);
+
+  // Constellation overlay + depth lines only make sense when a star is
+  // selected — every other body kind leaves them off. Pulled out here so
+  // the two effects below stay readable.
+  const selectedStar = selectedBody?.kind === 'star' ? selectedBody : null;
+
+  // Bright pattern overlay for the user-selected constellation. Decoupled
+  // from the main remount effect so changing selection does not re-mount
+  // stars/sun/moon/planets.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !selectedStar) return;
+    const active = reading ?? liveReading;
+    const gmstRad = gmstRadians(active.input.date);
+    const cleanup = mountSelectedConstellation(viewer, {
+      constellationAbbr: selectedStar.constellationAbbr,
+      gmstRad,
+    });
+    return cleanup;
+  }, [selectedStar, reading, liveReading]);
+
+  // Depth view: Earth→star vectors for the selected constellation. Uses
+  // the expanded shell when Side View is active so the rays land on the
+  // exploded star positions instead of the compact log shell.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !selectedStar || !depthViewActive) return;
+    const active = reading ?? liveReading;
+    const gmstRad = gmstRadians(active.input.date);
+    const cleanup = mountDepthLines(viewer, {
+      constellationAbbr: selectedStar.constellationAbbr,
+      gmstRad,
+      useExpandedShell: sideViewActive,
+    });
+    return cleanup;
+  }, [selectedStar, depthViewActive, sideViewActive, reading, liveReading]);
+
+  // Exploded constellation: re-renders the selected stars on the [50, 800]
+  // AU shell with depth tint and glow lines. Mounted only in Side View.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !selectedStar || !sideViewActive) return;
+    const active = reading ?? liveReading;
+    const gmstRad = gmstRadians(active.input.date);
+    const cleanup = mountExplodedConstellation(viewer, {
+      constellationAbbr: selectedStar.constellationAbbr,
+      gmstRad,
+    });
+    return cleanup;
+  }, [selectedStar, sideViewActive, reading, liveReading]);
+
+  // Distance ruler along the Earth→constellation axis with calibrated
+  // 100 ly ticks. Mounted only in Side View.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !selectedStar || !sideViewActive) return;
+    const active = reading ?? liveReading;
+    const gmstRad = gmstRadians(active.input.date);
+    const cleanup = mountDistanceRuler(viewer, {
+      constellationAbbr: selectedStar.constellationAbbr,
+      gmstRad,
+    });
+    return cleanup;
+  }, [selectedStar, sideViewActive, reading, liveReading]);
+
+  // Camera transition. We snapshot the current camera frame on the
+  // false→true edge, fly to the side perspective, and fly back to the
+  // snapshot on the true→false edge. The ref-tracked previous-state
+  // pattern is used so the effect can detect edges without re-running on
+  // unrelated re-renders (date ticks, selection changes, etc.).
+  const wasSideViewActiveRef = useRef(false);
+  const earthCameraSnapshotRef = useRef<CameraSnapshot | null>(null);
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    const previous = wasSideViewActiveRef.current;
+    wasSideViewActiveRef.current = sideViewActive;
+
+    if (!previous && sideViewActive && selectedStar) {
+      earthCameraSnapshotRef.current = captureCameraSnapshot(viewer);
+      const active = reading ?? liveReading;
+      flyToSideView(
+        viewer,
+        selectedStar.constellationAbbr,
+        gmstRadians(active.input.date),
+      );
+    } else if (previous && !sideViewActive && earthCameraSnapshotRef.current) {
+      flyToCameraSnapshot(viewer, earthCameraSnapshotRef.current);
+      earthCameraSnapshotRef.current = null;
+    }
+  }, [sideViewActive, selectedStar, reading, liveReading]);
 
   return (
     <div

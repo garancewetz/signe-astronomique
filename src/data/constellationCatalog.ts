@@ -10,9 +10,11 @@ export interface CatalogStar {
   dec: number;
   /** Magnitude apparente V-band */
   mag: number;
+  /** Distance à la Terre en années-lumière (Hipparcos, approximative) */
+  distance_ly: number;
 }
 
-interface CatalogConstellation {
+export interface CatalogConstellation {
   name: string;
   abbreviation: string;
   stars: CatalogStar[];
@@ -20,6 +22,15 @@ interface CatalogConstellation {
 }
 
 export const CONSTELLATION_CATALOG: CatalogConstellation[] = rawCatalog as CatalogConstellation[];
+
+/** Lookup constellation by IAU 3-letter abbreviation. */
+export function findConstellation(
+  abbreviation: string,
+): CatalogConstellation | null {
+  return (
+    CONSTELLATION_CATALOG.find((c) => c.abbreviation === abbreviation) ?? null
+  );
+}
 
 // ─── Mapping abbréviation IAU 3-lettres → IauConstellation ──────────────────
 // Seules les 13 zodiacales sont surlignées (lignes brillantes + label).

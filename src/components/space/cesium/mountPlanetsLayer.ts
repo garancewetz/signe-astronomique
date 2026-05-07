@@ -84,7 +84,12 @@ export function mountPlanetsLayer(viewer: Viewer, opts: MountOptions): () => voi
           kind: 'planet',
           id: body.id,
           name: body.name,
+          glyph: body.glyph,
+          color: body.color,
           constellation: body.constellation,
+          raHours: body.ra,
+          decDeg: body.dec,
+          distanceAU: body.distance,
         },
       }),
     );

@@ -68,11 +68,72 @@ export const raHoursToDegrees = (raHours: number): number => raHours * 15;
 export const AU_KM = 149_597_870.7;
 
 /**
- * Rayon de la sphère céleste où on projette les étoiles (km).
- * = 100 AU, soit deux fois plus loin que Pluton à son aphélie. Cette distance
- * met les étoiles **derrière** tous les corps du système solaire — l'ordre
- * des distances reste donc cohérent (Lune < Soleil < planètes < étoiles) et
- * le depth-test Cesium peut occulter ce qui doit l'être (Terre devant, etc.)
- * sans qu'on ait à truquer l'ordre de rendu.
+ * Radius of the celestial sphere onto which we project the sky (km).
+ * = 100 AU, twice Pluto's aphelion. This puts every projected sky element
+ * **behind** every solar-system body — the depth ordering Moon < Sun <
+ * planets < celestial sphere stays correct, and Cesium's depth test handles
+ * occlusion (Earth in front, etc.) without us having to fake the order.
+ *
+ * Still used by the reference lines (celestial equator, ecliptic) and by
+ * the projected Sun/Moon directions. Catalog stars now live in a
+ * logarithmic shell around this sphere (see starShellRadiusM).
  */
 export const CELESTIAL_SPHERE_KM = 100 * AU_KM;
+
+// ─── Log-compressed star shell ──────────────────────────────────────────────
+// We cannot place stars at their real distances (4–2500 ly = 250 000–1.6e8
+// AU) without blowing past the camera frustum (currently capped at 200 AU).
+// Instead we map them into a thin shell [STAR_SHELL_INNER, STAR_SHELL_OUTER]
+// AU around the celestial sphere via a logarithmic interpolation on the
+// light-year value. Effect: visible parallax when the camera orbits, without
+// breaking the planets < stars depth ordering. The numbers shown in the UI
+// stay the *real* light-years — the shell is purely a rendering artifice.
+const STAR_SHELL_INNER_AU = 95;
+const STAR_SHELL_OUTER_AU = 110;
+const STAR_SHELL_MIN_LY = 4;
+const STAR_SHELL_MAX_LY = 3000;
+const STAR_SHELL_LOG_MIN = Math.log10(STAR_SHELL_MIN_LY);
+const STAR_SHELL_LOG_RANGE =
+  Math.log10(STAR_SHELL_MAX_LY) - STAR_SHELL_LOG_MIN;
+
+/**
+ * Converts a distance in light-years to the radius (meters) at which the
+ * star is placed in the rendering shell. Logarithmic interpolation:
+ *
+ *   4 ly    → 95 AU
+ *   30 ly   → ~99 AU
+ *   300 ly  → ~106 AU
+ *   3000 ly → 110 AU
+ *
+ * Values outside [4, 3000] ly are clamped (very few stars: Proxima Centauri
+ * on the close side, Deneb-class supergiants on the far side).
+ */
+export function starShellRadiusM(distanceLy: number): number {
+  const clamped = Math.max(
+    STAR_SHELL_MIN_LY,
+    Math.min(STAR_SHELL_MAX_LY, distanceLy),
+  );
+  const t = (Math.log10(clamped) - STAR_SHELL_LOG_MIN) / STAR_SHELL_LOG_RANGE;
+  const radiusAU =
+    STAR_SHELL_INNER_AU + t * (STAR_SHELL_OUTER_AU - STAR_SHELL_INNER_AU);
+  return radiusAU * AU_KM * 1000;
+}
+
+// Expanded shell used by the Side View feature. Same logarithmic mapping
+// over [4, 3000] ly, but stretched across [50, 800] AU so the depth spread
+// becomes visually striking when seen from the side. This breaks the
+// planets < stars depth ordering, so it must only be applied to the
+// selected constellation — never to the global stars layer.
+const SIDE_SHELL_INNER_AU = 50;
+const SIDE_SHELL_OUTER_AU = 800;
+
+export function starShellRadiusMExpanded(distanceLy: number): number {
+  const clamped = Math.max(
+    STAR_SHELL_MIN_LY,
+    Math.min(STAR_SHELL_MAX_LY, distanceLy),
+  );
+  const t = (Math.log10(clamped) - STAR_SHELL_LOG_MIN) / STAR_SHELL_LOG_RANGE;
+  const radiusAU =
+    SIDE_SHELL_INNER_AU + t * (SIDE_SHELL_OUTER_AU - SIDE_SHELL_INNER_AU);
+  return radiusAU * AU_KM * 1000;
+}
