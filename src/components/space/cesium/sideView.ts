@@ -16,19 +16,17 @@ const SIDE_VIEW_DURATION_S = 2.5;
 const RESTORE_DURATION_S = 2.0;
 
 // Camera offset along the perpendicular, expressed as a multiple of the
-// timeline length. With Cesium's default 60° FOV this puts the timeline at
-// ~75 % of the screen width before the look-at bias is applied.
-const CAMERA_OFFSET_FACTOR = 1.4;
+// timeline length. With Cesium's default 60° FOV (tan ≈ 0.577), an offset
+// of 1.05 places the timeline endpoints at NDC x ≈ ±0.83 — i.e. the axis
+// spans ~83 % of the canvas width, with a small symmetric margin so star
+// labels at the extremities never clip against the viewport edges.
+const CAMERA_OFFSET_FACTOR = 1.05;
 
-// Look-at bias along T (Earth → far star), expressed as a fraction of the
-// timeline length. Pushes the centre of the visible timeline to the LEFT
-// of the screen so the BodyInfoHud panel (~20 rem on the right) does not
-// obstruct the diagram. Derivation:
-//   midpoint NDC x = -bias / (CAMERA_OFFSET_FACTOR · tan(half_fov))
-// For 60° FOV (half-fov = 30°, tan ≈ 0.577) and CAMERA_OFFSET_FACTOR = 1.4,
-// bias = 0.2 puts the midpoint at NDC x ≈ -0.25, i.e. ~37 % from the left
-// edge — comfortably centred in the free space to the left of the panel.
-const LOOK_AT_BIAS_FACTOR = 0.2;
+// Look-at bias along T (Earth → far star). Kept at 0 so the timeline is
+// horizontally centred in the canvas. The second-tier panel (BodyInfoHud)
+// now docks on the LEFT next to the sidebar, so the canvas itself is
+// inset accordingly and no in-scene compensation is needed.
+const LOOK_AT_BIAS_FACTOR = 0;
 
 /**
  * Snapshot of the camera state taken before entering side view, so the
@@ -142,9 +140,9 @@ function timelineLengthM(
  *
  * Goal: Earth (origin) on screen-left, farthest star on screen-right,
  * along a perfectly horizontal axis perpendicular to the constellation's
- * mean direction T. The look-at point is biased forward along T so the
- * timeline's visual centre lands in the free space to the left of the
- * BodyInfoHud panel.
+ * mean direction T. The timeline is horizontally centred in the canvas;
+ * with the docked panel now sitting on the left next to the sidebar, the
+ * canvas itself is already inset, so no in-scene bias is required.
  *
  * Math:
  *   - lookAt = T · timelineLength · (0.5 + LOOK_AT_BIAS_FACTOR)
@@ -185,8 +183,8 @@ function computeTimelineFrame(
  * Smoothly flies the camera to a strict horizontal-timeline side view of
  * the given constellation. Earth lands on the left, the farthest star on
  * the right, with the axis perfectly horizontal in screen space and the
- * timeline centred in the free space to the left of the BodyInfoHud.
- * Returns silently if the constellation abbreviation is unknown.
+ * timeline spanning the full canvas width (centred). Returns silently if
+ * the constellation abbreviation is unknown.
  */
 export function flyToSideView(
   viewer: Viewer,

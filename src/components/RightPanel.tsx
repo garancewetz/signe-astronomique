@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { Eye, EyeOff, X } from 'lucide-react';
 import { RadarWheel } from './RadarWheel';
 import {
   AscendantCard,
@@ -11,7 +11,7 @@ import {
   ResumeCard,
   ScientificFooter,
 } from './MissionLog';
-import { PanelPlaceholder, PanelShell } from './ui';
+import { PanelShell } from './ui';
 import type { CelestialReading } from '../utils/astroEngine';
 import {
   SPACE_AGE_START_YEAR,
@@ -31,19 +31,54 @@ interface LecturePanelProps extends PanelProps {
   satellitesEnabled: boolean;
 }
 
-// ─── Panneau RÉSUMÉ ──────────────────────────────────────────────────────────
+interface ResumePanelProps extends PanelProps {
+  /** Whether constellation art + body labels are currently visible. */
+  labelsEnabled: boolean;
+  /** Toggles constellation art + body labels on the 3D sky. */
+  onToggleLabels: () => void;
+  /** Reveals the user's sun constellation in the 3D sky. */
+  onRevealConstellation: () => void;
+}
 
-export function ResumePanel({ reading, onClose }: PanelProps) {
+// ─── Panneau MON SIGNE — fiche natale + hub d'entrée ────────────────────────
+
+export function ResumePanel({
+  reading,
+  onClose,
+  labelsEnabled,
+  onToggleLabels,
+  onRevealConstellation,
+}: ResumePanelProps) {
+  const LabelIcon = labelsEnabled ? EyeOff : Eye;
   return (
-    <ReportPanelShell title="RÉSUMÉ" subtitle="L’ESSENTIEL DE TON CIEL" onClose={onClose}>
+    <ReportPanelShell title="MON SIGNE" subtitle="TON CIEL DE NAISSANCE" onClose={onClose}>
       {reading ? (
-        <div className="space-y-3 text-cockpit-xl leading-relaxed">
+        <div className="space-y-4 text-cockpit-xl leading-relaxed">
+          <button
+            type="button"
+            onClick={onToggleLabels}
+            aria-pressed={labelsEnabled}
+            className="cockpit-focus group w-full
+                       flex items-center justify-center gap-2 rounded-panel
+                       border border-border-control
+                       bg-violet-600/15 hover:bg-violet-600/25
+                       hover:border-accent-label
+                       transition-colors px-3.5 py-2.5
+                       text-white text-cockpit-sm tracking-cockpit-caps font-medium"
+          >
+            <LabelIcon
+              aria-hidden="true"
+              className="size-4 text-violet-200 group-hover:text-white"
+              strokeWidth={1.4}
+            />
+            {labelsEnabled ? 'Masquer les constellations' : 'Voir les constellations'}
+          </button>
           <BirthHeader reading={reading} />
-          <ResumeCard reading={reading} />
+          <ResumeCard reading={reading} onRevealConstellation={onRevealConstellation} />
           <AscendantCard reading={reading} />
         </div>
       ) : (
-        <Empty />
+        <ResumeStub />
       )}
     </ReportPanelShell>
   );
@@ -53,7 +88,11 @@ export function ResumePanel({ reading, onClose }: PanelProps) {
 
 export function CartePanel({ reading, onClose }: PanelProps) {
   return (
-    <ReportPanelShell title="CARTE" subtitle="ROUE DES CONSTELLATIONS" onClose={onClose}>
+    <ReportPanelShell
+      title="CARTE"
+      subtitle="ROUE DES CONSTELLATIONS"
+      onClose={onClose}
+    >
       {reading ? (
         <div className="space-y-3 text-cockpit-xl leading-relaxed">
           <RadarWheel reading={reading} />
@@ -68,7 +107,11 @@ export function CartePanel({ reading, onClose }: PanelProps) {
 
 // ─── Panneau LECTURE ─────────────────────────────────────────────────────────
 
-export function LecturePanel({ reading, satellitesEnabled, onClose }: LecturePanelProps) {
+export function LecturePanel({
+  reading,
+  satellitesEnabled,
+  onClose,
+}: LecturePanelProps) {
   return (
     <ReportPanelShell title="LECTURE" subtitle="COMPRENDRE TA CARTE" onClose={onClose}>
       {reading ? (
@@ -86,9 +129,26 @@ export function LecturePanel({ reading, satellitesEnabled, onClose }: LecturePan
   );
 }
 
+// ─── Panneau DONNÉES ─────────────────────────────────────────────────────────
+
+export function DonneesPanel({ reading, onClose }: PanelProps) {
+  return (
+    <ReportPanelShell title="DONNÉES" subtitle="ASTRONOMIE BRUTE" onClose={onClose}>
+      {reading ? (
+        <div className="space-y-3 text-cockpit-xl leading-relaxed">
+          <AstroInfoCard reading={reading} />
+          <ScientificFooter />
+        </div>
+      ) : (
+        <DonneesStub />
+      )}
+    </ReportPanelShell>
+  );
+}
+
 /**
- * "Oracle" card for orbital relics — shown in LECTURE while the layer is
- * active. Two states:
+ * "Oracle" card for orbital relics — shown in LECTURE while the layer
+ * is active. Two states:
  *   - silence: birth before 1957 (Sputnik hadn't launched yet);
  *   - list   : every relic launched on or before the natal date.
  */
@@ -148,23 +208,6 @@ function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
   );
 }
 
-// ─── Panneau DONNÉES ─────────────────────────────────────────────────────────
-
-export function DonneesPanel({ reading, onClose }: PanelProps) {
-  return (
-    <ReportPanelShell title="DONNÉES" subtitle="ASTRONOMIE BRUTE" onClose={onClose}>
-      {reading ? (
-        <div className="space-y-3 text-cockpit-xl leading-relaxed">
-          <AstroInfoCard reading={reading} />
-          <ScientificFooter />
-        </div>
-      ) : (
-        <DonneesStub />
-      )}
-    </ReportPanelShell>
-  );
-}
-
 // ─── Rapport complet (export PNG) ────────────────────────────────────────────
 
 /**
@@ -208,98 +251,279 @@ function ReportPanelShell({
   );
 }
 
-// ─── États vides ─────────────────────────────────────────────────────────────
+// ─── États vides (locked previews) ───────────────────────────────────────────
 
-function Empty() {
+/**
+ * Shared locked-state wrapper. Each panel provides its own preview
+ * (the visual "what you'll get") and tagline; the wrapper handles the
+ * common chrome — eyebrow label, headline, tagline. The natal form lives
+ * permanently at the top of the sidebar, so the stub no longer needs
+ * its own CTA — users are funneled straight to the always-visible form.
+ */
+function LockedStub({
+  preview,
+  headline,
+  tagline,
+}: {
+  preview: ReactNode;
+  headline: string;
+  tagline: ReactNode;
+}) {
   return (
-    <div className="text-slate-300 text-cockpit-xl leading-relaxed mt-4 px-1">
-      <div className="text-4xl mb-4 opacity-25 text-center">◇</div>
-      <h2 className="text-accent-title text-cockpit-lg tracking-cockpit-tight font-medium mb-3 text-center uppercase">
-        Ton vrai signe, lu dans le ciel réel
-      </h2>
-      <p className="mb-2.5 text-slate-200">
-        Ton <strong className="text-violet-200 font-medium">signe astrologique</strong>{' '}
-        vient d&apos;un découpage du zodiaque figé il y a 2&nbsp;000 ans, à
-        l&apos;époque de Ptolémée. Depuis, la <em>précession des équinoxes</em> —
-        un lent basculement de l&apos;axe terrestre, qui décrit un cône complet
-        en environ 26&nbsp;000 ans — a décalé le ciel d&apos;à peu près un
-        signe entier.
-      </p>
-      <p className="mb-2.5 text-slate-200">
-        Le jour de ta naissance, le Soleil ne se trouvait donc presque jamais
-        dans la constellation annoncée par ton horoscope. Sa vraie position,
-        c&apos;est ton{' '}
-        <strong className="text-amber-200 font-medium">signe astronomique</strong>{' '}
-        — la constellation IAU réellement traversée sur l&apos;écliptique.
-      </p>
-      <p className="mb-2.5 text-slate-200">
-        Saisis ta date, ton heure et ton lieu de naissance : on dessine ta{' '}
-        <strong className="text-violet-200 font-medium">carte du ciel</strong>{' '}
-        avec le Soleil, la Lune, les planètes et ton{' '}
-        <strong className="text-emerald-200 font-medium">ascendant</strong>{' '}
-        astronomique, calculés en astronomie de position.
-      </p>
-      <p className="text-slate-400 text-cockpit-md italic">
-        Ophiuchus — le 13ᵉ signe écarté par les douze cases du calendrier — est
-        inclus : le Soleil y passe environ 18&nbsp;jours par an, c&apos;est un
-        fait observable, pas une opinion.
+    <div className="flex h-full min-h-0 flex-col gap-5 px-1 pt-2 pb-4 text-center">
+      <div
+        aria-hidden="true"
+        className="flex shrink-0 items-center justify-center
+                   pt-2 pb-1 text-violet-200"
+      >
+        {preview}
+      </div>
+
+      <div className="space-y-2 text-slate-300">
+        <div className="text-cockpit-xs tracking-cockpit-label uppercase text-violet-300/70">
+          Aperçu verrouillé
+        </div>
+        <h2
+          className="text-accent-title text-cockpit-lg tracking-cockpit-tight
+                     font-medium uppercase"
+        >
+          {headline}
+        </h2>
+        <p className="text-cockpit-md leading-relaxed text-slate-300/95 px-2">
+          {tagline}
+        </p>
+      </div>
+
+      <p className="mt-auto pt-2 text-cockpit-xs tracking-cockpit-label
+                    uppercase text-slate-500">
+        Saisis tes coordonnées dans la barre latérale
       </p>
     </div>
   );
 }
 
+/* ── Previews ───────────────────────────────────────────────────────────── */
+
+function ZodiacWheelPreview() {
+  // 12 spokes + a single highlighted arc segment hint at the eventual
+  // RadarWheel — without revealing which constellation is "yours".
+  const spokes = Array.from({ length: 12 }, (_, i) => i);
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      className="size-28 animate-rail-breathe"
+      role="presentation"
+    >
+      <circle
+        cx="50"
+        cy="50"
+        r="46"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="0.4"
+        strokeDasharray="2 2"
+        opacity="0.5"
+      />
+      <circle
+        cx="50"
+        cy="50"
+        r="34"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="0.3"
+        opacity="0.35"
+      />
+      {spokes.map((i) => {
+        const a = ((i * 30 - 90) * Math.PI) / 180;
+        return (
+          <line
+            key={i}
+            x1={50 + 34 * Math.cos(a)}
+            y1={50 + 34 * Math.sin(a)}
+            x2={50 + 46 * Math.cos(a)}
+            y2={50 + 46 * Math.sin(a)}
+            stroke="currentColor"
+            strokeWidth="0.4"
+            opacity="0.45"
+          />
+        );
+      })}
+      {/* Highlighted arc — top-right slice */}
+      <path
+        d="M 50 4 A 46 46 0 0 1 89.85 27 L 79.45 33 A 34 34 0 0 0 50 16 Z"
+        fill="rgb(196 181 253 / 0.18)"
+        stroke="rgb(196 181 253 / 0.55)"
+        strokeWidth="0.4"
+      />
+      <circle cx="50" cy="50" r="1.6" fill="currentColor" opacity="0.8" />
+    </svg>
+  );
+}
+
+function SignePreview() {
+  // Sun + ecliptic horizon + a lone "?" — visual question that the
+  // panel will answer once data is entered.
+  return (
+    <div className="relative size-28 animate-rail-breathe">
+      <svg viewBox="0 0 100 100" className="size-full">
+        <line
+          x1="8" y1="62" x2="92" y2="62"
+          stroke="rgb(196 181 253 / 0.45)"
+          strokeWidth="0.5"
+          strokeDasharray="3 2"
+        />
+        <circle
+          cx="50" cy="50" r="11"
+          fill="rgb(252 211 77 / 0.18)"
+          stroke="rgb(252 211 77 / 0.75)"
+          strokeWidth="0.6"
+        />
+        {Array.from({ length: 8 }, (_, i) => {
+          const a = (i * 45 * Math.PI) / 180;
+          return (
+            <line
+              key={i}
+              x1={50 + 14 * Math.cos(a)}
+              y1={50 + 14 * Math.sin(a)}
+              x2={50 + 19 * Math.cos(a)}
+              y2={50 + 19 * Math.sin(a)}
+              stroke="rgb(252 211 77 / 0.65)"
+              strokeWidth="0.6"
+            />
+          );
+        })}
+      </svg>
+      <span
+        aria-hidden="true"
+        className="absolute -top-1 right-3 text-cockpit-xl
+                   text-violet-200 font-medium"
+      >
+        ?
+      </span>
+    </div>
+  );
+}
+
+function LectureSkeletonPreview() {
+  // Article-style content skeleton: heading + paragraph lines.
+  return (
+    <div className="w-full max-w-[200px] space-y-2 opacity-65">
+      <div className="h-2 w-2/3 rounded-full bg-violet-300/55" />
+      <div className="space-y-1.5 pt-1">
+        <div className="h-1.5 w-full rounded-full bg-violet-300/35" />
+        <div className="h-1.5 w-[92%] rounded-full bg-violet-300/35" />
+        <div className="h-1.5 w-[78%] rounded-full bg-violet-300/30" />
+      </div>
+      <div className="space-y-1.5 pt-2">
+        <div className="h-1.5 w-[88%] rounded-full bg-violet-300/30" />
+        <div className="h-1.5 w-[95%] rounded-full bg-violet-300/30" />
+      </div>
+    </div>
+  );
+}
+
+function DonneesTablePreview() {
+  // Looks like the eventual AstroInfoCard's leftmost column.
+  const rows: Array<[string, string]> = [
+    ['α☉', '——h ——m'],
+    ['δ☉', '——° ——′'],
+    ['GST', '——h ——m'],
+    ['ε', '——° ——′'],
+  ];
+  return (
+    <div className="w-full max-w-[200px] font-mono opacity-75">
+      {rows.map(([k, v], i) => (
+        <div
+          key={k}
+          className={`flex items-baseline justify-between
+                      px-2 py-1 text-cockpit-md
+                      ${i < rows.length - 1
+                        ? 'border-b border-violet-300/15'
+                        : ''}`}
+        >
+          <span className="tracking-cockpit-tight text-violet-200/80">{k}</span>
+          <span className="text-slate-400">{v}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Stubs ──────────────────────────────────────────────────────────────── */
+
+function ResumeStub() {
+  return (
+    <LockedStub
+      preview={<SignePreview />}
+      headline="Ton vrai signe, dans le ciel réel"
+      tagline={
+        <>
+          Le Soleil n&apos;était presque jamais dans la constellation de ton
+          horoscope. En 2 000 ans, l&apos;axe de la Terre a glissé d&apos;environ
+          une constellation entière — voici ton ciel{' '}
+          <strong className="text-amber-200 font-medium">
+            astronomique exact
+          </strong>
+          , dérive comprise.
+        </>
+      }
+    />
+  );
+}
+
 function CarteStub() {
   return (
-    <PanelPlaceholder>
-      <p className="text-slate-300 mb-2.5">
-        Ici se dessinera ta{' '}
-        <strong className="text-violet-200 font-medium">carte du ciel astronomique</strong>{' '}
-        — la <em>roue des constellations IAU</em> traversées par le Soleil, la
-        Lune et les planètes au moment exact de ta naissance, projetées sur
-        l&apos;écliptique réelle plutôt que sur le zodiaque tropical figé.
-      </p>
-      <p className="text-slate-500 text-cockpit-sm">
-        Saisis tes coordonnées dans{' '}
-        <span className="text-violet-200 font-medium">COORDONNÉES</span> pour
-        afficher la roue, la table des planètes et l&apos;ascendant.
-      </p>
-    </PanelPlaceholder>
+    <LockedStub
+      preview={<ZodiacWheelPreview />}
+      headline="La roue des vraies constellations"
+      tagline={
+        <>
+          Soleil, Lune et planètes projetés sur les{' '}
+          <strong className="text-violet-200 font-medium">
+            13 constellations
+          </strong>{' '}
+          qu&apos;ils traversent réellement — frontières fixées par
+          l&apos;Union astronomique internationale (1930), pas les
+          12 cases égales du zodiaque.
+        </>
+      }
+    />
   );
 }
 
 function LectureStub() {
   return (
-    <PanelPlaceholder>
-      <p className="text-slate-300 mb-2.5">
-        Comment lire ton{' '}
-        <strong className="text-violet-200 font-medium">thème astronomique</strong>{' '}
-        : signe solaire réel, position lunaire, ascendant calculé sur
-        l&apos;horizon de ton lieu de naissance, et le rôle d&apos;<em>Ophiuchus</em>{' '}
-        — le 13ᵉ signe écarté par l&apos;astrologie tropicale.
-      </p>
-      <p className="text-slate-500 text-cockpit-sm">
-        Une fois ta carte calculée, la lecture détaillée et les notes de
-        constellations s&apos;afficheront ici.
-      </p>
-    </PanelPlaceholder>
+    <LockedStub
+      preview={<LectureSkeletonPreview />}
+      headline="Comprendre ta carte"
+      tagline={
+        <>
+          Le <span className="text-amber-200">Soleil</span> (ta vraie
+          constellation), la <span className="text-slate-200">Lune</span>{' '}
+          (sa phase exacte) et l&apos;
+          <span className="text-emerald-200">ascendant</span> (le point
+          d&apos;horizon est qui se levait à ta naissance) — leur
+          définition astronomique, et comment les repérer dans le ciel.
+        </>
+      }
+    />
   );
 }
 
 function DonneesStub() {
   return (
-    <PanelPlaceholder>
-      <p className="text-slate-300 mb-2.5">
-        <strong className="text-violet-200 font-medium">Éphémérides</strong>{' '}
-        et données brutes : longitudes écliptiques, déclinaisons, ascension
-        droite, temps sidéral local — calculés selon les algorithmes de{' '}
-        <em>Meeus 1998</em> avec les éphémérides JPL et les frontières IAU
-        1930.
-      </p>
-      <p className="text-slate-500 text-cockpit-sm">
-        Saisis date, heure et lieu pour générer les positions exactes au
-        moment de ta naissance.
-      </p>
-    </PanelPlaceholder>
+    <LockedStub
+      preview={<DonneesTablePreview />}
+      headline="Astronomie de position"
+      tagline={
+        <>
+          Ascension droite, déclinaison, temps sidéral, obliquité de
+          l&apos;écliptique : les{' '}
+          <strong className="text-violet-200 font-medium">coordonnées brutes</strong>{' '}
+          du ciel à ta naissance — l&apos;équivalent céleste de la
+          latitude et de la longitude (Meeus 1998 · JPL · IAU&nbsp;1930).
+        </>
+      }
+    />
   );
 }
-

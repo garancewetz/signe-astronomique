@@ -11,10 +11,7 @@ import {
   type Viewer,
 } from 'cesium';
 import { findConstellation } from '../../../data/constellationCatalog';
-import {
-  raDecToEcef,
-  starShellRadiusMExpanded,
-} from '../../../utils/skyCoordinates';
+import { starShellRadiusMExpanded } from '../../../utils/skyCoordinates';
 import { constellationAxis, sideViewBasis } from './sideView';
 
 interface MountOptions {
@@ -61,15 +58,18 @@ export function mountDistanceRuler(
   const constellation = findConstellation(opts.constellationAbbr);
   if (!constellation) return () => {};
 
-  const { T, raDeg, decDeg } = constellationAxis(constellation, opts.gmstRad);
+  const { T } = constellationAxis(constellation, opts.gmstRad);
   const { up: upWorld } = sideViewBasis(T);
 
   const farLy = Math.max(...constellation.stars.map((s) => s.distance_ly));
   const axisEndLy =
     Math.ceil((farLy + AXIS_END_PADDING_LY) / TICK_STEP_LY) * TICK_STEP_LY;
 
+  // T is already in ECEF (constellationAxis builds it from gmstRad-rotated
+  // unit vectors), so we scale it directly. Routing through raDecToEcef
+  // would re-apply the GMST rotation and slide the ruler off the stars.
   const placeAt = (ly: number): Cartesian3 =>
-    raDecToEcef(raDeg, decDeg, opts.gmstRad, starShellRadiusMExpanded(ly));
+    Cartesian3.multiplyByScalar(T, starShellRadiusMExpanded(ly), new Cartesian3());
 
   const axisEndPos = placeAt(axisEndLy);
   const timelineLengthM = Cartesian3.magnitude(axisEndPos);

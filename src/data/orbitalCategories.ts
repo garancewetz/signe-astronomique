@@ -4,7 +4,7 @@ import type { OrbitalCategory } from '../hooks/useOrbitalPopulation';
  * Single source of truth for the orbital overlay palette.
  *
  * Both the Cesium rendering layer (mountOrbitalLayer) and the HUD legend
- * (ControlConsole) read from here so the colors shown next to each label
+ * (LegendDock) read from here so the colors shown next to each label
  * always match what's drawn in the scene.
  *
  * Pure data (no Cesium imports) so it can be consumed from non-space code.

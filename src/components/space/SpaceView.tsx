@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import {
   Cartesian3,
   ClockRange,
@@ -43,11 +43,10 @@ import {
   flyToSideView,
   type CameraSnapshot,
 } from './cesium/sideView';
-import { useBodyPicker } from './cesium/useBodyPicker';
+import { useBodyHover, useBodyPicker, type HoveredBody } from './cesium/useBodyPicker';
 import {
   flyToOrbital,
   flyToCelestialDirection,
-  flyToRelicsView,
 } from './cesium/cameraDirector';
 import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
 import type { OrbitalSat } from '../../hooks/useOrbitalPopulation';
@@ -184,7 +183,7 @@ const LIVE_REFRESH_MS = 60_000;
 // Strict temporal gating for the modern Celestrak swarm. Beyond this window
 // from "now", current TLEs are no longer accurate (and most of those sats
 // didn't exist on a 1990 birth date anyway), so we hide the layer entirely.
-const LIVE_TLE_VALIDITY_MS = 14 * 24 * 60 * 60 * 1000;
+export const LIVE_TLE_VALIDITY_MS = 14 * 24 * 60 * 60 * 1000;
 // Cinematic transition timings for the JUMP into the past.
 const SWARM_FADE_OUT_MS = 800;
 const RELICS_FADE_IN_MS = 600;
@@ -677,21 +676,9 @@ export function SpaceView({
     return () => handle.fadeOutAndDispose(SWARM_FADE_OUT_MS);
   }, [orbitalSatellites, birthYear, liveSwarmAllowed]);
 
-  // When the user turns relics on (live mode only), fly closer to Earth
-  // so LEO satellites are visible *and* their motion is perceptible. From
-  // the default 100 000 km orbital camera, ISS would be sub-pixel.
-  // In natal mode we leave the camera alone — the user just JUMPed and
-  // the camera is already framing the natal sky direction.
-  const wasShowingSatellitesRef = useRef(false);
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
-    const turnedOn = showSatellites && !wasShowingSatellitesRef.current;
-    wasShowingSatellitesRef.current = showSatellites;
-    if (turnedOn && !reading) {
-      flyToRelicsView(viewer);
-    }
-  }, [showSatellites, reading]);
+  // Toggling relics no longer moves the camera — the layer just renders
+  // at the current framing. If the user wants to inspect LEO orbits up
+  // close, they pan or use the camera controls explicitly.
 
   // Observer marker: pinned to the globe surface at the natal birth
   // location (or live observer position). Independent effect so changing
@@ -715,6 +702,44 @@ export function SpaceView({
   // Click-pick installed once; emits a SelectedBody (or null) on click.
   useBodyPicker(viewerRef, onBodySelect);
 
+  // Hover affordance: cursor swap + floating name tooltip so it's obvious
+  // that bodies are clickable. We keep state for name (drives tooltip
+  // visibility + text) and a ref for the tooltip DOM node so cursor moves
+  // over the same body don't re-render the whole tree.
+  const [hoveredName, setHoveredName] = useState<string | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const hoveredNameRef = useRef<string | null>(null);
+  const handleHover = useCallback((hover: HoveredBody | null) => {
+    if (!hover) {
+      if (hoveredNameRef.current !== null) {
+        hoveredNameRef.current = null;
+        setHoveredName(null);
+      }
+      return;
+    }
+    const tip = tooltipRef.current;
+    if (tip) {
+      // Offset slightly so the tooltip never sits under the cursor and
+      // never traps mouse events.
+      tip.style.transform = `translate(${hover.x + 14}px, ${hover.y + 14}px)`;
+    }
+    if (hoveredNameRef.current !== hover.name) {
+      hoveredNameRef.current = hover.name;
+      setHoveredName(hover.name);
+    }
+  }, []);
+  useBodyHover(viewerRef, handleHover);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    viewer.scene.canvas.style.cursor = hoveredName ? 'pointer' : '';
+    return () => {
+      const v = viewerRef.current;
+      if (v) v.scene.canvas.style.cursor = '';
+    };
+  }, [hoveredName]);
+
   // Constellation overlay + depth lines only make sense when a star is
   // selected — every other body kind leaves them off. Pulled out here so
   // the two effects below stay readable.
@@ -722,10 +747,13 @@ export function SpaceView({
 
   // Bright pattern overlay for the user-selected constellation. Decoupled
   // from the main remount effect so changing selection does not re-mount
-  // stars/sun/moon/planets.
+  // stars/sun/moon/planets. Skipped in Side View: the exploded layer
+  // already draws the pattern at the timeline-aligned expanded-shell
+  // scale, and re-drawing it here on the compressed shell would render a
+  // second, miniature Taurus clinging to Earth.
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (!viewer || !selectedStar) return;
+    if (!viewer || !selectedStar || sideViewActive) return;
     const active = reading ?? liveReading;
     const gmstRad = gmstRadians(active.input.date);
     const cleanup = mountSelectedConstellation(viewer, {
@@ -733,7 +761,7 @@ export function SpaceView({
       gmstRad,
     });
     return cleanup;
-  }, [selectedStar, reading, liveReading]);
+  }, [selectedStar, sideViewActive, reading, liveReading]);
 
   // Depth view: Earth→star vectors for the selected constellation. Uses
   // the expanded shell when Side View is active so the rays land on the
@@ -807,10 +835,22 @@ export function SpaceView({
   }, [sideViewActive, selectedStar, reading, liveReading]);
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0"
-      aria-label="Vue 3D du ciel natal"
-    />
+    <div className="absolute inset-0" aria-label="Vue 3D du ciel natal">
+      <div ref={containerRef} className="absolute inset-0" />
+      <div
+        ref={tooltipRef}
+        role="tooltip"
+        aria-hidden={!hoveredName}
+        className="pointer-events-none absolute top-0 left-0 z-20
+                   px-2 py-1 rounded
+                   bg-slate-950/85 border border-violet-400/35
+                   text-cockpit-sm tracking-tight text-slate-100
+                   shadow-[0_2px_12px_rgba(0,0,0,0.45)] backdrop-blur-sm
+                   transition-opacity duration-100 will-change-transform"
+        style={{ opacity: hoveredName ? 1 : 0 }}
+      >
+        {hoveredName ?? ''}
+      </div>
+    </div>
   );
 }

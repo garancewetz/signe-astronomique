@@ -102,7 +102,12 @@ export interface CelestialReading {
   trueConstellation: IauConstellation;
   /** Signe astrologique tropical "classique" (mapping naïf 30°/signe) */
   tropicalSign: ZodiacSign;
-  /** Décalage tropical / sidéral en jours (≈ 24-25 jours en 2026) */
+  /**
+   * Décalage cumulé du zodiaque tropical par rapport au ciel IAU, en jours.
+   * = longitude tropicale du début d'Aries IAU, projetée en jours solaires.
+   * À ~80 BCE, le point vernal coïncidait avec la frontière Pisces→Aries IAU
+   * (gap = 0). Depuis, la précession (~50.29″/an) a creusé l'écart : ~30 j en 2026.
+   */
   precessionGapDays: number;
   /** Nombre de jours que le Soleil passe réellement dans cette constellation */
   daysInConstellation: number;
@@ -360,12 +365,27 @@ function tropicalSignFromLongitude(lon: number): ZodiacSign {
 }
 
 /**
- * Précession des équinoxes : ~50.29″/an depuis J2000.
- * Convertit une longitude tropicale en longitude sidérale (frame IAU).
+ * Dérive du point vernal depuis J2000, en degrés (~50.29″/an).
+ * Sert à convertir une longitude tropicale courante en longitude écliptique
+ * J2000 (frame ICRS), où sont tabulées les frontières IAU.
+ *
+ * NB : ce n'est PAS la dérive cumulée du zodiaque depuis son ancrage
+ * historique — pour ça, voir {@link zodiacDriftDegrees}.
  */
 export function precessionOffset(jd: number): number {
   const yearsSinceJ2000 = (jd - 2451545.0) / 365.25;
   return (50.29 / 3600) * yearsSinceJ2000;
+}
+
+/**
+ * Décalage angulaire entre le 0° tropical (point vernal courant) et le début
+ * de la constellation IAU Aries, projeté sur l'écliptique. C'est la « vraie »
+ * dérive du zodiaque par rapport au ciel : ~80 BCE, le point vernal était sur
+ * la frontière IAU Pisces→Aries (gap = 0) ; depuis, la précession l'a écarté
+ * d'environ 50.29″/an. En 2026, gap ≈ 29.4° ≈ 30 jours solaires.
+ */
+export function zodiacDriftDegrees(jd: number): number {
+  return IAU_BOUNDARIES[0].start + precessionOffset(jd);
 }
 
 // ─── Conversion écliptique → équatoriale (Meeus 13.3) ───────────────────────
@@ -500,7 +520,7 @@ export function computeReading(input: BirthInput): CelestialReading {
     ascendantLongitude: asc,
     trueConstellation,
     tropicalSign: tropicalSignFromLongitude(sunTropical),
-    precessionGapDays: offset / (360 / 365.25),
+    precessionGapDays: zodiacDriftDegrees(jd) / (360 / 365.25),
     daysInConstellation: daysInConstellation(trueConstellation),
     moon: {
       eclipticLongitude: moon.lon,
@@ -526,4 +546,31 @@ export function formatRA(hours: number): string {
   const m = Math.floor((hours - h) * 60);
   const s = Math.round(((hours - h) * 60 - m) * 60);
   return `${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
+}
+
+// ─── Live telemetry — used by the HUD header in empty state ──────────────────
+
+export interface LiveTelemetry {
+  /** Local Apparent Sidereal Time at the observer, in hours (0–24). */
+  lstHours: number;
+  /** Julian Day for the instant. */
+  julianDay: number;
+}
+
+/**
+ * Cheap derivation of LST + JD for the live header. Both are also
+ * computed inside `computeReading` for natal mode; keeping a separate
+ * call avoids dragging the full-reading engine on every tick.
+ */
+export function liveTelemetry(date: Date, longitudeDeg: number): LiveTelemetry {
+  const jd = toJulianDay(date);
+  const gst = greenwichSiderealTime(jd);
+  const lst = norm24(gst + longitudeDeg / 15);
+  return { lstHours: lst, julianDay: jd };
+}
+
+export function formatLST(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.floor((hours - h) * 60);
+  return `${h.toString().padStart(2, '0')}h${m.toString().padStart(2, '0')}`;
 }

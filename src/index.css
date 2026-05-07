@@ -163,8 +163,31 @@ body {
 }
 .animate-shimmer { animation: shimmer 3s ease-in-out infinite; }
 
+/* Souffle ambiant des icônes verrouillées (rail droit, état vide) */
+@keyframes rail-breathe {
+  0%, 100% { opacity: 0.50; }
+  50%      { opacity: 0.72; }
+}
+.animate-rail-breathe { animation: rail-breathe 4s ease-in-out infinite; }
+
+/* Cascade de déverrouillage quand un thème natal est calculé */
+@keyframes rail-unlock {
+  0%   { opacity: 0.55; filter: blur(0.5px); }
+  60%  {
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 0 6px rgb(103 232 249 / 0.6));
+  }
+  100% { opacity: 1; filter: none; }
+}
+.animate-rail-unlock {
+  animation: rail-unlock 600ms ease-out forwards;
+  animation-delay: calc(var(--rail-index, 0) * 80ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-shimmer {
+  .animate-shimmer,
+  .animate-rail-breathe,
+  .animate-rail-unlock {
     animation: none;
     opacity: 0.85;
   }

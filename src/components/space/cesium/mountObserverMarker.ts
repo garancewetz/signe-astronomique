@@ -3,6 +3,7 @@ import {
   Cartesian2,
   Cartesian3,
   Color,
+  DistanceDisplayCondition,
   HorizontalOrigin,
   LabelStyle,
   NearFarScalar,
@@ -26,6 +27,12 @@ const MARKER_HEX = '#f472b6';
 // from the default 100 000 km orbital view, short enough to not dominate
 // the relics view (~1500 km altitude camera).
 const BEAM_HEIGHT_M = 250_000;
+// Proximity threshold for the place-name label. Below ~5 000 km of
+// camera-to-marker distance the label fades in; from orbital views
+// (100 000 km) it stays hidden so the central canvas reads as clean
+// stars-and-Earth without floating text.
+const LABEL_NEAR_M = 0;
+const LABEL_FAR_M = 5_000_000;
 
 /**
  * "You are here" marker on the globe surface — anchors the natal birth
@@ -81,6 +88,12 @@ export function mountObserverMarker(
               verticalOrigin: VerticalOrigin.BOTTOM,
               horizontalOrigin: HorizontalOrigin.LEFT,
               pixelOffset: new Cartesian2(8, -4),
+              // Show the place name only when the camera is close to
+              // the marker — keeps the orbital view uncluttered.
+              distanceDisplayCondition: new DistanceDisplayCondition(
+                LABEL_NEAR_M,
+                LABEL_FAR_M,
+              ),
             },
           }
         : {}),

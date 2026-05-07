@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import {
+  Cartesian2,
   Entity,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
@@ -9,6 +10,14 @@ import type { IauConstellation } from '../../../utils/astroEngine';
 import type { PlanetId } from '../../../utils/planetEngine';
 import type { SelectedBody } from '../SpaceView';
 
+/** Body identification under the cursor — used to drive hover affordance. */
+export interface HoveredBody {
+  name: string;
+  /** Canvas-relative coordinates, ready to position a tooltip. */
+  x: number;
+  y: number;
+}
+
 /**
  * Property bags attached by the mount layers to every clickable entity.
  * The runtime payload comes back as `unknown` from PropertyBag.getValue;
@@ -16,6 +25,9 @@ import type { SelectedBody } from '../SpaceView';
  */
 interface StarPayload {
   kind: 'star';
+  /** Bayer designation + proper name resolved at mount time. */
+  name?: string;
+  bayer?: string;
   constellationAbbr: string;
   starIndex: number;
 }
@@ -142,6 +154,29 @@ function payloadToSelection(p: BodyPayload): SelectedBody {
   }
 }
 
+function payloadDisplayName(p: BodyPayload): string {
+  switch (p.kind) {
+    case 'star':
+      return [p.bayer, p.name].filter(Boolean).join(' ').trim() || 'Étoile';
+    case 'sun':
+    case 'moon':
+    case 'planet':
+      return p.name;
+  }
+}
+
+function pickBodyPayloadAt(
+  viewer: Viewer,
+  position: Cartesian2,
+): BodyPayload | null {
+  const picked = viewer.scene.pick(position);
+  if (!picked) return null;
+  const entity = picked.id;
+  if (!(entity instanceof Entity) || !entity.properties) return null;
+  const value = entity.properties.getValue(viewer.clock.currentTime);
+  return isBodyPayload(value) ? value : null;
+}
+
 /**
  * Installs a LEFT_CLICK handler on the Cesium viewer that dispatches on the
  * `kind` property attached by the mount layers:
@@ -161,17 +196,52 @@ export function useBodyPicker(
     if (!viewer) return;
     const handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction((event: ScreenSpaceEventHandler.PositionedEvent) => {
-      const picked = viewer.scene.pick(event.position);
-      if (!picked) {
-        onSelect(null);
+      const payload = pickBodyPayloadAt(viewer, event.position);
+      if (!payload) {
+        // Distinguish "empty sky" (deselect) from "non-body entity, e.g.
+        // depth line" (preserve selection) by looking at the raw pick.
+        const picked = viewer.scene.pick(event.position);
+        if (!picked) onSelect(null);
         return;
       }
-      const entity = picked.id;
-      if (!(entity instanceof Entity) || !entity.properties) return;
-      const value = entity.properties.getValue(viewer.clock.currentTime);
-      if (!isBodyPayload(value)) return;
-      onSelect(payloadToSelection(value));
+      onSelect(payloadToSelection(payload));
     }, ScreenSpaceEventType.LEFT_CLICK);
     return () => handler.destroy();
   }, [viewerRef, onSelect]);
+}
+
+/**
+ * Installs a MOUSE_MOVE handler that emits the body under the cursor (or
+ * null when nothing pickable is hovered). Used by SpaceView to swap the
+ * cursor and render a floating tooltip — the affordance that signals
+ * "this is clickable" without any extra UI chrome.
+ *
+ * Picking on every mouse move is cheap in Cesium for this entity count,
+ * but we still bail out early when the position is outside the canvas.
+ */
+export function useBodyHover(
+  viewerRef: React.RefObject<Viewer | null>,
+  onHover: (hover: HoveredBody | null) => void,
+): void {
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    const handler = new ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction((event: ScreenSpaceEventHandler.MotionEvent) => {
+      const payload = pickBodyPayloadAt(viewer, event.endPosition);
+      if (!payload) {
+        onHover(null);
+        return;
+      }
+      onHover({
+        name: payloadDisplayName(payload),
+        x: event.endPosition.x,
+        y: event.endPosition.y,
+      });
+    }, ScreenSpaceEventType.MOUSE_MOVE);
+    return () => {
+      handler.destroy();
+      onHover(null);
+    };
+  }, [viewerRef, onHover]);
 }

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Moon } from 'lucide-react';
-import type { CelestialReading } from '../utils/astroEngine';
+import {
+  formatLST,
+  liveTelemetry,
+  type CelestialReading,
+} from '../utils/astroEngine';
 
 const NATAL_DATE_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',
@@ -15,11 +18,25 @@ const LIVE_DATE_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
 
 interface HudFrameProps {
   reading: CelestialReading | null;
-  /** Opens the RÉSUMÉ panel — wired only when a natal reading is active. */
+  /** Observer latitude (deg N) — used for the live telemetry line. */
+  observerLat: number;
+  /** Observer longitude (deg E) — used for the live telemetry line. */
+  observerLon: number;
+  /** Opens the MON SIGNE panel — wired only when a natal reading is active. */
   onOpenSummary?: () => void;
 }
 
-export function HudFrame({ reading, onOpenSummary }: HudFrameProps) {
+/**
+ * Slim status banner — pure mode + live telemetry. Branding now lives in
+ * the sidebar header so this bar carries no logo or right-side spacer;
+ * the entire band is reserved for the centered status block.
+ */
+export function HudFrame({
+  reading,
+  observerLat,
+  observerLon,
+  onOpenSummary,
+}: HudFrameProps) {
   const [liveNow, setLiveNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -33,9 +50,15 @@ export function HudFrame({ reading, onOpenSummary }: HudFrameProps) {
   const main = reading
     ? `${reading.trueConstellation} · ${reading.moon.constellation}`
     : null;
+
   const sub = reading
     ? `${reading.input.placeLabel ?? 'Ciel natal'} · ${NATAL_DATE_FORMATTER.format(reading.input.date)} UTC`
-    : LIVE_DATE_FORMATTER.format(liveNow);
+    : (() => {
+        const { lstHours } = liveTelemetry(liveNow, observerLon);
+        const latStr = `${Math.abs(observerLat).toFixed(2)}°${observerLat >= 0 ? 'N' : 'S'}`;
+        const lonStr = `${Math.abs(observerLon).toFixed(2)}°${observerLon >= 0 ? 'E' : 'W'}`;
+        return `${LIVE_DATE_FORMATTER.format(liveNow)} · LST ${formatLST(lstHours)} · ${latStr} ${lonStr}`;
+      })();
 
   const summaryClickable = isNatal && !!onOpenSummary;
 
@@ -63,7 +86,7 @@ export function HudFrame({ reading, onOpenSummary }: HudFrameProps) {
   return (
     <header
       role="banner"
-      className="absolute top-0 inset-x-0 h-11
+      className="relative h-11
                  bg-linear-to-b from-hud-bar/95 via-hud-bar/70 to-transparent"
     >
       <h1 className="sr-only">Carte du ciel réel</h1>
@@ -74,34 +97,20 @@ export function HudFrame({ reading, onOpenSummary }: HudFrameProps) {
                    bg-linear-to-r from-transparent via-border-hud-subtle to-transparent"
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 items-center h-full px-5 sm:px-6 gap-3">
-        {/* Branding — masqué sous sm pour rendre l'écran à la vue 3D */}
-        <div className="hidden sm:flex items-center gap-2 text-cockpit-sm tracking-cockpit-hud min-w-0">
-          <Moon className="size-3.5 shrink-0 text-accent-label" strokeWidth={1.25} aria-hidden />
-          <span aria-hidden="true" className="text-accent-title truncate">
-            CARTE&nbsp;DU&nbsp;CIEL&nbsp;RÉEL
-          </span>
-        </div>
-
-        {/* État central — cliquable quand un thème natal est actif (raccourci RÉSUMÉ) */}
-        <div className="min-w-0 flex justify-center">
-          {summaryClickable ? (
-            <button
-              type="button"
-              onClick={onOpenSummary}
-              className="cockpit-focus pointer-events-auto min-w-0 max-w-full inline-block
-                         rounded-cockpit transition-opacity hover:opacity-85"
-              aria-label={`Ouvrir la fiche RÉSUMÉ — ${mode} · ${main}`}
-            >
-              {centerInner}
-            </button>
-          ) : (
-            centerInner
-          )}
-        </div>
-
-        {/* Spacer droit — équilibre la grille pour que le centre reste optiquement centré */}
-        <div className="hidden sm:block" aria-hidden />
+      <div className="flex items-center justify-center h-full px-4">
+        {summaryClickable ? (
+          <button
+            type="button"
+            onClick={onOpenSummary}
+            className="cockpit-focus pointer-events-auto min-w-0 max-w-full inline-block
+                       rounded-cockpit transition-opacity hover:opacity-85"
+            aria-label={`Ouvrir la fiche MON SIGNE — ${mode} · ${main}`}
+          >
+            {centerInner}
+          </button>
+        ) : (
+          centerInner
+        )}
       </div>
     </header>
   );

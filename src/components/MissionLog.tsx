@@ -6,6 +6,7 @@ import {
   type CelestialReading,
 } from '../utils/astroEngine';
 import { CONSTELLATION_LORE } from '../utils/constellationLore';
+import { cn } from './ui/cn';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -73,7 +74,15 @@ export function BirthHeader({ reading }: { reading: CelestialReading }) {
 
 // ─── Résumé : ciel en un coup d'œil ─────────────────────────────────────────
 
-export function ResumeCard({ reading }: { reading: CelestialReading }) {
+export function ResumeCard({
+  reading,
+  onRevealConstellation,
+}: {
+  reading: CelestialReading;
+  /** When set, the Sun row becomes a CTA that flies the camera to the
+   *  user's constellation in the 3D sky. */
+  onRevealConstellation?: () => void;
+}) {
   const sunLore = CONSTELLATION_LORE[reading.trueConstellation];
   const moonLore = CONSTELLATION_LORE[reading.moon.constellation];
   const ascLore  = CONSTELLATION_LORE[reading.ascendantConstellation];
@@ -84,7 +93,8 @@ export function ResumeCard({ reading }: { reading: CelestialReading }) {
     <Section label="TON CIEL EN UN COUP D’ŒIL">
       <div className="px-3 py-2.5 space-y-2">
         <ResumeRow glyph="☉" glyphColor="#fde68a" label="Vrai signe (Soleil)"
-          value={sunLore.fr} valueClass="text-yellow-300" />
+          value={sunLore.fr} valueClass="text-yellow-300"
+          onReveal={onRevealConstellation} />
         <ResumeRow glyph="☽" glyphColor="#c4b5fd" label="Lune"
           value={`${moonLore.fr} · ${reading.moon.phaseName}`} valueClass="text-violet-200" />
         <ResumeRow glyph="↑" glyphColor="#4ade80" label="Ascendant"
@@ -96,9 +106,10 @@ export function ResumeCard({ reading }: { reading: CelestialReading }) {
   );
 }
 
-function ResumeRow({ glyph, glyphColor, label, value, valueClass }: {
+function ResumeRow({ glyph, glyphColor, label, value, valueClass, onReveal }: {
   glyph: string; glyphColor: string;
   label: string; value: string; valueClass: string;
+  onReveal?: () => void;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -107,7 +118,24 @@ function ResumeRow({ glyph, glyphColor, label, value, valueClass }: {
         {glyph}
       </span>
       <span className="text-slate-400 shrink-0 w-36 text-cockpit-sm">{label}</span>
-      <span className={`font-medium text-cockpit-md ${valueClass}`}>{value}</span>
+      {onReveal ? (
+        <button
+          type="button"
+          onClick={onReveal}
+          aria-label="Voir cette constellation dans le ciel"
+          title="Voir cette constellation dans le ciel"
+          className={cn(
+            'cockpit-focus inline-flex items-center gap-1 rounded-cockpit',
+            'font-medium text-cockpit-md transition-opacity hover:opacity-85',
+            valueClass,
+          )}
+        >
+          <span>{value}</span>
+          <span aria-hidden="true" className="text-cockpit-sm opacity-80">↗</span>
+        </button>
+      ) : (
+        <span className={cn('font-medium text-cockpit-md', valueClass)}>{value}</span>
+      )}
     </div>
   );
 }
