@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from './ui';
+import { usePortalTarget } from '../hooks/usePortalTarget';
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right';
 
@@ -32,6 +33,7 @@ export function TooltipWrap({
   const timeoutRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const portalTarget = usePortalTarget();
 
   const updatePos = () => {
     const el = wrapRef.current;
@@ -80,7 +82,7 @@ export function TooltipWrap({
   const tooltip =
     open &&
     pos &&
-    typeof document !== 'undefined' &&
+    portalTarget &&
     createPortal(
       <span
         aria-hidden="true"
@@ -97,7 +99,7 @@ export function TooltipWrap({
       >
         {text}
       </span>,
-      document.body,
+      portalTarget,
     );
 
   return (

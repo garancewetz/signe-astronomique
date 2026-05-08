@@ -1,142 +1,180 @@
-# Signe astronomique
+# True Cosmic Sign
 
-Cockpit web qui calcule **le vrai signe astronomique** d'une personne — la constellation où le Soleil se trouvait *réellement* à sa naissance, selon les frontières IAU, en intégrant la précession des équinoxes et le 13ᵉ signe (Ophiuchus).
+> A web cockpit that computes your **true astronomical sign** — the constellation the Sun was actually in when you were born, using IAU 1930 boundaries, equinox precession, and Ophiuchus as the 13th sign.
 
-L'app rend une scène 3D Cesium centrée sur la Terre + sphère céleste géocentrique : Soleil, Lune, planètes du système solaire, constellations (catalogue Hipparcos avec étoiles individuelles cliquables), satellites reliques (ISS, Hubble, premier Starlink) et — en option — la population orbitale active complète propagée en temps réel via SGP4.
+![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white) ![CesiumJS](https://img.shields.io/badge/CesiumJS-1.140-4caf50) ![Tailwind](https://img.shields.io/badge/Tailwind-4-06b6d4?logo=tailwindcss&logoColor=white) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-Chaque corps est cliquable : un *body picker* déclenche un panneau d'information dédié et permet de basculer en *side view* (vue perpendiculaire à l'axe Terre→constellation, avec règle de distance graduée en années-lumière) ou *depth view* (constellation « éclatée » à l'échelle réelle des distances stellaires).
+<!-- TODO: hero screenshot or short GIF — drop the file at docs/hero.png and uncomment -->
+<!-- ![Screenshot](docs/hero.png) -->
 
-## Stack
+**Live demo:** <!-- TODO: replace with deployed URL --> *coming soon*
 
-- **Vite 8** + **React 19** + **TypeScript**
-- **Cesium 1.140** (via `vite-plugin-cesium`) pour la scène 3D
-- **satellite.js** pour la propagation SGP4 (ECI → ECEF)
-- **Framer Motion** pour le HUD
-- **lucide-react** pour les icônes des rails
-- **html2canvas-pro** pour la capture du rapport PDF
-- **Tailwind v4** (`@tailwindcss/vite`)
+---
 
-## Lancer en local
+## What it does
+
+The app renders a Cesium 3D scene centered on Earth, surrounded by a geocentric celestial sphere: the Sun, the Moon, the planets, the full Hipparcos star catalog with clickable constellations, a handful of historic relic satellites (ISS, Hubble, Sputnik, …) and — optionally — the entire active orbital population, propagated in real time via SGP4.
+
+Every body is pickable. Selecting one opens a HUD panel and unlocks two complementary visualizations:
+
+- **Side view** — camera perpendicular to the Earth → constellation axis, with a graduated distance ruler in light-years.
+- **Depth view** — the constellation "exploded" so each star sits at its real distance, making the depth disparity legible at a glance.
+
+A natal report is rendered alongside the 3D view: ascendant constellation, planetary positions, and the 360° ecliptic radar with IAU angular sizes.
+
+## Why it matters
+
+Mainstream astrology uses the **tropical zodiac**, a fiction frozen ~2000 years ago. Because of equinox precession, your tropical "sign" no longer matches the constellation the Sun was in when you were born. This project does the actual sidereal computation — RA/Dec in J2000, then epoch correction — and projects the Sun's position onto the IAU 1930 constellation boundaries. Most people end up with a different sign than their horoscope, and many fall into Ophiuchus.
+
+## Tech stack
+
+- **[Vite 8](https://vite.dev)** + **[React 19](https://react.dev)** + **TypeScript 6**
+- **[CesiumJS 1.140](https://cesium.com/platform/cesiumjs/)** (via `vite-plugin-cesium`) for the 3D scene
+- **[satellite.js](https://github.com/shashwatak/satellite.js)** for SGP4 propagation (ECI → ECEF)
+- **[Framer Motion](https://www.framer.com/motion/)** for the HUD
+- **[lucide-react](https://lucide.dev)** for rail icons
+- **[html2canvas-pro](https://github.com/yorickshan/html2canvas-pro)** for the PDF report capture
+- **[Tailwind v4](https://tailwindcss.com)** (`@tailwindcss/vite`)
+- **[tz-lookup](https://github.com/darkskyapp/tz-lookup)** for timezone resolution from coordinates
+
+No Cesium Ion token is required: imagery is served from NASA GIBS (Blue Marble + VIIRS Black Marble), and `Ion.defaultAccessToken = ''` prevents the default Bing fetch.
+
+## Run locally
 
 ```bash
 npm install
 npm run dev      # Vite dev server (http://localhost:5173)
-npm run build    # type-check + bundle prod
-npm run preview  # serve le bundle prod local
+npm run build    # type-check + production bundle
+npm run preview  # serve the local production bundle
 npm run lint
 ```
 
-Aucun token Cesium Ion n'est requis : l'imagerie passe par NASA GIBS (Blue Marble + VIIRS Black Marble) et `baseLayer: false` empêche le fetch par défaut de Bing.
+**Browser support:** modern Chrome / Firefox / Safari with WebGL2. The PNG export uses `preserveDrawingBuffer: true` on the Cesium viewer.
+
+**Bundle size:** the production bundle is large (~860 kB / ~266 kB gzipped) — Cesium dominates. This is a deliberate trade-off: the app's value is the 3D scene, and Cesium is loaded eagerly so the cockpit hydrates fully on first paint.
 
 ## Architecture
 
 ```
 src/
-├── App.tsx                 point d'entrée minimal
+├── App.tsx                       minimal entry point
+├── main.tsx                      bootstrap + dev-tools signature banner
 ├── components/
-│   ├── Cockpit.tsx         container principal (état formulaire, orchestration, layout des rails)
-│   ├── HudFrame.tsx        cadre cockpit (overlays décoratifs)
-│   ├── ControlConsole.tsx  HUD bas (toggles affichage, exports, légende)
-│   ├── LeftRail.tsx        rail gauche (icônes temps/espace : coordonnées, AUJOURD'HUI)
-│   ├── LeftPanel.tsx       panneau dockable gauche (formulaire date/heure/lieu)
-│   ├── RightRail.tsx       rail droit (icônes information/analyse + slot Telescope)
-│   ├── RightPanel.tsx      panneaux dockables droits (Mon signe, Carte)
-│   ├── BodyInfoHud.tsx     HUD d'info quand un corps est sélectionné
-│   ├── RadarWheel.tsx      roue radar 360° de l'écliptique (tailles angulaires IAU)
-│   ├── MissionLog.tsx      cartes du rapport (BirthHeader, AscendantCard, PlanetTable, …)
-│   ├── CityAutocomplete.tsx  autocomplete via Nominatim
-│   ├── ExploreSpacePopover.tsx  panneau lecture du ciel (legacy, mobile)
-│   ├── RailButton.tsx      bouton primitif des rails
-│   ├── Tooltip.tsx         tooltip portal (anti-clipping)
+│   ├── Cockpit.tsx               main container (form state, orchestration, sidebar layout)
+│   ├── HudFrame.tsx              cockpit frame (decorative overlays)
+│   ├── Sidebar.tsx               unified rail + console (left/right icons + dockable panels)
+│   ├── LegendPanel.tsx           orbital population legend (categories, counts, retry)
+│   ├── BodyInfoHud.tsx           HUD shown when a body is selected
+│   ├── RadarWheel.tsx            360° ecliptic radar (IAU angular sizes)
+│   ├── MissionLog.tsx            report cards (BirthHeader, AscendantCard, PlanetTable, …)
+│   ├── CityAutocomplete.tsx      Nominatim autocomplete
+│   ├── CoordinatesForm.tsx       date / time / location form
+│   ├── RightPanel.tsx            dockable right-side panel host
+│   ├── ExploreSpacePopover.tsx   sky-reading panel (legacy / mobile)
+│   ├── Tooltip.tsx               portal tooltip (anti-clipping)
+│   ├── mobile/                   mobile-specific cockpit, drawers, tab bar
 │   ├── space/
-│   │   ├── SpaceView.tsx           Viewer Cesium + caméra + cycle de vie + body picker
+│   │   ├── SpaceView.tsx                  Cesium Viewer + camera + lifecycle + body picker
 │   │   └── cesium/
-│   │       ├── mountStarsLayer.ts        toutes les étoiles du catalogue, cliquables
+│   │       ├── mountStarsLayer.ts         every star in the Hipparcos catalog, pickable
 │   │       ├── mountPlanetsLayer.ts
 │   │       ├── mountMoonLayer.ts
-│   │       ├── mountSunLayer.ts          disque Cesium + entité de pick
-│   │       ├── mountSatellitesLayer.ts   relics (ISS, Hubble, Starlink-0)
-│   │       ├── mountOrbitalLayer.ts      population active complète
-│   │       ├── mountReferenceLines.ts    écliptique, équateur, méridien
-│   │       ├── mountObserverMarker.ts    "you are here" sur le globe
-│   │       ├── mountSelectedConstellation.ts  pattern surligné de la constellation choisie
-│   │       ├── mountExplodedConstellation.ts  étoiles à leur distance réelle (depth view)
-│   │       ├── mountDepthLines.ts        vecteurs Terre→étoile, preuve visuelle des distances
-│   │       ├── mountDistanceRuler.ts     règle graduée en années-lumière (side view)
-│   │       ├── bodies/                   rayons IAU + ellipsoïde visuel proportionnel
-│   │       ├── sideView.ts               bascule caméra vue de côté ↔ vue Terre
-│   │       ├── useBodyPicker.ts          hook click→entité avec type guards sur les payloads
-│   │       └── cameraDirector.ts         flyTo helpers
-│   └── ui/                 primitives partagées (Button, Input, Field, PanelShell, …)
+│   │       ├── mountSunLayer.ts           Cesium disk + pick entity
+│   │       ├── mountSatellitesLayer.ts    relics (ISS, Hubble, Starlink-0)
+│   │       ├── mountOrbitalLayer.ts       full active orbital population
+│   │       ├── mountReferenceLines.ts     ecliptic, equator, meridian
+│   │       ├── mountObserverMarker.ts     "you are here" marker on the globe
+│   │       ├── mountSelectedConstellation.ts  highlighted pattern of the chosen constellation
+│   │       ├── mountExplodedConstellation.ts  stars at their real distance (depth view)
+│   │       ├── mountDistanceRuler.ts      light-year graduated ruler (side view)
+│   │       ├── bodies/                    IAU radii + proportional visual ellipsoid
+│   │       ├── sideView.ts                side ↔ Earth camera toggle
+│   │       ├── useBodyPicker.ts           click → entity hook with type guards on payloads
+│   │       └── cameraDirector.ts          flyTo helpers
+│   └── ui/                       shared primitives (Button, Input, Field, PanelShell, HudCard, …)
 ├── hooks/
 │   ├── useCockpitAudio.ts
 │   ├── useGeolocation.ts
-│   ├── useSatelliteTracker.ts    relics → entités Cesium
-│   └── useOrbitalPopulation.ts   fetch Celestrak (15 groupes typés + Starlink supplemental)
+│   ├── useMobileLayout.ts
+│   ├── usePortalTarget.ts
+│   ├── useSatelliteTracker.ts    relics → Cesium entities
+│   └── useOrbitalPopulation.ts   Celestrak fetch (15 typed groups + Starlink supplemental)
 ├── utils/
-│   ├── astroEngine.ts          frontières IAU, projection RA/Dec → constellation
-│   ├── planetEngine.ts         éphémérides planétaires
-│   ├── skyCoordinates.ts       conversions ICRS↔ECEF, sphère céleste
-│   ├── constellationLore.ts    nom français/latin, mythologie, vulgarisation
-│   ├── timezone.ts             tz-lookup → conversion heure naissance → UTC
-│   └── exportReport.ts         capture canvas + PDF
+│   ├── astroEngine.ts            IAU boundaries, RA/Dec → constellation projection
+│   ├── planetEngine.ts           planetary ephemerides
+│   ├── skyCoordinates.ts         ICRS ↔ ECEF conversions, celestial sphere
+│   ├── constellationLore.ts      French / Latin names, mythology, education copy
+│   ├── timezone.ts               tz-lookup → birth time → UTC
+│   └── exportReport.ts           canvas capture + PDF
 ├── data/
-│   ├── constellations.json     catalogue Hipparcos (étoiles + lignes de pattern)
-│   ├── constellationCatalog.ts loader typé du JSON
-│   ├── orbitalCategories.ts    palette + libellés des groupes Celestrak
-│   └── satellitesDB.ts         TLE des relics (Sputnik, Telstar, ISS, Hubble, …)
-└── types/                  .d.ts ambiants
+│   ├── constellations.json       Hipparcos catalog (stars + pattern lines)
+│   ├── constellationCatalog.ts   typed JSON loader
+│   ├── orbitalCategories.ts      Celestrak group palette + labels
+│   └── satellitesDB.ts           relic TLEs (Sputnik, Telstar, ISS, Hubble, …)
+└── types/                        ambient .d.ts
 ```
 
-Frontières du module Cesium : aucun `import 'cesium'` hors de `src/components/space/`. Les composants frères qui ont besoin d'agir sur la scène passent par le `SpaceViewHandle` impératif exposé en `ref`.
+**Module boundaries**
 
-Frontière des utils : `src/utils/` reste framework-agnostique — pas d'import React, pas d'accès DOM. C'est aussi là que vit toute la machinerie astronomique (`astroEngine.ts`, `planetEngine.ts`, `skyCoordinates.ts`).
+- `src/utils/` is framework-agnostic: no React imports, no DOM access. All the astronomical machinery (`astroEngine`, `planetEngine`, `skyCoordinates`) lives here.
+- The Cesium dependency is walled off: no `import 'cesium'` outside `src/components/space/`. Sibling components that need to act on the scene go through the imperative `SpaceViewHandle` exposed via `ref`.
+- Each `mountX(viewer, …)` factory returns its own teardown function. `SpaceView`'s effects chain those cleanups, so every entity, interval and primitive created is destroyed on unmount — no WebGL context leaks.
 
-## Couches Cesium
+## Cesium layers
 
-Chaque couche est une factory `mountX(viewer, …): () => void` qui retourne sa fonction de teardown. Les `useEffect` du `SpaceView` les appellent en cascade et chaînent les cleanups, ce qui garantit que **chaque entité, intervalle ou primitive créés sont détruits au démontage** — pas de fuite de contexte WebGL.
+- **Stars / Planets / Moon / Sun / ReferenceLines / ObserverMarker** — entities placed on a celestial sphere at ~100 AU (star radius scaled by magnitude), or on the globe for the observer marker.
+- **SelectedConstellation / ExplodedConstellation / DistanceRuler** — overlays that highlight the chosen constellation. The exploded variant places each star on a logarithmic shell so the real distance disparities become visible (educational view).
+- **Satellites Layer (relics)** — ISS, Hubble, Starlink-0, propagated each frame via `CallbackProperty`.
+- **Orbital Layer** — `PointPrimitiveCollection` batch, up to 4 000 active satellites, propagated once per second via `setInterval` (decoupled from the render loop). Color, size and label come from [`src/data/orbitalCategories.ts`](src/data/orbitalCategories.ts) — a single source of truth shared with the HUD legend.
 
-- **Stars / Planets / Moon / Sun / ReferenceLines / ObserverMarker** : entités sur sphère céleste à ~100 AU (étoiles à rayon variable selon magnitude), ou sur le globe pour le marqueur d'observation.
-- **SelectedConstellation / ExplodedConstellation / DepthLines / DistanceRuler** : couches de mise en valeur de la constellation choisie. La version *exploded* place chaque étoile sur une coquille logarithmique étirée pour faire ressortir les disparités de distance réelles (lecture pédagogique).
-- **Satellites Layer (relics)** : ISS, Hubble, Starlink-0, propagation SGP4 chaque trame via `CallbackProperty`.
-- **Orbital Layer** : `PointPrimitiveCollection` batch, jusqu'à 4 000 sats actifs, propagés une fois par seconde via `setInterval` (découplé du render loop). Couleur, taille et label viennent de [`src/data/orbitalCategories.ts`](src/data/orbitalCategories.ts) — une seule source de vérité partagée avec la légende du HUD.
+## Sidebar and panels
 
-## Rails et panneaux
+The main UI sits on a unified [`Sidebar`](src/components/Sidebar.tsx) with two 50 px rails. Each icon opens a dockable panel that slides adjacent to the rail (form on the left, reports on the right). The Cesium canvas inset moves with the panel — no camera math, just a viewport change that triggers automatic recentering.
 
-L'UI principale repose sur deux **rails latéraux** de 50 px (`LeftRail`, `RightRail`) qui restent fixes quel que soit l'état. Chaque icône ouvre un **panneau docké** qui glisse adjacent au rail (formulaire à gauche, rapports à droite). Le canvas Cesium est inseté en conséquence — pas de math caméra, juste un changement de viewport qui force un recentrage automatique.
-
-Le slot Telescope du rail droit n'apparaît que lorsqu'un corps est sélectionné via clic. Il rend [`BodyInfoHud`](src/components/BodyInfoHud.tsx), depuis lequel on bascule en **side view** (caméra perpendiculaire à l'axe Terre→constellation, règle de distance graduée) ou **depth view** (constellation éclatée + vecteurs Terre→étoile).
+The Telescope slot appears only when a body is selected via click. It hosts [`BodyInfoHud`](src/components/BodyInfoHud.tsx), from which you toggle into **side view** or **depth view**.
 
 ## Body picker
 
-[`useBodyPicker`](src/components/space/cesium/useBodyPicker.ts) écoute `LEFT_CLICK` sur le viewer et lit le `PropertyBag` attaché par chaque mount layer aux entités cliquables. Les payloads (`StarPayload`, `SunPayload`, `PlanetPayload`, `MoonPayload`) sont validés par des type guards avant d'être hissés en `SelectedBody` dans `SpaceView` — pas de cast, pas d'`any`.
+[`useBodyPicker`](src/components/space/cesium/useBodyPicker.ts) listens for `LEFT_CLICK` on the viewer and reads the `PropertyBag` attached by each mount layer to its pickable entities. Payloads (`StarPayload`, `SunPayload`, `PlanetPayload`, `MoonPayload`) are validated by type guards before being lifted into `SelectedBody` in `SpaceView` — no casts, no `any`.
 
-## Toggle ORBITAL
+## Live orbital toggle
 
-Activable via le bouton `[ORBITAL]` dans l'AFFICHAGE. OFF par défaut pour garder la lecture astrologique lisible.
+Activated through the `[ORBITAL]` button in the display panel. **Off by default** to keep the astrological reading legible.
 
-- **Modern Clutter** (par défaut) : tous les satellites actifs aujourd'hui.
-- **Historical View** (`[NAISSANCE]`, visible quand un thème natal est actif) : seulement les satellites lancés ≤ année de naissance. Filtrage à partir de l'international designator du TLE.
+- **Modern Clutter** (default) — every active satellite today.
+- **Historical View** (`[NAISSANCE]`, visible when a natal reading is active) — only satellites launched on or before the birth year. Filtered from the TLE international designator.
 
-Le `useOrbitalPopulation` fetch en parallèle 15 groupes Celestrak (`stations`, `weather`, `gps-ops`, `galileo`, `glo-ops`, `beidou`, `geo`, `intelsat`, `ses`, `iridium-NEXT`, `oneweb`, `science`, …) + le supplemental Starlink. Pas d'appel à `GROUP=active` (~5 Mo, blacklist IP en quelques hits). `Promise.allSettled` interne : un groupe rate-limité ne casse pas le reste. Cache module-level — un seul fetch par session, retoggle instantané.
+[`useOrbitalPopulation`](src/hooks/useOrbitalPopulation.ts) fetches 15 Celestrak groups in parallel (`stations`, `weather`, `gps-ops`, `galileo`, `glo-ops`, `beidou`, `geo`, `intelsat`, `ses`, `iridium-NEXT`, `oneweb`, `science`, …) plus the supplemental Starlink feed. It deliberately avoids `GROUP=active` (~5 MB, IP-blacklisted within a few hits). `Promise.allSettled` isolates failures: a rate-limited group doesn't break the rest. The result is exposed via `useSyncExternalStore` from a module-level cache — one fetch per session, instant retoggle, no setState-in-effect round-trip.
 
-En cas d'erreur réseau, le bouton bascule en `[RETRY]` et un seul clic relance le fetch via `retry()` exposé par le hook.
+On a network error the button flips to `[RETRY]`; one click re-runs the fetch via the hook's `retry()`.
 
-## Conventions
+## Astronomy notes
 
-- **Code en anglais** — identifiants, types, exports, commentaires. Seuls les libellés UI sont en français (titres de panneau, labels de boutons, messages d'erreur écran).
-- **Versions exactes** dans `package.json` (pas de `^` / `~`). Le `.npmrc` enforce.
-- **Pas d'`as` cast**, pas d'`eslint-disable`, pas de `console.log` ; `console.warn`/`console.error` réservés aux chemins d'erreur réels.
-- Les fichiers `mountX.ts` retournent toujours leur cleanup — ne jamais en monter un sans capturer son return.
-- État de formulaire qui doit survivre à la fermeture/réouverture d'un panneau → vit dans `Cockpit`, pas dans le panneau.
-
-## Astronomie
-
-- **Frontières IAU 1930** pour la projection Soleil → constellation.
-- **Précession des équinoxes** : le calcul est sidéral (RA/Dec dans J2000 puis correction d'époque), pas tropical, donc les signes diffèrent généralement d'un cran de l'horoscope grand public.
-- **Ophiuchus inclus** comme 13ᵉ constellation traversée par l'écliptique.
-- **Ascendant astronomique** : constellation qui se levait à l'horizon est à l'instant et au lieu de naissance, calculée via temps sidéral local + latitude.
+- **IAU 1930 boundaries** for the Sun → constellation projection.
+- **Sidereal**, not tropical — RA/Dec in J2000 with epoch precession correction. Signs typically differ by one slot from mainstream horoscopes.
+- **Ophiuchus** included as the 13th constellation crossed by the ecliptic.
+- **Astronomical ascendant** — the constellation rising on the eastern horizon at the birth instant and place, computed from local sidereal time + latitude.
 
 ## Export
 
-Le bouton appareil photo capture le canvas WebGL en PNG (d'où `preserveDrawingBuffer: true` sur le Viewer). Le bouton rapport génère un PDF récapitulatif via `exportReport.ts`.
+The camera button captures the WebGL canvas to PNG (hence `preserveDrawingBuffer: true` on the Viewer). The report button generates a PDF summary via [`exportReport.ts`](src/utils/exportReport.ts).
+
+## Conventions
+
+- **English** identifiers, types, exports, comments. Only the UI strings (panel titles, button labels, screen errors) are in French.
+- **Exact pinned versions** in `package.json` (no `^` / `~`); `.npmrc` enforces `save-exact=true`.
+- No `as` casts, no `eslint-disable`, no stray `console.log` (the dev-tools banner in [`main.tsx`](src/main.tsx) is intentional and labelled as such). `console.warn` / `console.error` reserved for real error paths.
+- `mountX.ts` factories always return a cleanup — never mount one without capturing its return.
+- Form state that must survive panel close/reopen lives in `Cockpit`, not in the panel.
+
+## Credits
+
+- **IAU 1930 constellation boundaries** — Eugène Delporte, *Délimitation scientifique des constellations*.
+- **Hipparcos star catalog** — ESA, public domain.
+- **Celestrak** — Dr. T.S. Kelso, [celestrak.org](https://celestrak.org/) — TLEs for the live orbital population.
+- **NASA GIBS** — Earth imagery (Blue Marble + VIIRS Black Marble Night Lights).
+- **OpenStreetMap / Nominatim** — city geocoding.
+
+## License
+
+[MIT](LICENSE) — © 2026 Garance Wetzel.

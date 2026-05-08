@@ -32,7 +32,6 @@ import { mountPlanetsLayer } from './cesium/mountPlanetsLayer';
 import { mountReferenceLines } from './cesium/mountReferenceLines';
 import { mountSatellitesLayer } from './cesium/mountSatellitesLayer';
 import { mountOrbitalLayer } from './cesium/mountOrbitalLayer';
-import { mountDepthLines } from './cesium/mountDepthLines';
 import { mountDistanceRuler } from './cesium/mountDistanceRuler';
 import { mountExplodedConstellation } from './cesium/mountExplodedConstellation';
 import { mountSelectedConstellation } from './cesium/mountSelectedConstellation';
@@ -157,11 +156,6 @@ interface Props {
   /** Fires when the user clicks a body or empty space (deselects). */
   onBodySelect: (body: SelectedBody | null) => void;
   /**
-   * Renders the Earth→star vectors for the selected constellation.
-   * No-op unless a star is selected.
-   */
-  depthViewActive: boolean;
-  /**
    * Side View: flies the camera 90° around the constellation, swaps in
    * the exploded shell + distance ruler, and dims the rest of the sky.
    * No-op unless a star is selected.
@@ -212,7 +206,6 @@ export function SpaceView({
   markerLabel,
   selectedBody,
   onBodySelect,
-  depthViewActive,
   sideViewActive,
   ref,
 }: Props) {
@@ -740,9 +733,9 @@ export function SpaceView({
     };
   }, [hoveredName]);
 
-  // Constellation overlay + depth lines only make sense when a star is
-  // selected — every other body kind leaves them off. Pulled out here so
-  // the two effects below stay readable.
+  // Constellation overlays only make sense when a star is selected —
+  // every other body kind leaves them off. Pulled out here so the
+  // effects below stay readable.
   const selectedStar = selectedBody?.kind === 'star' ? selectedBody : null;
 
   // Bright pattern overlay for the user-selected constellation. Decoupled
@@ -762,22 +755,6 @@ export function SpaceView({
     });
     return cleanup;
   }, [selectedStar, sideViewActive, reading, liveReading]);
-
-  // Depth view: Earth→star vectors for the selected constellation. Uses
-  // the expanded shell when Side View is active so the rays land on the
-  // exploded star positions instead of the compact log shell.
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer || !selectedStar || !depthViewActive) return;
-    const active = reading ?? liveReading;
-    const gmstRad = gmstRadians(active.input.date);
-    const cleanup = mountDepthLines(viewer, {
-      constellationAbbr: selectedStar.constellationAbbr,
-      gmstRad,
-      useExpandedShell: sideViewActive,
-    });
-    return cleanup;
-  }, [selectedStar, depthViewActive, sideViewActive, reading, liveReading]);
 
   // Exploded constellation: re-renders the selected stars on the [50, 800]
   // AU shell with depth tint and glow lines. Mounted only in Side View.

@@ -1,6 +1,23 @@
+import { type SVGProps, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Info, X } from 'lucide-react';
+import { Check, Info, Mail, X } from 'lucide-react';
+
+function GithubMark(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+      {...props}
+    >
+      <path d="M12 .5C5.73.5.75 5.48.75 11.75c0 4.97 3.22 9.18 7.69 10.67.56.1.77-.24.77-.54 0-.27-.01-1.16-.02-2.1-3.13.68-3.79-1.34-3.79-1.34-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.55 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.99 0 0 .94-.3 3.09 1.15.9-.25 1.87-.38 2.83-.38.96 0 1.93.13 2.83.38 2.15-1.45 3.09-1.15 3.09-1.15.61 1.56.23 2.71.11 2.99.72.79 1.16 1.79 1.16 3.02 0 4.31-2.63 5.27-5.14 5.55.4.35.76 1.03.76 2.08 0 1.5-.01 2.71-.01 3.08 0 .3.2.65.78.54 4.46-1.49 7.68-5.7 7.68-10.67C23.25 5.48 18.27.5 12 .5z" />
+    </svg>
+  );
+}
+import { usePortalTarget } from '../hooks/usePortalTarget';
+
+const CONTACT_EMAIL = 'garance.wetzel@gmail.com';
 
 const SECTIONS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -87,6 +104,40 @@ interface Props {
 
 export function ExploreSpacePopover({ onClose }: Props) {
   const reduceMotion = useReducedMotion();
+  const portalTarget = usePortalTarget();
+  const [emailCopied, setEmailCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
+
+  const handleCopyEmail = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(CONTACT_EMAIL);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = CONTACT_EMAIL;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setEmailCopied(true);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setEmailCopied(false), 1800);
+    } catch {
+      // Clipboard access denied — keep state unchanged
+    }
+  };
+
+  if (!portalTarget) return null;
   return createPortal(
     <motion.div
       role="presentation"
@@ -171,9 +222,68 @@ export function ExploreSpacePopover({ onClose }: Props) {
             </section>
           ))}
         </div>
+
+        <footer
+          className="shrink-0 flex items-center justify-between gap-3
+                     px-4 py-2.5 border-t border-border-hud-muted"
+        >
+          <span className="text-cockpit-xs tracking-cockpit-hud uppercase text-slate-500">
+            Conçu par Garance Wetzel
+          </span>
+          <div className="flex items-center gap-1">
+            <a
+              href="https://github.com/garancewetz"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub de Garance Wetzel"
+              className="cockpit-focus grid place-items-center
+                         size-8 rounded
+                         text-slate-400 hover:text-violet-200
+                         hover:bg-violet-500/10 transition-colors"
+            >
+              <GithubMark className="size-4" />
+            </a>
+            <button
+              type="button"
+              onClick={handleCopyEmail}
+              aria-label={
+                emailCopied
+                  ? `Email copié : ${CONTACT_EMAIL}`
+                  : `Copier l’email : ${CONTACT_EMAIL}`
+              }
+              title={emailCopied ? 'Email copié' : `Copier ${CONTACT_EMAIL}`}
+              className="cockpit-focus relative grid place-items-center
+                         size-8 rounded
+                         text-slate-400 hover:text-violet-200
+                         hover:bg-violet-500/10 transition-colors"
+            >
+              {emailCopied ? (
+                <Check
+                  className="size-4 text-violet-300"
+                  strokeWidth={1.6}
+                  aria-hidden
+                />
+              ) : (
+                <Mail className="size-4" strokeWidth={1.4} aria-hidden />
+              )}
+              {emailCopied && (
+                <span
+                  role="status"
+                  className="pointer-events-none absolute bottom-full right-0 mb-1.5
+                             whitespace-nowrap rounded border border-border-hud-subtle
+                             bg-surface-raised/95 px-1.5 py-0.5
+                             text-cockpit-xs tracking-cockpit-hud uppercase text-violet-200
+                             shadow-cockpit-sheet"
+                >
+                  Copié
+                </span>
+              )}
+            </button>
+          </div>
+        </footer>
       </div>
     </motion.div>,
-    document.body,
+    portalTarget,
   );
 }
 

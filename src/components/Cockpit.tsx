@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import {
   SpaceView,
@@ -25,6 +25,9 @@ import {
 } from './RightPanel';
 import { LegendPanel } from './LegendPanel';
 import { useCockpitAudio } from '../hooks/useCockpitAudio';
+import { useMobileLayout } from '../hooks/useMobileLayout';
+import { MobileCockpit } from './mobile/MobileCockpit';
+import type { MobileTabKey } from './mobile/MobileTabBar';
 import {
   downloadCanvasPng,
   exportTargetedPng,
@@ -91,6 +94,8 @@ function selectedBodyLabel(body: SelectedBody | null): string | null {
 }
 
 export function Cockpit() {
+  const isMobile = useMobileLayout();
+
   const [reading, setReading] = useState<CelestialReading | null>(null);
 
   // The natal form lives at the top of the sidebar (always visible), so
@@ -110,8 +115,8 @@ export function Cockpit() {
   const [constellationOverlayEnabled, setConstellationOverlayEnabled] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
   const [selectedBody, setSelectedBody] = useState<SelectedBody | null>(null);
-  const [depthViewActive, setDepthViewActive] = useState(false);
   const [sideViewActive, setSideViewActive] = useState(false);
+  const [mobileActiveTab, setMobileActiveTab] = useState<MobileTabKey | null>(null);
 
   const reduceMotion = useReducedMotion();
 
@@ -123,15 +128,16 @@ export function Cockpit() {
 
   // Live overlay availability — Celestrak TLEs only span ~2 weeks around
   // their epoch. When the natal date wanders far from now, gate the toggle.
+  // nowMs is sampled at mount; the 2-week threshold absorbs session drift.
+  const [nowMs] = useState(() => Date.now());
   const orbitalAvailable =
     reading == null ||
-    Math.abs(reading.input.date.getTime() - Date.now()) < LIVE_TLE_VALIDITY_MS;
+    Math.abs(reading.input.date.getTime() - nowMs) < LIVE_TLE_VALIDITY_MS;
 
-  useEffect(() => {
-    if (!orbitalAvailable && constellationOverlayEnabled) {
-      setConstellationOverlayEnabled(false);
-    }
-  }, [orbitalAvailable, constellationOverlayEnabled]);
+  // Derived: user intent gated by data validity. Avoids a setState-in-effect
+  // round-trip — the user toggle keeps its intent, but downstream consumers
+  // see the effective state at render time.
+  const constellationOverlayActive = constellationOverlayEnabled && orbitalAvailable;
 
   const [date, setDate] = useState(() => formatInputDate(new Date()));
   const [time, setTime] = useState(() => formatInputTime(new Date()));
@@ -207,12 +213,13 @@ export function Cockpit() {
   const handleBodySelect = (body: SelectedBody | null) => {
     cancelPendingPanelOpen();
     setSelectedBody(body);
-    setDepthViewActive(false);
     setSideViewActive(false);
     if (body) {
       openPanel('body');
+      setMobileActiveTab('selection');
     } else {
       setActivePanel((prev) => (prev === 'body' ? null : prev));
+      setMobileActiveTab((prev) => (prev === 'selection' ? null : prev));
     }
   };
 
@@ -331,8 +338,12 @@ export function Cockpit() {
   // to the sidebar, on the left side of the viewport only.
   const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_PX : SIDEBAR_EXPANDED_PX;
   const dockWidth = dockWidthFor(sidebarWidth);
+  // Body and legend float over the canvas as glassmorphism cards; only
+  // the dense analysis panels widen the canvas inset.
+  const isFloatingPanel = activePanel === 'body' || activePanel === 'legend';
+  const dockedPanelOpen = activePanel !== null && !isFloatingPanel;
   const canvasInsetStyle = {
-    left: activePanel
+    left: dockedPanelOpen
       ? `calc(${sidebarWidth}px + ${dockWidth})`
       : `${sidebarWidth}px`,
   };
@@ -345,6 +356,74 @@ export function Cockpit() {
     }
     setConstellationOverlayEnabled((v) => !v);
   };
+
+  const spaceView = (
+    <SpaceView
+      ref={spaceViewRef}
+      reading={reading}
+      showGuides={showGuides}
+      showBodyLabels={bodyLabelsEnabled}
+      showSatellites={satellitesEnabled}
+      orbitalSatellites={constellationOverlayActive ? orbitalSatellites : []}
+      constellationMode="modern"
+      liveLatitude={city.lat}
+      liveLongitude={city.lon}
+      markerLatitude={reading?.input.latitude ?? city.lat}
+      markerLongitude={reading?.input.longitude ?? city.lon}
+      markerLabel={reading?.input.placeLabel ?? city.label}
+      selectedBody={selectedBody}
+      onBodySelect={handleBodySelect}
+      sideViewActive={sideViewActive}
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <MobileCockpit
+        date={date}
+        time={time}
+        city={city}
+        onDateChange={setDate}
+        onTimeChange={setTime}
+        onCityChange={setUserCity}
+        onJump={handleJump}
+        onBlip={audio.blip}
+        reading={reading}
+        selectedBody={selectedBody}
+        onCloseSelection={() => handleBodySelect(null)}
+        hasSelectedStar={selectedBody?.kind === 'star'}
+        bodyLabelsEnabled={bodyLabelsEnabled}
+        onToggleBodyLabels={() => setBodyLabelsEnabled((v) => !v)}
+        guidesEnabled={showGuides}
+        onToggleGuides={() => setShowGuides((v) => !v)}
+        satellitesEnabled={satellitesEnabled}
+        onToggleSatellites={() => setSatellitesEnabled((v) => !v)}
+        constellationOverlayEnabled={constellationOverlayEnabled}
+        onToggleConstellationOverlay={orbitalToggleHandler}
+        orbitalAvailable={orbitalAvailable}
+        orbitalStatus={orbitalStatus}
+        sideViewActive={sideViewActive}
+        onToggleSideView={() => setSideViewActive((v) => !v)}
+        onFlySun={() => spaceViewRef.current?.flyToSun()}
+        onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
+        onFlyEarth={() => spaceViewRef.current?.flyToEarth()}
+        onRevealConstellation={() => revealConstellation({ openPanelAfter: false })}
+        activeTab={mobileActiveTab}
+        onActiveTabChange={setMobileActiveTab}
+        audioEnabled={audio.enabled}
+        onToggleAudio={toggleAudio}
+        fullscreenActive={fullscreenActive}
+        onToggleFullscreen={toggleFullscreen}
+        onExportView={handleExportView}
+        exportingView={exportingView}
+        onExportReport={handleExport}
+        exportingReport={exporting}
+        canExportReport={!!reading}
+      >
+        {spaceView}
+      </MobileCockpit>
+    );
+  }
 
   return (
     <div
@@ -363,24 +442,7 @@ export function Cockpit() {
                    transition-[left] duration-300 ease-out"
         style={canvasInsetStyle}
       >
-        <SpaceView
-          ref={spaceViewRef}
-          reading={reading}
-          showGuides={showGuides}
-          showBodyLabels={bodyLabelsEnabled}
-          showSatellites={satellitesEnabled}
-          orbitalSatellites={constellationOverlayEnabled ? orbitalSatellites : []}
-          constellationMode="modern"
-          liveLatitude={city.lat}
-          liveLongitude={city.lon}
-          markerLatitude={reading?.input.latitude ?? city.lat}
-          markerLongitude={reading?.input.longitude ?? city.lon}
-          markerLabel={reading?.input.placeLabel ?? city.label}
-          selectedBody={selectedBody}
-          onBodySelect={handleBodySelect}
-          depthViewActive={depthViewActive}
-          sideViewActive={sideViewActive}
-        />
+        {spaceView}
       </div>
 
       {/* === VIGNETTE BOULE DE CRISTAL === */}
@@ -433,8 +495,6 @@ export function Cockpit() {
         orbitalAvailable={orbitalAvailable}
         orbitalStatus={orbitalStatus}
         hasSelectedStar={selectedBody?.kind === 'star'}
-        depthViewActive={depthViewActive}
-        onToggleDepthView={() => setDepthViewActive((v) => !v)}
         sideViewActive={sideViewActive}
         onToggleSideView={() => setSideViewActive((v) => !v)}
         audioEnabled={audio.enabled}
@@ -450,10 +510,14 @@ export function Cockpit() {
 
       {/* === DOCKED PANEL — second-tier slide-out adjacent to the sidebar === */}
       <DockedPanel
-        open={activePanel !== null}
+        open={dockedPanelOpen}
         sidebarWidth={sidebarWidth}
         dockWidth={dockWidth}
-        panelId={activePanel ? `panel-${activePanel}` : 'panel-second-tier'}
+        panelId={
+          activePanel && !isFloatingPanel
+            ? `panel-${activePanel}`
+            : 'panel-second-tier'
+        }
       >
         {activePanel === 'resume' && (
           <ResumePanel
@@ -480,19 +544,37 @@ export function Cockpit() {
         {activePanel === 'donnees' && (
           <DonneesPanel reading={reading} onClose={closePanel} />
         )}
+      </DockedPanel>
+
+      {/* === FLOATING HUD CARDS — glassmorphism overlays above the sky === */}
+      <AnimatePresence mode="wait">
         {activePanel === 'body' && selectedBody && (
           <BodyInfoHud
             key={bodyInfoKey(selectedBody)}
             selected={selectedBody}
-            depthViewActive={depthViewActive}
-            onToggleDepthView={() => setDepthViewActive((v) => !v)}
+            sidebarWidth={sidebarWidth}
             sideViewActive={sideViewActive}
             onToggleSideView={() => setSideViewActive((v) => !v)}
             onClose={closePanel}
           />
         )}
-        {activePanel === 'legend' && <LegendPanel onClose={closePanel} />}
-      </DockedPanel>
+        {activePanel === 'legend' && (
+          <LegendPanel
+            key="legend"
+            sidebarWidth={sidebarWidth}
+            onClose={closePanel}
+            bodyLabelsEnabled={bodyLabelsEnabled}
+            onToggleBodyLabels={() => setBodyLabelsEnabled((v) => !v)}
+            guidesEnabled={showGuides}
+            onToggleGuides={() => setShowGuides((v) => !v)}
+            satellitesEnabled={satellitesEnabled}
+            onToggleSatellites={() => setSatellitesEnabled((v) => !v)}
+            constellationOverlayEnabled={constellationOverlayEnabled}
+            onToggleConstellationOverlay={orbitalToggleHandler}
+            orbitalAvailable={orbitalAvailable}
+          />
+        )}
+      </AnimatePresence>
 
       {/* === RAPPORT COMPLET (hors-écran) — source de l'export PNG === */}
       {reading && (

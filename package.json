@@ -1,8 +1,38 @@
 {
-  "name": "true-cosmic-sign",
+  "name": "signe-astronomique",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "description": "Cockpit web that computes your true astronomical sign — the constellation the Sun was actually in at your birth, using IAU 1930 boundaries, equinox precession, and Ophiuchus as the 13th sign. Renders a Cesium 3D globe + geocentric celestial sphere with interactive bodies, a live SGP4-propagated orbital population, and side / depth views of the chosen constellation.",
+  "author": {
+    "name": "Garance Wetzel",
+    "url": "https://github.com/garancewetz"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/garancewetz/signe-astronomique#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garancewetz/signe-astronomique.git"
+  },
+  "bugs": {
+    "url": "https://github.com/garancewetz/signe-astronomique/issues"
+  },
+  "keywords": [
+    "astronomy",
+    "astrology",
+    "cesium",
+    "react",
+    "typescript",
+    "vite",
+    "constellations",
+    "iau",
+    "sgp4",
+    "satellites",
+    "celestrak",
+    "ophiuchus",
+    "precession",
+    "webgl"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

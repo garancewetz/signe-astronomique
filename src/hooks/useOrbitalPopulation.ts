@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { twoline2satrec, type SatRec } from 'satellite.js';
 
 export type OrbitalCategory = 'starlink' | 'weather' | 'nav' | 'comm' | 'other';
@@ -42,16 +42,47 @@ const CELESTRAK_STARLINK_URL =
 // Hard cap after merge — keeps the SGP4 batch at ~20 ms per 1-second tick.
 const MAX_DISPLAY = 4000;
 
-// Module-level cache: survives toggle-off/on without re-fetching.
-let _cache: OrbitalSat[] | null = null;
+// ─── module-level store ─────────────────────────────────────────────────────
+// Survives toggle-off/on without re-fetching, and lets every consumer of the
+// hook subscribe via useSyncExternalStore (no setState-in-effect round-trip).
+
+const EMPTY_SATS: OrbitalSat[] = [];
+
+let cacheRef: OrbitalSat[] = EMPTY_SATS;
+let statusRef: OrbitalStatus = 'idle';
+const listeners = new Set<() => void>();
+
+function emit() {
+  listeners.forEach((l) => l());
+}
+
+function setCache(next: OrbitalSat[]) {
+  cacheRef = next;
+  statusRef = 'ready';
+  emit();
+}
+
+function setStatus(next: OrbitalStatus) {
+  statusRef = next;
+  emit();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+const getSnapshot = () => cacheRef;
+const getStatusSnapshot = () => statusRef;
 
 /**
  * Fetches the full active satellite catalog + supplemental Starlink TLEs from
  * Celestrak, merges them (supplemental wins on duplicate NORAD IDs), and
  * returns a typed, categorized array ready for the orbital layer.
  *
- * Only fetches once per session. Subsequent calls with `enabled = true` reuse
- * the in-memory cache immediately.
+ * Only fetches once per session. Subsequent mounts read the in-memory store.
  */
 export function useOrbitalPopulation(enabled: boolean): {
   satellites: OrbitalSat[];
@@ -59,21 +90,15 @@ export function useOrbitalPopulation(enabled: boolean): {
   /** Force a refetch — used by the UI retry affordance after an error. */
   retry: () => void;
 } {
-  const [status, setStatus] = useState<OrbitalStatus>(
-    _cache ? 'ready' : 'idle',
-  );
-  const [satellites, setSatellites] = useState<OrbitalSat[]>(_cache ?? []);
+  const satellites = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const status = useSyncExternalStore(subscribe, getStatusSnapshot, getStatusSnapshot);
   // Bumped by retry() to force a re-run of the fetch effect. Cheaper than
   // a state-machine inside the hook.
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!enabled) return;
-    if (_cache) {
-      setSatellites(_cache);
-      setStatus('ready');
-      return;
-    }
+    if (cacheRef.length > 0) return;
     setStatus('loading');
     const controller = new AbortController();
     const signal = controller.signal;
@@ -91,10 +116,7 @@ export function useOrbitalPopulation(enabled: boolean): {
           setStatus('error');
           return;
         }
-        const merged = mergePopulations(general, starlink);
-        _cache = merged;
-        setSatellites(merged);
-        setStatus('ready');
+        setCache(mergePopulations(general, starlink));
       })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === 'AbortError') return;

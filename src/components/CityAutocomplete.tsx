@@ -26,29 +26,30 @@ export function CityAutocomplete({ value, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [lastValueLabel, setLastValueLabel] = useState(value.label);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const reqIdRef = useRef(0);
   const listboxId = useId();
 
-  useEffect(() => {
-    const isInputFocused = document.activeElement === inputRef.current;
-    if (isInputFocused) return;
-    setQuery(value.label);
-    setResults([]);
-    setOpen(false);
-    setLoading(false);
-  }, [value.label]);
+  // React docs "Adjusting state on prop change" pattern — render-time setState,
+  // bounded by the lastValueLabel guard so it can't loop. Replaces a
+  // setState-in-effect that suffered from cascading renders.
+  if (value.label !== lastValueLabel) {
+    setLastValueLabel(value.label);
+    if (!isFocused) {
+      setQuery(value.label);
+      setResults([]);
+      setOpen(false);
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const trimmed = query.trim();
-    if (trimmed.length < 2 || trimmed === value.label) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
+    if (trimmed.length < 2 || trimmed === value.label) return;
     const id = ++reqIdRef.current;
-    setLoading(true);
 
     const timer = setTimeout(async () => {
       try {
@@ -118,6 +119,7 @@ export function CityAutocomplete({ value, onSelect }: Props) {
   };
 
   const onBlur = () => {
+    setIsFocused(false);
     if (query.trim() !== value.label) setQuery(value.label);
   };
 
@@ -128,8 +130,22 @@ export function CityAutocomplete({ value, onSelect }: Props) {
         type="text"
         value={query}
         placeholder="Ville de naissance…"
-        onChange={e => { setQuery(e.target.value); setOpen(true); }}
-        onFocus={() => results.length > 0 && setOpen(true)}
+        onChange={e => {
+          const next = e.target.value;
+          setQuery(next);
+          setOpen(true);
+          const trimmed = next.trim();
+          if (trimmed.length < 2 || trimmed === value.label) {
+            setResults([]);
+            setLoading(false);
+          } else {
+            setLoading(true);
+          }
+        }}
+        onFocus={() => {
+          setIsFocused(true);
+          if (results.length > 0) setOpen(true);
+        }}
         onKeyDown={onKeyDown}
         onBlur={onBlur}
         className="cockpit-input w-full"

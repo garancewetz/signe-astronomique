@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import type { HTMLAttributes, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Button } from './Button';
 import { cn } from './cn';
 import { X } from 'lucide-react';
@@ -22,13 +22,13 @@ interface PanelShellProps {
   animationKey?: string;
 }
 
-function PanelShellRoot({
+export function PanelShell({
   title,
   subtitle,
   children,
   onClose,
   closeAriaLabel = 'Fermer le panneau',
-  closeContent = <DefaultCloseIcon />,
+  closeContent = <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />,
   className,
   headerClassName,
   titleClassName,
@@ -64,9 +64,23 @@ function PanelShellRoot({
       >
         <div className="min-w-0">
           {subtitle && (
-            <PanelShellSubtitle className={subtitleClassName}>{subtitle}</PanelShellSubtitle>
+            <div
+              className={cn(
+                'text-cockpit-sm tracking-cockpit-label text-accent-label mb-0.5',
+                subtitleClassName,
+              )}
+            >
+              {subtitle}
+            </div>
           )}
-          <PanelShellTitle className={titleClassName}>{title}</PanelShellTitle>
+          <h2
+            className={cn(
+              'text-cockpit-lg tracking-cockpit-tight text-accent-title',
+              titleClassName,
+            )}
+          >
+            {title}
+          </h2>
         </div>
         {onClose && (
           <Button
@@ -86,42 +100,3 @@ function PanelShellRoot({
     </div>
   );
 }
-
-function PanelShellTitle({
-  className,
-  ...props
-}: HTMLAttributes<HTMLHeadingElement>) {
-  return (
-    <h2
-      className={cn(
-        'text-cockpit-lg tracking-cockpit-tight text-accent-title',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-function PanelShellSubtitle({
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn(
-        'text-cockpit-sm tracking-cockpit-label text-accent-label mb-0.5',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-function DefaultCloseIcon() {
-  return <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />;
-}
-
-export const PanelShell = Object.assign(PanelShellRoot, {
-  Title: PanelShellTitle,
-  Subtitle: PanelShellSubtitle,
-});

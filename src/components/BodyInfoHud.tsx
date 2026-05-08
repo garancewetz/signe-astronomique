@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
   CONSTELLATION_CATALOG,
   abbrToZodiacal,
@@ -14,59 +14,63 @@ import type {
   SelectedStar,
   SelectedSun,
 } from './space/SpaceView';
-import { Button, PanelShell, cn } from './ui';
+import { Button, HudCard, type HudCardVariant, cn } from './ui';
 
 interface Props {
   selected: SelectedBody | null;
-  depthViewActive: boolean;
-  onToggleDepthView: () => void;
+  /** Distance in px from the left edge to the floating card. Required when `variant === 'floating'`. */
+  sidebarWidth?: number;
   sideViewActive: boolean;
   onToggleSideView: () => void;
   onClose: () => void;
+  /**
+   * `floating` (default): absolute-positioned glassmorphism card anchored
+   * left of the sky map, with slide+fade entry animation. `inline`:
+   * static block suitable for embedding (e.g. inside the mobile bottom
+   * sheet) — same chrome, no positioning, no animation.
+   */
+  variant?: 'floating' | 'inline';
 }
 
 interface InfoRow {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }
 
 /**
- * Renders the panel content for the currently selected body — its
- * caller (the right rail's docked container in Cockpit) provides the
- * surrounding chrome and slide-out animation. Dispatches on the
- * selected body's `kind` to render the relevant facts:
- *   - star: name, magnitude, distance (ly), depth comparison + projection toggle.
- *   - sun / moon / planet: name, constellation, distance, body-specific
- *     fields (illumination, phase, glyph…).
+ * Floating "HUD" card for the currently selected body. Renders as a
+ * left-anchored glassmorphism overlay (auto height, fixed width) that
+ * floats above the sky map instead of pushing the canvas. Dispatches
+ * on the body's `kind` to surface the relevant facts.
  */
 export function BodyInfoHud({
   selected,
-  depthViewActive,
-  onToggleDepthView,
+  sidebarWidth = 0,
   sideViewActive,
   onToggleSideView,
   onClose,
+  variant = 'floating',
 }: Props) {
   if (!selected) return null;
 
+  const shellProps = { sidebarWidth, variant } as const;
   switch (selected.kind) {
     case 'star':
       return (
-        <StarPanel
+        <StarCard
           selected={selected}
-          depthViewActive={depthViewActive}
-          onToggleDepthView={onToggleDepthView}
           sideViewActive={sideViewActive}
           onToggleSideView={onToggleSideView}
           onClose={onClose}
+          {...shellProps}
         />
       );
     case 'sun':
-      return <SunPanel selected={selected} onClose={onClose} />;
+      return <SunCard selected={selected} onClose={onClose} {...shellProps} />;
     case 'moon':
-      return <MoonPanel selected={selected} onClose={onClose} />;
+      return <MoonCard selected={selected} onClose={onClose} {...shellProps} />;
     case 'planet':
-      return <PlanetPanel selected={selected} onClose={onClose} />;
+      return <PlanetCard selected={selected} onClose={onClose} {...shellProps} />;
   }
 }
 
@@ -94,17 +98,17 @@ function resolveStar(selected: SelectedStar): ResolvedStar | null {
   return { star, constellation, closest, ratio };
 }
 
-function StarPanel({
+function StarCard({
   selected,
-  depthViewActive,
-  onToggleDepthView,
+  sidebarWidth,
+  variant,
   sideViewActive,
   onToggleSideView,
   onClose,
 }: {
   selected: SelectedStar;
-  depthViewActive: boolean;
-  onToggleDepthView: () => void;
+  sidebarWidth: number;
+  variant: HudCardVariant;
   sideViewActive: boolean;
   onToggleSideView: () => void;
   onClose: () => void;
@@ -122,22 +126,27 @@ function StarPanel({
     : `${ratio < 10 ? ratio.toFixed(1) : Math.round(ratio)}× plus loin que ${closest.name} (${formatLightYears(closest.distance_ly)})`;
 
   return (
-    <PanelShell
-      title={
-        <span className="text-cockpit-md tracking-wide text-slate-100 truncate inline-block max-w-full">
-          <span className="text-accent-label mr-1.5 font-mono">{star.bayer}</span>
-          {star.name}
-        </span>
-      }
-      subtitle={
-        <span className="text-cockpit-xs tracking-cockpit-caps text-accent-label/80">
-          ÉTOILE · {constellation.abbreviation.toUpperCase()} · {localizedName}
-        </span>
-      }
+    <HudCard
+      variant={variant}
+      sidebarWidth={sidebarWidth}
       onClose={onClose}
       closeAriaLabel="Fermer le panneau étoile"
-      animated={false}
-      bodyClassName="overflow-y-auto p-4 space-y-3"
+      subtitle={
+        <>ÉTOILE · {constellation.abbreviation.toUpperCase()} · {localizedName}</>
+      }
+      title={
+        <>
+          <span className="text-accent-label mr-1.5 font-mono">{star.bayer}</span>
+          {star.name}
+        </>
+      }
+      footer={
+        <p className="text-cockpit-xs text-slate-500 leading-snug">
+          Bascule sur l'axe pour voir le dessin se disloquer : depuis la Terre,
+          les étoiles semblent alignées ; vues de côté, elles sont séparées
+          par des centaines d'années-lumière.
+        </p>
+      }
     >
       <InfoGrid
         rows={[
@@ -146,124 +155,149 @@ function StarPanel({
           { label: 'PROFONDEUR', value: ratioText },
         ]}
       />
-
-      <DepthToggle
-        label="PROJECTION_PROFONDEUR"
-        active={depthViewActive}
-        onToggle={onToggleDepthView}
-      />
-      <DepthToggle
+      <ModeToggle
         label="PERSPECTIVE_AXIALE"
         active={sideViewActive}
         onToggle={onToggleSideView}
       />
-
-      <p className="text-cockpit-xs text-slate-500 leading-snug">
-        Bascule sur l'axe pour voir le dessin se disloquer : depuis la Terre,
-        les étoiles semblent alignées ; vues de côté, elles sont séparées
-        par des centaines d'années-lumière.
-      </p>
-    </PanelShell>
+    </HudCard>
   );
 }
 
 // ─── Sun ─────────────────────────────────────────────────────────────────────
 
-function SunPanel({ selected, onClose }: { selected: SelectedSun; onClose: () => void }) {
+function SunCard({
+  selected,
+  sidebarWidth,
+  variant,
+  onClose,
+}: {
+  selected: SelectedSun;
+  sidebarWidth: number;
+  variant: HudCardVariant;
+  onClose: () => void;
+}) {
   const constellationFr = CONSTELLATION_LORE[selected.constellation].fr;
   return (
-    <PanelShell
-      title={
-        <span className="text-cockpit-md tracking-wide text-slate-100">
-          <span className="text-glyph-sun mr-1.5">☀</span>
-          {selected.name}
-        </span>
-      }
-      subtitle={<span className="text-cockpit-xs tracking-cockpit-caps text-accent-label/80">ÉTOILE HÔTE</span>}
+    <HudCard
+      variant={variant}
+      sidebarWidth={sidebarWidth}
       onClose={onClose}
       closeAriaLabel="Fermer le panneau Soleil"
-      animated={false}
-      bodyClassName="overflow-y-auto p-4 space-y-3"
+      subtitle={<>ÉTOILE HÔTE</>}
+      title={
+        <>
+          <span className="text-glyph-sun mr-1.5">☀</span>
+          {selected.name}
+        </>
+      }
+      footer={
+        <p className="text-cockpit-xs text-slate-500 leading-snug">
+          L'étoile la plus proche : 8 minutes-lumière. Sa lumière éclaire le
+          ciel diurne et masque toutes les autres.
+        </p>
+      }
     >
       <InfoGrid
         rows={[
-          { label: 'CONSTELLATION', value: `${constellationFr} (${selected.constellation})` },
+          {
+            label: 'CONSTELLATION',
+            value: `${constellationFr} (${selected.constellation})`,
+          },
           { label: 'DISTANCE', value: formatAU(1) },
           { label: 'RA / DEC', value: formatRaDec(selected.raHours, selected.decDeg) },
           { label: 'MAGNITUDE', value: '−26,7' },
         ]}
       />
-      <p className="text-cockpit-xs text-slate-500 leading-snug">
-        L'étoile la plus proche : 8 minutes-lumière. Sa lumière éclaire le
-        ciel diurne et masque toutes les autres.
-      </p>
-    </PanelShell>
+    </HudCard>
   );
 }
 
 // ─── Moon ────────────────────────────────────────────────────────────────────
 
-function MoonPanel({ selected, onClose }: { selected: SelectedMoon; onClose: () => void }) {
+function MoonCard({
+  selected,
+  sidebarWidth,
+  variant,
+  onClose,
+}: {
+  selected: SelectedMoon;
+  sidebarWidth: number;
+  variant: HudCardVariant;
+  onClose: () => void;
+}) {
   const constellationFr = CONSTELLATION_LORE[selected.constellation].fr;
   const illumPct = `${Math.round(selected.illumination * 100)} %`;
   return (
-    <PanelShell
-      title={
-        <span className="text-cockpit-md tracking-wide text-slate-100">
-          <span className="text-glyph-moon mr-1.5">☾</span>
-          {selected.name}
-        </span>
-      }
-      subtitle={<span className="text-cockpit-xs tracking-cockpit-caps text-accent-label/80">SATELLITE NATUREL</span>}
+    <HudCard
+      variant={variant}
+      sidebarWidth={sidebarWidth}
       onClose={onClose}
       closeAriaLabel="Fermer le panneau Lune"
-      animated={false}
-      bodyClassName="overflow-y-auto p-4 space-y-3"
+      subtitle={<>SATELLITE NATUREL</>}
+      title={
+        <>
+          <span className="text-glyph-moon mr-1.5">☾</span>
+          {selected.name}
+        </>
+      }
     >
       <InfoGrid
         rows={[
-          { label: 'CONSTELLATION', value: `${constellationFr} (${selected.constellation})` },
+          {
+            label: 'CONSTELLATION',
+            value: `${constellationFr} (${selected.constellation})`,
+          },
           { label: 'DISTANCE', value: formatKm(selected.distanceKm) },
           { label: 'PHASE', value: `${selected.phaseName} · ${illumPct}` },
           { label: 'RA / DEC', value: formatRaDec(selected.raHours, selected.decDeg) },
         ]}
       />
-    </PanelShell>
+    </HudCard>
   );
 }
 
 // ─── Planet ──────────────────────────────────────────────────────────────────
 
-function PlanetPanel({
+function PlanetCard({
   selected,
+  sidebarWidth,
+  variant,
   onClose,
 }: {
   selected: SelectedPlanet;
+  sidebarWidth: number;
+  variant: HudCardVariant;
   onClose: () => void;
 }) {
   const constellationFr = CONSTELLATION_LORE[selected.constellation].fr;
   return (
-    <PanelShell
-      title={
-        <span className="text-cockpit-md tracking-wide text-slate-100">
-          <span className="mr-1.5" style={{ color: selected.color }}>{selected.glyph}</span>
-          {selected.name}
-        </span>
-      }
-      subtitle={<span className="text-cockpit-xs tracking-cockpit-caps text-accent-label/80">PLANÈTE</span>}
+    <HudCard
+      variant={variant}
+      sidebarWidth={sidebarWidth}
       onClose={onClose}
       closeAriaLabel={`Fermer le panneau ${selected.name}`}
-      animated={false}
-      bodyClassName="overflow-y-auto p-4 space-y-3"
+      subtitle={<>PLANÈTE</>}
+      title={
+        <>
+          <span className="mr-1.5" style={{ color: selected.color }}>
+            {selected.glyph}
+          </span>
+          {selected.name}
+        </>
+      }
     >
       <InfoGrid
         rows={[
-          { label: 'CONSTELLATION', value: `${constellationFr} (${selected.constellation})` },
+          {
+            label: 'CONSTELLATION',
+            value: `${constellationFr} (${selected.constellation})`,
+          },
           { label: 'DISTANCE', value: formatAU(selected.distanceAU) },
           { label: 'RA / DEC', value: formatRaDec(selected.raHours, selected.decDeg) },
         ]}
       />
-    </PanelShell>
+    </HudCard>
   );
 }
 
@@ -284,7 +318,7 @@ function InfoGrid({ rows }: { rows: InfoRow[] }) {
   );
 }
 
-function DepthToggle({
+function ModeToggle({
   label,
   active,
   onToggle,
@@ -301,18 +335,18 @@ function DepthToggle({
       variant={active ? 'solid' : 'outline'}
       size="sm"
       className={cn(
-        'w-full justify-between',
+        'w-full justify-between font-mono',
         active &&
           'border-sky-300/65 text-sky-100 bg-sky-400/14 hover:bg-sky-400/20',
       )}
     >
       <span>{label}</span>
-      <DepthSwitchKnob active={active} />
+      <SwitchKnob active={active} />
     </Button>
   );
 }
 
-function DepthSwitchKnob({ active }: { active: boolean }) {
+function SwitchKnob({ active }: { active: boolean }) {
   return (
     <span
       aria-hidden="true"
@@ -341,7 +375,8 @@ function formatLightYears(ly: number): string {
 }
 
 function formatAU(au: number): string {
-  if (au < 0.1) return `${(au * AU_KM).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} km`;
+  if (au < 0.1)
+    return `${(au * AU_KM).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} km`;
   return `${au.toFixed(au < 1 ? 3 : 2)} UA`;
 }
 

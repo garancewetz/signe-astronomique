@@ -20,6 +20,11 @@ import type { IauConstellation } from '../../../utils/astroEngine';
 
 const MAGNITUDE_LIMIT = 6.0;
 
+// Billboard size = pixelSize × this factor. The sprite has a soft halo that
+// extends well beyond the bright core, so the on-screen "perceived" star is
+// roughly half the billboard footprint.
+const STAR_SPRITE_SIZE_FACTOR = 2.2;
+
 // Distance modulation tunables (light-years). The shell math itself lives in
 // utils/skyCoordinates; the values below only shape the *visual* fade so
 // faraway stars feel deeper without disappearing.
@@ -87,16 +92,21 @@ export function mountStarsLayer(viewer: Viewer, opts: MountOptions): () => void 
     );
 
     // Stars
+    const sprite = getStarSpriteUrl();
     c.stars.forEach((star, i) => {
       if (star.mag > magnitudeLimit) return;
       const baseColor = zodiacal ? Color.WHITE : Color.WHITE.withAlpha(0.5);
       const distanceFade = distanceAlphaFactor(star.distance_ly);
+      const apparent = pixelSizeFor(star.mag, zodiacal, star.distance_ly);
+      const spriteSize = apparent * STAR_SPRITE_SIZE_FACTOR;
       created.push(
         viewer.entities.add({
           position: positions[i],
-          point: {
-            pixelSize: pixelSizeFor(star.mag, zodiacal, star.distance_ly),
+          billboard: {
+            image: sprite,
             color: baseColor.withAlpha(baseColor.alpha * distanceFade * dimFactor),
+            width: spriteSize,
+            height: spriteSize,
           },
           properties: {
             kind: 'star',
@@ -199,6 +209,33 @@ function pixelSizeFor(mag: number, zodiacal: boolean, distanceLy: number): numbe
       Math.log10(Math.max(DISTANCE_PIXEL_REF_LY, distanceLy) / DISTANCE_PIXEL_REF_LY);
   const scaled = base * Math.max(DISTANCE_PIXEL_FLOOR, distanceScale);
   return zodiacal ? scaled : scaled * 0.85;
+}
+
+/**
+ * Soft radial sprite (white core, gaussian-ish falloff to transparent).
+ * Generated once on first use and cached as a data URL — every star
+ * billboard reuses the same texture, tinted via `billboard.color`.
+ */
+let starSpriteUrl: string | null = null;
+function getStarSpriteUrl(): string {
+  if (starSpriteUrl) return starSpriteUrl;
+  const size = 32;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+  const center = size / 2;
+  const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+  gradient.addColorStop(0.0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.18, 'rgba(255,255,255,0.92)');
+  gradient.addColorStop(0.4, 'rgba(255,255,255,0.45)');
+  gradient.addColorStop(0.7, 'rgba(255,255,255,0.1)');
+  gradient.addColorStop(1.0, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, size, size);
+  starSpriteUrl = canvas.toDataURL('image/png');
+  return starSpriteUrl;
 }
 
 /**
