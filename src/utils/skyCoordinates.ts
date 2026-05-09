@@ -1,15 +1,18 @@
 /**
- * Conversions ICRS J2000 → ECEF (Earth-Centered Earth-Fixed) pour le rendu
- * Cesium. La sphère céleste est traitée comme géocentrique : la parallaxe
- * entre la surface et le centre de la Terre est négligeable (~1.8°) à ces
- * échelles, donc une seule projection suffit pour toutes les caméras.
+ * ICRS J2000 → ECEF (Earth-Centered Earth-Fixed) coordinate transforms used
+ * to project the celestial sphere for the 3D scene. Treats the sphere as
+ * geocentric — the parallax between Earth's surface and centre is below
+ * naked-eye resolution (~1.8°), so one projection serves every camera.
  *
- * Algorithmes : Meeus, Astronomical Algorithms (2e éd.) — chapitres 12 (GMST)
- * et 13 (transformations équatoriales). On ignore précession et nutation
- * (erreur < 0.5° / siècle, invisible à l'œil nu pour des constellations).
+ * Pure math, framework-agnostic: outputs `[x, y, z]` tuples. The Cesium-
+ * typed wrapper that returns `Cartesian3` lives in
+ * `src/components/space/cesium/skyVector.ts`.
+ *
+ * Algorithms: Meeus, Astronomical Algorithms (2nd ed.) — chapters 12 (GMST)
+ * and 13 (equatorial transforms). Precession and nutation are ignored
+ * (< 0.5° / century, invisible at constellation scale).
  */
 
-import { Cartesian3 } from 'cesium';
 import { toJulianDay } from './astroEngine';
 
 const DEG = Math.PI / 180;
@@ -33,22 +36,21 @@ export function gmstRadians(date: Date): number {
 }
 
 /**
- * Direction (RA, Dec) ICRS → position ECEF à un rayon donné.
+ * Direction (RA, Dec) in ICRS → ECEF position at a given radius, returned
+ * as `[x, y, z]` in metres. ECI→ECEF rotation is `R_z(-GMST)`. Catalogue
+ * J2000 coordinates are treated as apparent ICRS (precession ignored).
  *
- * Rotation ECI→ECEF : R_z(-GMST). Les coordonnées catalogue J2000 sont
- * traitées comme ICRS apparentes (précession négligée).
- *
- * @param raDeg    Ascension droite en degrés [0..360)
- * @param decDeg   Déclinaison en degrés [-90..+90]
- * @param gmstRad  GMST en radians (cf. gmstRadians)
- * @param radiusM  Rayon en mètres (distance de l'objet au centre Terre)
+ * @param raDeg    Right ascension in degrees [0..360)
+ * @param decDeg   Declination in degrees [-90..+90]
+ * @param gmstRad  GMST in radians (cf. gmstRadians)
+ * @param radiusM  Radius in metres (distance from Earth centre)
  */
-export function raDecToEcef(
+export function raDecToEcefXYZ(
   raDeg: number,
   decDeg: number,
   gmstRad: number,
   radiusM: number,
-): Cartesian3 {
+): [number, number, number] {
   const ra = raDeg * DEG;
   const dec = decDeg * DEG;
   const xi = Math.cos(dec) * Math.cos(ra);
@@ -58,7 +60,7 @@ export function raDecToEcef(
   const s = Math.sin(gmstRad);
   const xe = xi * c + yi * s;
   const ye = -xi * s + yi * c;
-  return new Cartesian3(xe * radiusM, ye * radiusM, zi * radiusM);
+  return [xe * radiusM, ye * radiusM, zi * radiusM];
 }
 
 /** Conversion heures décimales → degrés (RA dans astroEngine est en heures). */

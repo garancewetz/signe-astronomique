@@ -2,9 +2,7 @@ import {
   Atom,
   Axis3d,
   BookOpen,
-  ChevronRight,
   Globe2,
-  Lock,
   Map,
   Network,
   Satellite,
@@ -16,7 +14,7 @@ import { BodyInfoHud } from '../BodyInfoHud';
 import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '../space/SpaceView';
 import type { OrbitalStatus } from '../../hooks/useOrbitalPopulation';
-import { cn } from '../ui';
+import { MenuRow } from '../ui';
 import type { MobileTabKey } from './MobileTabBar';
 
 interface MobileSheetContentProps {
@@ -156,29 +154,38 @@ function DisplayContent({
     <SheetSection>
       <SheetEyebrow>Affichage</SheetEyebrow>
 
-      <ToggleRow
+      <MenuRow
+        kind="toggle"
+        size="lg"
         label="Noms et lignes"
         sublabel="Astres · constellations"
         icon={<Tag className="size-4" strokeWidth={1.35} aria-hidden />}
         active={bodyLabelsEnabled}
         onClick={onToggleBodyLabels}
       />
-      <ToggleRow
+      <MenuRow
+        kind="toggle"
+        size="lg"
         label="Repères du ciel"
         sublabel="Axe · équateur · écliptique"
         icon={<Globe2 className="size-4" strokeWidth={1.35} aria-hidden />}
         active={guidesEnabled}
         onClick={onToggleGuides}
       />
-      <ToggleRow
+      <MenuRow
+        kind="toggle"
+        size="lg"
         label="Population orbitale"
         sublabel={orbitalSublabel}
         icon={<Network className="size-4" strokeWidth={1.4} aria-hidden />}
         active={constellationOverlayEnabled}
+        locked={!orbitalAvailable}
         disabled={!orbitalAvailable}
         onClick={orbitalAvailable ? onToggleConstellationOverlay : undefined}
       />
-      <ToggleRow
+      <MenuRow
+        kind="toggle"
+        size="lg"
         label="Reliques orbitales"
         sublabel="Satellites historiques"
         icon={<Satellite className="size-4" strokeWidth={1.4} aria-hidden />}
@@ -188,7 +195,9 @@ function DisplayContent({
 
       <Divider />
 
-      <ToggleRow
+      <MenuRow
+        kind="toggle"
+        size="lg"
         label="Perspective axiale"
         sublabel={
           hasSelectedStar
@@ -197,6 +206,7 @@ function DisplayContent({
         }
         icon={<Axis3d className="size-4" strokeWidth={1.4} aria-hidden />}
         active={sideViewActive}
+        locked={!hasSelectedStar}
         disabled={!hasSelectedStar}
         onClick={hasSelectedStar ? onToggleSideView : undefined}
       />
@@ -215,19 +225,25 @@ function NavigationContent({
     <SheetSection>
       <SheetEyebrow>Navigation</SheetEyebrow>
 
-      <ActionRow
+      <MenuRow
+        size="lg"
+        chevron
         label="Soleil"
         sublabel="Centrer la caméra"
         icon={<span className="text-cockpit-glyph leading-none text-glyph-sun">☀</span>}
         onClick={onFlySun}
       />
-      <ActionRow
+      <MenuRow
+        size="lg"
+        chevron
         label="Lune"
         sublabel="Centrer la caméra"
         icon={<span className="text-cockpit-glyph leading-none text-glyph-moon">☾</span>}
         onClick={onFlyMoon}
       />
-      <ActionRow
+      <MenuRow
+        size="lg"
+        chevron
         label="Terre"
         sublabel="Vue orbitale par défaut"
         icon={<span className="text-cockpit-glyph leading-none text-glyph-earth">⊕</span>}
@@ -271,19 +287,25 @@ function AnalysisContent({
     <SheetSection>
       <SheetEyebrow>Analyse</SheetEyebrow>
 
-      <NavRow
+      <MenuRow
+        size="lg"
+        chevron
         label="Mon signe"
         sublabel="Ton ciel de naissance"
         icon={<Sparkles className="size-4" strokeWidth={1.4} aria-hidden />}
         onClick={() => onSelectAnalysisPanel('resume')}
       />
-      <NavRow
+      <MenuRow
+        size="lg"
+        chevron
         label="Carte"
         sublabel="Roue des constellations"
         icon={<Map className="size-4" strokeWidth={1.4} aria-hidden />}
         onClick={() => onSelectAnalysisPanel('carte')}
       />
-      <NavRow
+      <MenuRow
+        size="lg"
+        chevron
         label="Lecture"
         sublabel="Comprendre ta carte"
         icon={<BookOpen className="size-4" strokeWidth={1.4} aria-hidden />}
@@ -292,7 +314,9 @@ function AnalysisContent({
 
       <Divider />
 
-      <NavRow
+      <MenuRow
+        size="lg"
+        chevron
         label="Données"
         sublabel="Astronomie brute"
         icon={<Atom className="size-4" strokeWidth={1.4} aria-hidden />}
@@ -318,105 +342,4 @@ function SheetEyebrow({ children }: { children: ReactNode }) {
 
 function Divider() {
   return <div aria-hidden="true" className="my-2 mx-1 h-px bg-border-hud-faint" />;
-}
-
-interface RowProps {
-  label: string;
-  sublabel?: string;
-  icon: ReactNode;
-  onClick?: () => void;
-  active?: boolean;
-  disabled?: boolean;
-}
-
-function ToggleRow({ label, sublabel, icon, onClick, active = false, disabled = false }: RowProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      disabled={disabled || !onClick}
-      className={cn(
-        'cockpit-focus relative w-full',
-        'flex items-center gap-3 min-h-12 py-2 pl-2 pr-3 rounded',
-        'transition-colors duration-200',
-        'disabled:opacity-40 disabled:cursor-not-allowed',
-        active
-          ? 'text-cyan-100 bg-cyan-400/10'
-          : 'text-slate-200/90 hover:text-slate-50 hover:bg-violet-500/10',
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          'shrink-0 grid place-items-center w-5',
-          active ? 'text-cyan-200' : 'text-slate-300/85',
-        )}
-      >
-        {icon}
-      </span>
-      <span className="flex-1 min-w-0 text-left">
-        <span className="block truncate text-cockpit-md tracking-tight">{label}</span>
-        {sublabel && (
-          <span className="block truncate text-cockpit-xs tracking-cockpit-tight uppercase text-slate-500">
-            {sublabel}
-          </span>
-        )}
-      </span>
-      <span
-        aria-hidden="true"
-        className={cn(
-          'shrink-0 relative inline-block w-9 h-4 rounded-full transition-colors',
-          active ? 'bg-cyan-400/60' : 'bg-slate-600/45',
-        )}
-      >
-        <span
-          className={cn(
-            'absolute top-1/2 -translate-y-1/2 size-3 rounded-full bg-white shadow transition-[left]',
-            active ? 'left-[calc(100%-0.75rem-1px)]' : 'left-px',
-          )}
-        />
-      </span>
-      {disabled && !active && (
-        <span
-          aria-hidden="true"
-          className="absolute right-1 top-1
-                     grid place-items-center size-4 rounded-full
-                     bg-violet-950/85 border border-violet-400/40"
-        >
-          <Lock className="size-[8px] text-violet-200/85" strokeWidth={2.5} />
-        </span>
-      )}
-    </button>
-  );
-}
-
-function ActionRow({ label, sublabel, icon, onClick }: RowProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="cockpit-focus w-full
-                 flex items-center gap-3 min-h-12 py-2 pl-2 pr-3 rounded
-                 text-slate-200/90 hover:text-slate-50 hover:bg-violet-500/10
-                 transition-colors"
-    >
-      <span aria-hidden="true" className="shrink-0 grid place-items-center w-5">
-        {icon}
-      </span>
-      <span className="flex-1 min-w-0 text-left">
-        <span className="block truncate text-cockpit-md tracking-tight">{label}</span>
-        {sublabel && (
-          <span className="block truncate text-cockpit-xs tracking-cockpit-tight uppercase text-slate-500">
-            {sublabel}
-          </span>
-        )}
-      </span>
-      <ChevronRight className="size-3.5 shrink-0 text-slate-500" strokeWidth={1.5} aria-hidden />
-    </button>
-  );
-}
-
-function NavRow(props: RowProps) {
-  return <ActionRow {...props} />;
 }

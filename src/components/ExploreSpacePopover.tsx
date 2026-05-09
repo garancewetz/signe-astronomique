@@ -16,6 +16,7 @@ function GithubMark(props: SVGProps<SVGSVGElement>) {
   );
 }
 import { usePortalTarget } from '../hooks/usePortalTarget';
+import { cn, surfaceClasses } from './ui';
 
 const CONTACT_EMAIL = 'garance.wetzel@gmail.com';
 
@@ -160,12 +161,12 @@ export function ExploreSpacePopover({ onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="explore-space-title"
-        className="relative z-10 w-[min(34rem,calc(100vw-2rem))] min-h-0 min-w-0
-                   max-h-[min(75vh,32rem,calc(100svh-2rem))]
-                   flex flex-col
-                   bg-surface-raised/98 backdrop-blur-xl
-                   border border-border-hud-strong rounded-panel
-                   shadow-cockpit-sheet overflow-hidden"
+        className={cn(
+          'relative z-10 w-[min(34rem,calc(100vw-2rem))] min-h-0 min-w-0',
+          'max-h-[min(75vh,32rem,calc(100svh-2rem))]',
+          'flex flex-col rounded-panel overflow-hidden',
+          surfaceClasses('sheet'),
+        )}
       >
         <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b border-border-hud-muted">
           <div>

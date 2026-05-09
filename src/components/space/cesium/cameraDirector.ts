@@ -4,10 +4,8 @@ import {
   PerspectiveFrustum,
   type Viewer,
 } from 'cesium';
-import {
-  raDecToEcef,
-  raHoursToDegrees,
-} from '../../../utils/skyCoordinates';
+import { raHoursToDegrees } from '../../../utils/skyCoordinates';
+import { raDecToEcef } from './skyVector';
 
 // 100 000 km — Terre fait ~7° apparent (taille d'une bille à bout de bras),
 // même calibration que lumina-sky. Ça laisse de la place pour la Lune

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from './cn';
+import { IconButton } from './IconButton';
 
 export type HudCardVariant = 'floating' | 'inline';
 
@@ -53,20 +54,15 @@ export function HudCard({
             {title}
           </h2>
         </div>
-        <button
-          type="button"
+        <IconButton
+          size="sm"
+          tone="glass"
           onClick={onClose}
           aria-label={closeAriaLabel}
-          className={cn(
-            'cockpit-focus shrink-0 grid place-items-center',
-            'size-7 rounded-md',
-            'text-slate-300/85 hover:text-slate-50',
-            'border border-white/10 hover:border-white/20',
-            'bg-white/0 hover:bg-white/5 transition-colors',
-          )}
+          className="shrink-0"
         >
           <X className="size-3.5" strokeWidth={1.4} aria-hidden />
-        </button>
+        </IconButton>
       </header>
 
       <div className="overflow-y-auto px-4 py-3.5 space-y-3.5">{children}</div>

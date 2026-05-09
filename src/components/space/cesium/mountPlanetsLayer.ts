@@ -10,9 +10,9 @@ import {
 } from 'cesium';
 import {
   AU_KM,
-  raDecToEcef,
   raHoursToDegrees,
 } from '../../../utils/skyCoordinates';
+import { raDecToEcef } from './skyVector';
 import type { CelestialBody } from '../../../utils/astroEngine';
 import type { PlanetId } from '../../../utils/planetEngine';
 import { visualEllipsoidRadiusMeters } from './bodies';

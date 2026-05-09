@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import {
   SpaceView,
@@ -15,7 +15,7 @@ import {
   SIDEBAR_EXPANDED_PX,
   type SectionKey,
   type SidebarPanelKey,
-} from './Sidebar';
+} from './sidebar';
 import {
   CartePanel,
   DonneesPanel,
@@ -24,6 +24,7 @@ import {
   ResumePanel,
 } from './RightPanel';
 import { LegendPanel } from './LegendPanel';
+import { DockedPanel } from './ui';
 import { useCockpitAudio } from '../hooks/useCockpitAudio';
 import { useMobileLayout } from '../hooks/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
@@ -609,47 +610,3 @@ function bodyInfoKey(body: SelectedBody): string {
   }
 }
 
-/**
- * Docked second-tier panel that slides out from the sidebar's right edge.
- * Width and height are predictable across panel kinds so the canvas
- * inset transition stays smooth as the user navigates.
- */
-function DockedPanel({
-  open,
-  sidebarWidth,
-  dockWidth,
-  panelId,
-  children,
-}: {
-  open: boolean;
-  sidebarWidth: number;
-  dockWidth: string;
-  panelId: string;
-  children: React.ReactNode;
-}) {
-  const reduceMotion = useReducedMotion();
-
-  return (
-    <motion.aside
-      id={panelId}
-      initial={false}
-      animate={{ x: open ? '0%' : '-100%', opacity: open ? 1 : 0 }}
-      transition={
-        reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 220, damping: 32 }
-      }
-      aria-hidden={!open}
-      className="absolute top-11 z-25
-                 bottom-[env(safe-area-inset-bottom,0)]
-                 bg-surface-raised/95 backdrop-blur-2xl
-                 border border-border-control border-l-0
-                 rounded-r-sm
-                 shadow-cockpit-panel"
-      style={{
-        width: dockWidth,
-        left: `${sidebarWidth}px`,
-      }}
-    >
-      <div className="h-full min-h-0 overflow-hidden flex flex-col">{children}</div>
-    </motion.aside>
-  );
-}

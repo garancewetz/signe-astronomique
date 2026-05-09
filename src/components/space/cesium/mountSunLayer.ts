@@ -9,9 +9,9 @@ import {
 } from 'cesium';
 import {
   AU_KM,
-  raDecToEcef,
   raHoursToDegrees,
 } from '../../../utils/skyCoordinates';
+import { raDecToEcef } from './skyVector';
 import type { IauConstellation } from '../../../utils/astroEngine';
 
 interface MountOptions {

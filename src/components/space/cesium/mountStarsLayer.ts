@@ -15,7 +15,8 @@ import {
   type CatalogStar,
 } from '../../../data/constellationCatalog';
 import { CONSTELLATION_LORE } from '../../../utils/constellationLore';
-import { raDecToEcef, starShellRadiusM } from '../../../utils/skyCoordinates';
+import { starShellRadiusM } from '../../../utils/skyCoordinates';
+import { raDecToEcef } from './skyVector';
 import type { IauConstellation } from '../../../utils/astroEngine';
 
 const MAGNITUDE_LIMIT = 6.0;
