@@ -75,7 +75,8 @@ export type SelectedBody =
   | SelectedStar
   | SelectedSun
   | SelectedMoon
-  | SelectedPlanet;
+  | SelectedPlanet
+  | SelectedSatellite;
 
 export interface SelectedStar {
   kind: 'star';
@@ -114,6 +115,19 @@ export interface SelectedPlanet {
   raHours: number;
   decDeg: number;
   distanceAU: number;
+}
+
+export interface SelectedSatellite {
+  kind: 'satellite';
+  /** Stable slug from satellitesDB.ts. */
+  relicId: string;
+  name: string;
+  /** ISO YYYY-MM-DD launch date. */
+  launchDate: string;
+  /** Short narrative shown as the card footer. */
+  blurb: string;
+  /** CSS color of the in-scene glow point — reused as the title dot. */
+  glowColor: string;
 }
 
 interface Props {

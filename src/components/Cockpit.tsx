@@ -90,6 +90,8 @@ function selectedBodyLabel(body: SelectedBody | null): string | null {
       return 'Lune';
     case 'planet':
       return body.name;
+    case 'satellite':
+      return body.name;
   }
 }
 
@@ -602,6 +604,8 @@ function bodyInfoKey(body: SelectedBody): string {
       return 'moon';
     case 'planet':
       return `planet-${body.id}`;
+    case 'satellite':
+      return `satellite-${body.relicId}`;
   }
 }
 

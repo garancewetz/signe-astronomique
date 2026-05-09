@@ -184,6 +184,7 @@ export function mountSatellitesLayer(
         name: relic.name,
         launchDate: relic.launchDate,
         blurb: relic.blurb,
+        glowColor: relic.glowColor,
       },
     });
 

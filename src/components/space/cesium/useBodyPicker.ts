@@ -63,7 +63,21 @@ interface PlanetPayload {
   distanceAU: number;
 }
 
-type BodyPayload = StarPayload | SunPayload | MoonPayload | PlanetPayload;
+interface SatellitePayload {
+  kind: 'satellite';
+  relicId: string;
+  name: string;
+  launchDate: string;
+  blurb: string;
+  glowColor: string;
+}
+
+type BodyPayload =
+  | StarPayload
+  | SunPayload
+  | MoonPayload
+  | PlanetPayload
+  | SatellitePayload;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object') return null;
@@ -106,6 +120,14 @@ function isBodyPayload(value: unknown): value is BodyPayload {
         typeof v.raHours === 'number' &&
         typeof v.decDeg === 'number' &&
         typeof v.distanceAU === 'number'
+      );
+    case 'satellite':
+      return (
+        typeof v.relicId === 'string' &&
+        typeof v.name === 'string' &&
+        typeof v.launchDate === 'string' &&
+        typeof v.blurb === 'string' &&
+        typeof v.glowColor === 'string'
       );
     default:
       return false;
@@ -151,6 +173,15 @@ function payloadToSelection(p: BodyPayload): SelectedBody {
         decDeg: p.decDeg,
         distanceAU: p.distanceAU,
       };
+    case 'satellite':
+      return {
+        kind: 'satellite',
+        relicId: p.relicId,
+        name: p.name,
+        launchDate: p.launchDate,
+        blurb: p.blurb,
+        glowColor: p.glowColor,
+      };
   }
 }
 
@@ -161,6 +192,7 @@ function payloadDisplayName(p: BodyPayload): string {
     case 'sun':
     case 'moon':
     case 'planet':
+    case 'satellite':
       return p.name;
   }
 }
@@ -180,10 +212,10 @@ function pickBodyPayloadAt(
 /**
  * Installs a LEFT_CLICK handler on the Cesium viewer that dispatches on the
  * `kind` property attached by the mount layers:
- *  - star / sun / moon / planet → emit a typed SelectedBody snapshot;
+ *  - star / sun / moon / planet / satellite → emit a typed SelectedBody snapshot;
  *  - empty space → emit null (deselect);
- *  - any other entity (depth lines, satellites, etc.) → no-op so the
- *    current selection is preserved.
+ *  - any other entity (depth lines, modern-swarm point primitives, etc.)
+ *    → no-op so the current selection is preserved.
  *
  * The handler is destroyed in cleanup.
  */

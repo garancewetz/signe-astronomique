@@ -11,6 +11,7 @@ import type {
   SelectedBody,
   SelectedMoon,
   SelectedPlanet,
+  SelectedSatellite,
   SelectedStar,
   SelectedSun,
 } from './space/SpaceView';
@@ -71,6 +72,10 @@ export function BodyInfoHud({
       return <MoonCard selected={selected} onClose={onClose} {...shellProps} />;
     case 'planet':
       return <PlanetCard selected={selected} onClose={onClose} {...shellProps} />;
+    case 'satellite':
+      return (
+        <SatelliteCard selected={selected} onClose={onClose} {...shellProps} />
+      );
   }
 }
 
@@ -301,6 +306,54 @@ function PlanetCard({
   );
 }
 
+// ─── Satellite ───────────────────────────────────────────────────────────────
+
+function SatelliteCard({
+  selected,
+  sidebarWidth,
+  variant,
+  onClose,
+}: {
+  selected: SelectedSatellite;
+  sidebarWidth: number;
+  variant: HudCardVariant;
+  onClose: () => void;
+}) {
+  return (
+    <HudCard
+      variant={variant}
+      sidebarWidth={sidebarWidth}
+      onClose={onClose}
+      closeAriaLabel={`Fermer le panneau ${selected.name}`}
+      subtitle={<>RELIQUE ORBITALE</>}
+      title={
+        <>
+          <span
+            aria-hidden="true"
+            className="inline-block size-2 rounded-full mr-2 align-middle"
+            style={{
+              backgroundColor: selected.glowColor,
+              boxShadow: `0 0 8px 2px ${selected.glowColor}80`,
+            }}
+          />
+          {selected.name}
+        </>
+      }
+      footer={
+        <p className="text-cockpit-xs text-slate-500 leading-snug italic">
+          {selected.blurb}
+        </p>
+      }
+    >
+      <InfoGrid
+        rows={[
+          { label: 'LANCEMENT', value: formatLaunchDate(selected.launchDate) },
+        ]}
+      />
+    </HudCard>
+  );
+}
+
 // ─── Shared building blocks ──────────────────────────────────────────────────
 
 function InfoGrid({ rows }: { rows: InfoRow[] }) {
@@ -382,6 +435,18 @@ function formatAU(au: number): string {
 
 function formatKm(km: number): string {
   return `${km.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} km`;
+}
+
+function formatLaunchDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
 }
 
 function formatRaDec(raHours: number, decDeg: number): string {
