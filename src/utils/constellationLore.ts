@@ -33,7 +33,7 @@ export const CONSTELLATION_LORE: Record<IauConstellation, ConstellationLore> = {
     latin: 'Gemini',
     brightestStar: 'Pollux (β Geminorum)',
     myth: 'Castor et Pollux, jumeaux inséparables — l\'un mortel, l\'autre divin.',
-    poetic: 'Castor et Pollux paraissent jumelles pour l\'œil ; ce sont en réalité deux systèmes stellaires distincts, séparés dans la galaxie.',
+    poetic: 'À l\'œil nu, Castor (~51 al) et Pollux (~34 al) paraissent jumelles ; ce sont en réalité deux systèmes stellaires distincts, séparés d\'environ 17 années-lumière dans la Voie lactée.',
   },
   Cancer: {
     fr: 'Cancer',

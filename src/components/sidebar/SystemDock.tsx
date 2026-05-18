@@ -7,8 +7,6 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
-  Volume2,
-  VolumeX,
 } from 'lucide-react';
 import { TooltipWrap } from '../Tooltip';
 import { ExploreSpacePopover, InfoCircleIcon } from '../ExploreSpacePopover';
@@ -18,8 +16,6 @@ interface SystemDockProps {
   collapsed: boolean;
   legendActive: boolean;
   onToggleLegend: () => void;
-  audioEnabled: boolean;
-  onToggleAudio: () => void;
   fullscreenActive: boolean;
   onToggleFullscreen: () => void;
   onExportView: () => void;
@@ -33,8 +29,6 @@ export function SystemDock({
   collapsed,
   legendActive,
   onToggleLegend,
-  audioEnabled,
-  onToggleAudio,
   fullscreenActive,
   onToggleFullscreen,
   onExportView,
@@ -87,19 +81,6 @@ export function SystemDock({
             <Minimize2 className="size-4" strokeWidth={1.35} aria-hidden />
           ) : (
             <Maximize2 className="size-4" strokeWidth={1.35} aria-hidden />
-          )}
-        </SystemButton>
-        <SystemButton
-          tooltip={audioEnabled ? 'Couper le son' : 'Activer le son'}
-          ariaLabel={audioEnabled ? 'Couper le son' : 'Activer le son'}
-          active={audioEnabled}
-          activeTone="emerald"
-          onClick={onToggleAudio}
-        >
-          {audioEnabled ? (
-            <Volume2 className="size-4" strokeWidth={1.35} aria-hidden />
-          ) : (
-            <VolumeX className="size-4" strokeWidth={1.35} aria-hidden />
           )}
         </SystemButton>
         <SystemButton

@@ -1,34 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Atom,
   Axis3d,
-  BookOpen,
-  Compass,
-  Eye,
   Globe2,
-  LayoutDashboard,
-  Map,
   Network,
   Satellite,
   Sparkles,
   Tag,
-  Telescope,
 } from 'lucide-react';
 import { type CityResult } from '../CityAutocomplete';
-import { cn, surfaceClasses } from '../ui';
+import { cn, IconButton, surfaceClasses } from '../ui';
+import { TooltipWrap } from '../Tooltip';
 import { CoordinatesForm } from '../CoordinatesForm';
 import { type CelestialReading } from '../../utils/astroEngine';
 import type { OrbitalStatus } from '../../hooks/useOrbitalPopulation';
-import { AnalysisItem, SidebarItem } from './SidebarItem';
 import { SidebarHeader } from './SidebarHeader';
-import {
-  SectionBadge,
-  SidebarDivider,
-  SidebarSection,
-} from './SidebarSection';
 import { SystemDock } from './SystemDock';
-import type { SectionKey, SidebarPanelKey } from './types';
+import type { SidebarPanelKey } from './types';
 
 const EXPANDED_PX = 280;
 const COLLAPSED_PX = 56;
@@ -38,11 +27,14 @@ interface SidebarProps {
   collapsed: boolean;
   onToggleCollapsed: () => void;
 
-  expandedSection: SectionKey | null;
-  onExpandSection: (key: SectionKey | null) => void;
-
   activePanel: SidebarPanelKey | null;
   onTogglePanel: (key: SidebarPanelKey) => void;
+
+  // Analysis modal (single entry point)
+  analysisOpen: boolean;
+  /** Bumps each time a new reading is computed — used to pulse the CTA. */
+  analysisAttention: number;
+  onOpenAnalysis: () => void;
 
   // Always-visible coordinates form (top of sidebar)
   date: string;
@@ -52,16 +44,8 @@ interface SidebarProps {
   onTimeChange: (v: string) => void;
   onCityChange: (v: CityResult) => void;
   onJump: (reading: CelestialReading) => void;
-  onBlip: () => void;
 
   hasReading: boolean;
-  hasSelectedBody: boolean;
-  selectedBodyLabel: string | null;
-
-  // Camera fly-to
-  onFlySun: () => void;
-  onFlyMoon: () => void;
-  onFlyEarth: () => void;
 
   // Sphere annotations
   guidesEnabled: boolean;
@@ -77,14 +61,12 @@ interface SidebarProps {
   orbitalAvailable: boolean;
   orbitalStatus: OrbitalStatus;
 
-  // Star-only display modes (gated by selectedStar — disabled otherwise)
+  // Star-only display modes
   hasSelectedStar: boolean;
   sideViewActive: boolean;
   onToggleSideView: () => void;
 
   // System
-  audioEnabled: boolean;
-  onToggleAudio: () => void;
   fullscreenActive: boolean;
   onToggleFullscreen: () => void;
 
@@ -97,24 +79,20 @@ interface SidebarProps {
 }
 
 /**
- * Unified left sidebar. Replaces the former two 50px rails, the top-right
- * chrome cluster, the bottom-right export cluster and the legend popover
- * with a single dashboard column. Sections are a single-open accordion;
- * the system row stays pinned at the bottom; the body slot only renders
- * when something is selected in the 3D scene.
- *
- * Width modes — `collapsed=false` shows section labels and inline items
- * (280 px); `collapsed=true` shrinks the rail to a 56 px icon column where
- * each section icon expands the sidebar back to its full width.
+ * Unified left sidebar. Hosts the coordinates form, the analysis CTA, a
+ * flat grid of display layers, and a pinned system dock. In collapsed
+ * mode (56 px), the chip grid degrades to a vertical icon column so
+ * each layer stays one click away without forcing the user to expand.
  */
 export function Sidebar(props: SidebarProps) {
   const {
     collapsed,
     onToggleCollapsed,
-    expandedSection,
-    onExpandSection,
     activePanel,
     onTogglePanel,
+    analysisOpen,
+    analysisAttention,
+    onOpenAnalysis,
     date,
     time,
     city,
@@ -122,13 +100,7 @@ export function Sidebar(props: SidebarProps) {
     onTimeChange,
     onCityChange,
     onJump,
-    onBlip,
     hasReading,
-    hasSelectedBody,
-    selectedBodyLabel,
-    onFlySun,
-    onFlyMoon,
-    onFlyEarth,
     guidesEnabled,
     onToggleGuides,
     bodyLabelsEnabled,
@@ -142,8 +114,6 @@ export function Sidebar(props: SidebarProps) {
     hasSelectedStar,
     sideViewActive,
     onToggleSideView,
-    audioEnabled,
-    onToggleAudio,
     fullscreenActive,
     onToggleFullscreen,
     onExportView,
@@ -153,46 +123,81 @@ export function Sidebar(props: SidebarProps) {
     canExportReport,
   } = props;
 
-  // Lock → unlock cascade for ANALYSE items, mirroring the original rail.
+  // Pulse the Analyse CTA every time a new reading is computed — both for the
+  // initial unlock and for subsequent recomputes (so the user notices fresh
+  // data even though we no longer auto-open the modal). The trigger is
+  // derived from a prop change *during render* (storing the last attention
+  // bump in state) rather than from an effect — avoids the cascading-render
+  // smell flagged by react-hooks/set-state-in-effect.
   const [unlocking, setUnlocking] = useState(false);
-  const prevLockedRef = useRef(!hasReading);
+  const [lastAttention, setLastAttention] = useState(analysisAttention);
+  if (analysisAttention !== lastAttention) {
+    setLastAttention(analysisAttention);
+    if (analysisAttention !== 0) setUnlocking(true);
+  }
   useEffect(() => {
-    const wasLocked = prevLockedRef.current;
-    const isLocked = !hasReading;
-    if (wasLocked && !isLocked) {
-      setUnlocking(true);
-      const id = window.setTimeout(() => setUnlocking(false), UNLOCK_WINDOW_MS);
-      prevLockedRef.current = isLocked;
-      return () => window.clearTimeout(id);
-    }
-    prevLockedRef.current = isLocked;
-  }, [hasReading]);
+    if (!unlocking) return;
+    const id = window.setTimeout(() => setUnlocking(false), UNLOCK_WINDOW_MS);
+    return () => window.clearTimeout(id);
+  }, [unlocking]);
 
-  const handleSectionClick = (key: SectionKey) => {
-    if (collapsed) {
-      onToggleCollapsed();
-      onExpandSection(key);
-      return;
-    }
-    onExpandSection(expandedSection === key ? null : key);
-  };
-
-  // Count of active display layers — surfaced as a chip on the AFFICHAGE
-  // section title so the user knows what's on without opening the section.
-  const displayActiveCount =
-    (bodyLabelsEnabled ? 1 : 0) +
-    (guidesEnabled ? 1 : 0) +
-    (constellationOverlayEnabled ? 1 : 0) +
-    (satellitesEnabled ? 1 : 0) +
-    (sideViewActive ? 1 : 0);
-
-  const orbitalLabel = orbitalAvailable
+  const orbitalAriaLabel = orbitalAvailable
     ? orbitalStatus === 'loading'
-      ? 'Population orbitale en chargement…'
+      ? 'Population orbitale — chargement Celestrak…'
       : orbitalStatus === 'error'
         ? 'Population orbitale — réessayer'
         : 'Population orbitale (temps réel)'
     : 'Population orbitale — indisponible loin de la date du jour';
+
+  const orbitalStatusDot: LayerDef['status'] =
+    orbitalStatus === 'loading'
+      ? 'loading'
+      : orbitalStatus === 'error'
+        ? 'error'
+        : null;
+
+  const layers: LayerDef[] = [
+    {
+      key: 'labels',
+      label: 'Noms',
+      icon: <Tag className="size-3.5" strokeWidth={1.4} aria-hidden />,
+      active: bodyLabelsEnabled,
+      onClick: onToggleBodyLabels,
+    },
+    {
+      key: 'guides',
+      label: 'Repères',
+      icon: <Globe2 className="size-3.5" strokeWidth={1.4} aria-hidden />,
+      active: guidesEnabled,
+      onClick: onToggleGuides,
+    },
+    {
+      key: 'orbital',
+      label: 'Orbital',
+      icon: <Network className="size-3.5" strokeWidth={1.4} aria-hidden />,
+      active: constellationOverlayEnabled,
+      disabled: !orbitalAvailable,
+      ariaLabel: orbitalAriaLabel,
+      onClick: onToggleConstellationOverlay,
+      status: orbitalStatusDot,
+    },
+    {
+      key: 'relics',
+      label: 'Reliques',
+      icon: <Satellite className="size-3.5" strokeWidth={1.4} aria-hidden />,
+      active: satellitesEnabled,
+      onClick: onToggleSatellites,
+    },
+    {
+      key: 'side-view',
+      label: hasSelectedStar ? 'Vue de côté' : 'Vue de côté · sélectionne une étoile',
+      icon: <Axis3d className="size-3.5" strokeWidth={1.4} aria-hidden />,
+      active: sideViewActive,
+      disabled: !hasSelectedStar,
+      onClick: onToggleSideView,
+      fullWidth: true,
+    },
+  ];
 
   return (
     <motion.aside
@@ -219,196 +224,32 @@ export function Sidebar(props: SidebarProps) {
           onTimeChange={onTimeChange}
           onCityChange={onCityChange}
           onJump={onJump}
-          onBlip={onBlip}
         />
       )}
 
+      <AnalysisCTA
+        collapsed={collapsed}
+        active={analysisOpen}
+        locked={!hasReading}
+        unlocking={unlocking}
+        onClick={onOpenAnalysis}
+      />
+
       <div
         className="flex-1 min-h-0 overflow-y-auto overscroll-contain
-                   [&::-webkit-scrollbar]:hidden [scrollbar-width:none]
-                   py-2"
+                   [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
-        {hasSelectedBody && (
-          <SidebarSection
-            sectionKey="selection"
-            title="SÉLECTION"
-            icon={<Telescope className="size-4.5" strokeWidth={1.4} aria-hidden />}
-            collapsed={collapsed}
-            expanded={expandedSection === 'selection'}
-            onHeaderClick={() => handleSectionClick('selection')}
-          >
-            <SidebarItem
-              kind="panel"
-              label={selectedBodyLabel ?? 'Détails de l’objet'}
-              icon={<Telescope className="size-4" strokeWidth={1.4} aria-hidden />}
-              active={activePanel === 'body'}
-              collapsed={collapsed}
-              onClick={() => onTogglePanel('body')}
-              ariaControls="panel-body"
-            />
-          </SidebarSection>
+        {collapsed ? (
+          <CollapsedLayerRail layers={layers} />
+        ) : (
+          <ExpandedLayerGrid layers={layers} />
         )}
-
-        <SidebarSection
-          sectionKey="display"
-          title="AFFICHAGE"
-          icon={<Eye className="size-4.5" strokeWidth={1.4} aria-hidden />}
-          collapsed={collapsed}
-          expanded={expandedSection === 'display'}
-          onHeaderClick={() => handleSectionClick('display')}
-          badge={
-            displayActiveCount > 0 ? (
-              <SectionBadge count={displayActiveCount} />
-            ) : null
-          }
-        >
-          <SidebarItem
-            kind="toggle"
-            label="Noms et lignes"
-            sublabel="Astres · constellations"
-            icon={<Tag className="size-4" strokeWidth={1.35} aria-hidden />}
-            active={bodyLabelsEnabled}
-            collapsed={collapsed}
-            onClick={onToggleBodyLabels}
-          />
-          <SidebarItem
-            kind="toggle"
-            label="Repères du ciel"
-            sublabel="Axe · équateur · écliptique"
-            icon={<Globe2 className="size-4" strokeWidth={1.35} aria-hidden />}
-            active={guidesEnabled}
-            collapsed={collapsed}
-            onClick={onToggleGuides}
-          />
-          <SidebarItem
-            kind="toggle"
-            label="Population orbitale"
-            sublabel={
-              orbitalStatus === 'loading'
-                ? 'Chargement Celestrak…'
-                : orbitalStatus === 'error'
-                  ? 'Réessayer'
-                  : 'Temps réel · Celestrak'
-            }
-            icon={<Network className="size-4" strokeWidth={1.4} aria-hidden />}
-            active={constellationOverlayEnabled}
-            disabled={!orbitalAvailable}
-            ariaLabel={orbitalLabel}
-            collapsed={collapsed}
-            onClick={
-              orbitalAvailable ? onToggleConstellationOverlay : () => {}
-            }
-          />
-          <SidebarItem
-            kind="toggle"
-            label="Reliques orbitales"
-            sublabel="Satellites historiques"
-            icon={<Satellite className="size-4" strokeWidth={1.4} aria-hidden />}
-            active={satellitesEnabled}
-            collapsed={collapsed}
-            onClick={onToggleSatellites}
-          />
-          <SidebarDivider collapsed={collapsed} />
-          <SidebarItem
-            kind="toggle"
-            label="Perspective axiale"
-            sublabel={
-              hasSelectedStar
-                ? 'Vue de côté · constellation'
-                : 'Sélectionne une étoile'
-            }
-            icon={<Axis3d className="size-4" strokeWidth={1.4} aria-hidden />}
-            active={sideViewActive}
-            disabled={!hasSelectedStar}
-            collapsed={collapsed}
-            onClick={hasSelectedStar ? onToggleSideView : () => {}}
-          />
-        </SidebarSection>
-
-        <SidebarSection
-          sectionKey="navigation"
-          title="NAVIGATION"
-          icon={<Compass className="size-4.5" strokeWidth={1.4} aria-hidden />}
-          collapsed={collapsed}
-          expanded={expandedSection === 'navigation'}
-          onHeaderClick={() => handleSectionClick('navigation')}
-        >
-          <SidebarItem
-            kind="action"
-            label="Soleil"
-            sublabel="Centrer la caméra"
-            icon={<span className="text-cockpit-glyph leading-none text-glyph-sun">☀</span>}
-            collapsed={collapsed}
-            onClick={onFlySun}
-          />
-          <SidebarItem
-            kind="action"
-            label="Lune"
-            sublabel="Centrer la caméra"
-            icon={<span className="text-cockpit-glyph leading-none text-glyph-moon">☾</span>}
-            collapsed={collapsed}
-            onClick={onFlyMoon}
-          />
-          <SidebarItem
-            kind="action"
-            label="Terre"
-            sublabel="Vue orbitale par défaut"
-            icon={<span className="text-cockpit-glyph leading-none text-glyph-earth">⊕</span>}
-            collapsed={collapsed}
-            onClick={onFlyEarth}
-          />
-        </SidebarSection>
-
-        <SidebarSection
-          sectionKey="analysis"
-          title="ANALYSE"
-          icon={<LayoutDashboard className="size-4.5" strokeWidth={1.4} aria-hidden />}
-          collapsed={collapsed}
-          expanded={expandedSection === 'analysis'}
-          onHeaderClick={() => handleSectionClick('analysis')}
-        >
-          <AnalysisItem
-            panelKey="resume"
-            label="Mon signe"
-            sublabel="Ton ciel de naissance"
-            icon={<Sparkles className="size-4" strokeWidth={1.4} aria-hidden />}
-            unlockIndex={0}
-            {...{ activePanel, onTogglePanel, hasReading, unlocking, collapsed }}
-          />
-          <AnalysisItem
-            panelKey="carte"
-            label="Carte"
-            sublabel="Roue des constellations"
-            icon={<Map className="size-4" strokeWidth={1.4} aria-hidden />}
-            unlockIndex={1}
-            {...{ activePanel, onTogglePanel, hasReading, unlocking, collapsed }}
-          />
-          <AnalysisItem
-            panelKey="lecture"
-            label="Lecture"
-            sublabel="Comprendre ta carte"
-            icon={<BookOpen className="size-4" strokeWidth={1.4} aria-hidden />}
-            unlockIndex={2}
-            {...{ activePanel, onTogglePanel, hasReading, unlocking, collapsed }}
-          />
-          <SidebarDivider collapsed={collapsed} />
-          <AnalysisItem
-            panelKey="donnees"
-            label="Données"
-            sublabel="Astronomie brute"
-            icon={<Atom className="size-4" strokeWidth={1.4} aria-hidden />}
-            unlockIndex={3}
-            {...{ activePanel, onTogglePanel, hasReading, unlocking, collapsed }}
-          />
-        </SidebarSection>
       </div>
 
       <SystemDock
         collapsed={collapsed}
         legendActive={activePanel === 'legend'}
         onToggleLegend={() => onTogglePanel('legend')}
-        audioEnabled={audioEnabled}
-        onToggleAudio={onToggleAudio}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={onToggleFullscreen}
         onExportView={onExportView}
@@ -418,6 +259,237 @@ export function Sidebar(props: SidebarProps) {
         canExportReport={canExportReport}
       />
     </motion.aside>
+  );
+}
+
+/* ── CTA — single entry point that opens the analysis modal ─────────────── */
+
+interface AnalysisCTAProps {
+  collapsed: boolean;
+  active: boolean;
+  locked: boolean;
+  unlocking: boolean;
+  onClick: () => void;
+}
+
+function AnalysisCTA({
+  collapsed,
+  active,
+  locked,
+  unlocking,
+  onClick,
+}: AnalysisCTAProps) {
+  const ariaLabel = locked
+    ? 'Analyse — verrouillé · saisis tes coordonnées'
+    : 'Ouvrir l’analyse';
+
+  // "Ready" = a reading exists and the modal is closed. That's the state we
+  // want to advertise visually so the user notices fresh data without us
+  // auto-opening the modal.
+  const ready = !locked && !active;
+
+  if (collapsed) {
+    return (
+      <div className="flex flex-col items-center py-2">
+        <TooltipWrap text={locked ? 'Analyse · verrouillé' : 'Analyse'} placement="right">
+          <IconButton
+            size="xl"
+            onClick={onClick}
+            disabled={locked}
+            active={active}
+            aria-label={ariaLabel}
+            className={cn(
+              locked && 'animate-rail-breathe',
+              unlocking && !locked && 'animate-rail-unlock',
+              ready &&
+                !unlocking &&
+                'animate-cta-glow border-violet-400/55 bg-violet-500/12 text-violet-50',
+            )}
+          >
+            <Sparkles className="size-4.5" strokeWidth={1.4} aria-hidden />
+          </IconButton>
+        </TooltipWrap>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 pt-2 pb-3">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={locked}
+        aria-label={ariaLabel}
+        aria-pressed={active}
+        className={cn(
+          'cockpit-focus group w-full min-w-0 overflow-hidden',
+          'flex items-center gap-2.5 rounded-md border',
+          'px-2.5 py-2 transition-colors',
+          'text-cockpit-sm tracking-cockpit-caps font-medium',
+          'disabled:cursor-not-allowed',
+          active
+            ? 'border-cyan-300/45 bg-cyan-400/8 text-white'
+            : locked
+              ? 'border-white/8 bg-white/2 text-slate-400 animate-rail-breathe'
+              : 'border-violet-400/45 bg-violet-500/10 text-violet-50 hover:bg-violet-500/15 hover:border-violet-300/60',
+          unlocking && !locked && 'animate-rail-unlock',
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            'grid place-items-center size-7 rounded transition-colors shrink-0',
+            active
+              ? 'bg-cyan-400/15 text-cyan-100'
+              : locked
+                ? 'bg-white/3 text-slate-500'
+                : 'bg-violet-400/20 text-violet-100 group-hover:text-white',
+            ready && !unlocking && 'animate-cta-glow',
+          )}
+        >
+          <Sparkles className="size-4" strokeWidth={1.4} />
+        </span>
+        <span className="flex-1 min-w-0 truncate text-left">Analyse</span>
+        <span
+          aria-hidden="true"
+          className={cn(
+            'shrink-0 text-cockpit-xs tracking-cockpit-label normal-case',
+            active
+              ? 'text-cyan-200'
+              : locked
+                ? 'text-slate-600'
+                : 'text-violet-200',
+          )}
+        >
+          {locked ? '✕' : '→'}
+        </span>
+      </button>
+    </div>
+  );
+}
+
+/* ── Layer grid (expanded) ─────────────────────────────────────────────── */
+
+interface LayerDef {
+  key: string;
+  label: string;
+  icon: ReactNode;
+  active: boolean;
+  disabled?: boolean;
+  ariaLabel?: string;
+  onClick: () => void;
+  /** Spans both columns of the grid — used for the gated side-view chip. */
+  fullWidth?: boolean;
+  /** Optional status dot ('loading' | 'error' | null) — used by the orbital layer. */
+  status?: 'loading' | 'error' | null;
+}
+
+function ExpandedLayerGrid({ layers }: { layers: LayerDef[] }) {
+  return (
+    <section aria-label="Calques d’affichage" className="px-3 pt-2 pb-2">
+      <div
+        className="px-1 pb-2 text-cockpit-xs tracking-cockpit-label uppercase
+                   text-slate-500"
+      >
+        Calques
+      </div>
+      <div className="grid grid-cols-2 gap-1.5">
+        {layers.map(({ key, ...chipProps }) => (
+          <LayerChip key={key} {...chipProps} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LayerChip({
+  label,
+  icon,
+  active,
+  disabled = false,
+  ariaLabel,
+  onClick,
+  fullWidth = false,
+  status,
+}: Omit<LayerDef, 'key'>) {
+  return (
+    <button
+      type="button"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      aria-pressed={active}
+      aria-label={ariaLabel ?? label}
+      className={cn(
+        'cockpit-focus group min-w-0 overflow-hidden',
+        'flex items-center gap-2 rounded-md border',
+        'px-2 py-1.5 transition-colors',
+        'disabled:cursor-not-allowed disabled:opacity-40',
+        fullWidth && 'col-span-2',
+        active
+          ? 'border-cyan-300/40 bg-cyan-400/8 text-white'
+          : 'border-white/8 bg-white/3 text-slate-200 hover:bg-white/6 hover:border-white/15 hover:text-white',
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          'grid place-items-center size-6 rounded transition-colors shrink-0',
+          active
+            ? 'bg-cyan-400/12 text-cyan-100'
+            : 'bg-white/4 text-slate-400 group-hover:text-slate-200',
+        )}
+      >
+        {icon}
+      </span>
+      <span
+        className={cn(
+          'flex-1 min-w-0 truncate text-left',
+          'text-cockpit-sm tracking-cockpit-tight font-medium',
+        )}
+      >
+        {label}
+      </span>
+      {status && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            'shrink-0 size-1.5 rounded-full',
+            status === 'loading'
+              ? 'bg-amber-300 animate-rail-breathe'
+              : 'bg-rose-400',
+          )}
+        />
+      )}
+    </button>
+  );
+}
+
+/* ── Layer rail (collapsed) — icon-only column ──────────────────────────── */
+
+function CollapsedLayerRail({ layers }: { layers: LayerDef[] }) {
+  return (
+    <ul
+      role="list"
+      aria-label="Calques d’affichage"
+      className="flex flex-col items-center gap-1 pt-2"
+    >
+      {layers.map((layer) => (
+        <li key={layer.key}>
+          <TooltipWrap text={layer.ariaLabel ?? layer.label} placement="right">
+            <IconButton
+              size="lg"
+              active={layer.active}
+              disabled={layer.disabled}
+              onClick={layer.disabled ? undefined : layer.onClick}
+              aria-pressed={layer.active}
+              aria-label={layer.ariaLabel ?? layer.label}
+            >
+              {layer.icon}
+            </IconButton>
+          </TooltipWrap>
+        </li>
+      ))}
+    </ul>
   );
 }
 

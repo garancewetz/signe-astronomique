@@ -36,7 +36,6 @@ interface MobileCockpitProps {
   onTimeChange: (v: string) => void;
   onCityChange: (v: CityResult) => void;
   onJump: (reading: CelestialReading) => void;
-  onBlip: () => void;
 
   // Reading + selection state
   reading: CelestialReading | null;
@@ -70,10 +69,10 @@ interface MobileCockpitProps {
   // scene can directly route into the Sélection tab without an effect.
   activeTab: MobileTabKey | null;
   onActiveTabChange: (tab: MobileTabKey | null) => void;
+  /** Bumps each time a new reading is computed — pulses the Analyse tab. */
+  analysisAttention: number;
 
   // System (drawer + overlays)
-  audioEnabled: boolean;
-  onToggleAudio: () => void;
   fullscreenActive: boolean;
   onToggleFullscreen: () => void;
   onExportView: () => void;
@@ -109,7 +108,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
     onTimeChange,
     onCityChange,
     onJump,
-    onBlip,
     reading,
     selectedBody,
     activeTab,
@@ -257,6 +255,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         onTabChange={handleTabChange}
         hasSelectedBody={hasSelectedBody}
         hasReading={hasReading}
+        analysisAttention={props.analysisAttention}
       />
 
       <MobileCoordinatesModal
@@ -269,7 +268,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
         onTimeChange={onTimeChange}
         onCityChange={onCityChange}
         onJump={onJump}
-        onBlip={onBlip}
       />
 
       <MobileAnalysisStack
@@ -285,8 +283,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
       <MobileSystemDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        audioEnabled={props.audioEnabled}
-        onToggleAudio={props.onToggleAudio}
         fullscreenActive={props.fullscreenActive}
         onToggleFullscreen={props.onToggleFullscreen}
         onOpenLegend={() => setLegendOpen(true)}

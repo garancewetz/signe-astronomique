@@ -30,6 +30,9 @@ interface BirthInput {
   longitude: number;
   /** Lieu (label affichable, optionnel) */
   placeLabel?: string;
+  /** IANA timezone du lieu (ex. "America/New_York"). Sert à formater
+   *  l'affichage et le moment de la journée dans le repère local. */
+  timezone?: string;
 }
 
 /**

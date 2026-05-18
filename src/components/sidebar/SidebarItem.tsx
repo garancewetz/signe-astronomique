@@ -1,6 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { cn, MenuRow } from '../ui';
-import type { ReportPanelKey, SidebarPanelKey } from './types';
 
 type ItemKind = 'action' | 'toggle' | 'panel';
 
@@ -85,45 +84,3 @@ export function SidebarItem({
   );
 }
 
-interface AnalysisItemProps {
-  panelKey: ReportPanelKey;
-  label: string;
-  sublabel?: string;
-  icon: ReactNode;
-  unlockIndex: number;
-  activePanel: SidebarPanelKey | null;
-  onTogglePanel: (key: SidebarPanelKey) => void;
-  hasReading: boolean;
-  unlocking: boolean;
-  collapsed: boolean;
-}
-
-/** Shared lock/unlock state for the report panel rows. */
-export function AnalysisItem({
-  panelKey,
-  label,
-  sublabel,
-  icon,
-  unlockIndex,
-  activePanel,
-  onTogglePanel,
-  hasReading,
-  unlocking,
-  collapsed,
-}: AnalysisItemProps) {
-  return (
-    <SidebarItem
-      kind="panel"
-      label={label}
-      sublabel={sublabel}
-      icon={icon}
-      active={activePanel === panelKey}
-      locked={!hasReading}
-      unlocking={unlocking}
-      unlockIndex={unlockIndex}
-      collapsed={collapsed}
-      onClick={() => onTogglePanel(panelKey)}
-      ariaControls={`panel-${panelKey}`}
-    />
-  );
-}

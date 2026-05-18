@@ -43,7 +43,7 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
     id: 'sputnik-1',
     name: 'Sputnik 1',
     launchDate: '1957-10-04',
-    blurb: 'Le premier murmure humain en orbite. 92 jours de bip, puis le silence.',
+    blurb: 'Le premier murmure humain en orbite : 21 jours de bip avant l\'épuisement des piles, puis trois mois d\'orbite silencieuse jusqu\'à sa rentrée.',
     glowColor: '#fbbf24',
     tle: [
       '1 00002U 57001B   57277.00000000  .00000000  00000-0  00000-0 0  9999',

@@ -255,34 +255,12 @@ function NavigationContent({
 
 /* ── Analysis ────────────────────────────────────────────────────────────── */
 
+// The "Analyse" tab is gated by `hasReading` inside MobileTabBar (the button
+// is disabled until a reading exists), so this content always renders with a
+// reading in hand — no empty-state branch needed.
 function AnalysisContent({
-  hasReading,
   onSelectAnalysisPanel,
-  onOpenCoords,
 }: MobileSheetContentProps) {
-  if (!hasReading) {
-    return (
-      <SheetSection>
-        <SheetEyebrow>Analyse</SheetEyebrow>
-        <p className="text-cockpit-sm text-slate-400/85 leading-relaxed">
-          Calcule d’abord ton ciel de naissance pour débloquer les
-          analyses.
-        </p>
-        <button
-          type="button"
-          onClick={onOpenCoords}
-          className="cockpit-focus w-full px-4 py-3 min-h-11 rounded-panel
-                     border border-border-control bg-violet-600/15
-                     text-white text-cockpit-sm tracking-cockpit
-                     hover:bg-violet-600/25 hover:border-accent-label
-                     transition-all inline-flex items-center justify-center gap-2"
-        >
-          <span aria-hidden className="text-violet-200/90 leading-none">✦</span>
-          CALCULER MON SIGNE
-        </button>
-      </SheetSection>
-    );
-  }
   return (
     <SheetSection>
       <SheetEyebrow>Analyse</SheetEyebrow>

@@ -15,7 +15,6 @@ interface MobileCoordinatesModalProps {
   onTimeChange: (v: string) => void;
   onCityChange: (v: CityResult) => void;
   onJump: (reading: CelestialReading) => void;
-  onBlip: () => void;
 }
 
 /**
@@ -34,7 +33,6 @@ export function MobileCoordinatesModal({
   onTimeChange,
   onCityChange,
   onJump,
-  onBlip,
 }: MobileCoordinatesModalProps) {
   const reduceMotion = useReducedMotion();
 
@@ -87,7 +85,6 @@ export function MobileCoordinatesModal({
               onDateChange={onDateChange}
               onTimeChange={onTimeChange}
               onCityChange={onCityChange}
-              onBlip={onBlip}
               onJump={(reading) => {
                 onJump(reading);
                 onClose();

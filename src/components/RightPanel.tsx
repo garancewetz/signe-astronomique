@@ -10,6 +10,7 @@ import {
   PlanetTable,
   ResumeCard,
   ScientificFooter,
+  TwoMotionsCard,
 } from './MissionLog';
 import { PanelShell } from './ui';
 import type { CelestialReading } from '../utils/astroEngine';
@@ -40,51 +41,71 @@ interface ResumePanelProps extends PanelProps {
   onRevealConstellation: () => void;
 }
 
-// ─── Panneau MON SIGNE — fiche natale + hub d'entrée ────────────────────────
+// ─── Body MON SIGNE ──────────────────────────────────────────────────────────
 
-export function ResumePanel({
+interface ResumeBodyProps {
+  reading: CelestialReading | null;
+  labelsEnabled: boolean;
+  onToggleLabels: () => void;
+  onRevealConstellation: () => void;
+}
+
+export function ResumeBody({
   reading,
-  onClose,
   labelsEnabled,
   onToggleLabels,
   onRevealConstellation,
-}: ResumePanelProps) {
+}: ResumeBodyProps) {
   const LabelIcon = labelsEnabled ? EyeOff : Eye;
+  if (!reading) return <ResumeStub />;
+  return (
+    <div className="space-y-4 text-cockpit-xl leading-relaxed">
+      <button
+        type="button"
+        onClick={onToggleLabels}
+        aria-pressed={labelsEnabled}
+        className="cockpit-focus group w-full
+                   flex items-center justify-center gap-2 rounded-panel
+                   border border-border-control
+                   bg-violet-600/15 hover:bg-violet-600/25
+                   hover:border-accent-label
+                   transition-colors px-3.5 py-2.5
+                   text-white text-cockpit-sm tracking-cockpit-caps font-medium"
+      >
+        <LabelIcon
+          aria-hidden="true"
+          className="size-4 text-violet-200 group-hover:text-white"
+          strokeWidth={1.4}
+        />
+        {labelsEnabled ? 'Masquer les constellations' : 'Voir les constellations'}
+      </button>
+      <BirthHeader reading={reading} />
+      <ResumeCard reading={reading} onRevealConstellation={onRevealConstellation} />
+      <AscendantCard reading={reading} />
+    </div>
+  );
+}
+
+export function ResumePanel(props: ResumePanelProps) {
+  const { onClose, ...bodyProps } = props;
   return (
     <ReportPanelShell title="MON SIGNE" subtitle="TON CIEL DE NAISSANCE" onClose={onClose}>
-      {reading ? (
-        <div className="space-y-4 text-cockpit-xl leading-relaxed">
-          <button
-            type="button"
-            onClick={onToggleLabels}
-            aria-pressed={labelsEnabled}
-            className="cockpit-focus group w-full
-                       flex items-center justify-center gap-2 rounded-panel
-                       border border-border-control
-                       bg-violet-600/15 hover:bg-violet-600/25
-                       hover:border-accent-label
-                       transition-colors px-3.5 py-2.5
-                       text-white text-cockpit-sm tracking-cockpit-caps font-medium"
-          >
-            <LabelIcon
-              aria-hidden="true"
-              className="size-4 text-violet-200 group-hover:text-white"
-              strokeWidth={1.4}
-            />
-            {labelsEnabled ? 'Masquer les constellations' : 'Voir les constellations'}
-          </button>
-          <BirthHeader reading={reading} />
-          <ResumeCard reading={reading} onRevealConstellation={onRevealConstellation} />
-          <AscendantCard reading={reading} />
-        </div>
-      ) : (
-        <ResumeStub />
-      )}
+      <ResumeBody {...bodyProps} />
     </ReportPanelShell>
   );
 }
 
-// ─── Panneau CARTE ───────────────────────────────────────────────────────────
+// ─── Body CARTE ──────────────────────────────────────────────────────────────
+
+export function CarteBody({ reading }: { reading: CelestialReading | null }) {
+  if (!reading) return <CarteStub />;
+  return (
+    <div className="space-y-3 text-cockpit-xl leading-relaxed">
+      <RadarWheel reading={reading} />
+      <PlanetTable reading={reading} />
+    </div>
+  );
+}
 
 export function CartePanel({ reading, onClose }: PanelProps) {
   return (
@@ -93,19 +114,31 @@ export function CartePanel({ reading, onClose }: PanelProps) {
       subtitle="ROUE DES CONSTELLATIONS"
       onClose={onClose}
     >
-      {reading ? (
-        <div className="space-y-3 text-cockpit-xl leading-relaxed">
-          <RadarWheel reading={reading} />
-          <PlanetTable reading={reading} />
-        </div>
-      ) : (
-        <CarteStub />
-      )}
+      <CarteBody reading={reading} />
     </ReportPanelShell>
   );
 }
 
-// ─── Panneau LECTURE ─────────────────────────────────────────────────────────
+// ─── Body LECTURE ────────────────────────────────────────────────────────────
+
+interface LectureBodyProps {
+  reading: CelestialReading | null;
+  satellitesEnabled: boolean;
+}
+
+export function LectureBody({ reading, satellitesEnabled }: LectureBodyProps) {
+  if (!reading) return <LectureStub />;
+  return (
+    <div className="space-y-3 text-cockpit-xl leading-relaxed">
+      <HowToRead />
+      <TwoMotionsCard />
+      <NotesCard reading={reading} />
+      {satellitesEnabled && (
+        <RelicsOracleCard birthDate={reading.input.date} />
+      )}
+    </div>
+  );
+}
 
 export function LecturePanel({
   reading,
@@ -114,34 +147,27 @@ export function LecturePanel({
 }: LecturePanelProps) {
   return (
     <ReportPanelShell title="LECTURE" subtitle="COMPRENDRE TA CARTE" onClose={onClose}>
-      {reading ? (
-        <div className="space-y-3 text-cockpit-xl leading-relaxed">
-          <HowToRead />
-          <NotesCard reading={reading} />
-          {satellitesEnabled && (
-            <RelicsOracleCard birthDate={reading.input.date} />
-          )}
-        </div>
-      ) : (
-        <LectureStub />
-      )}
+      <LectureBody reading={reading} satellitesEnabled={satellitesEnabled} />
     </ReportPanelShell>
   );
 }
 
-// ─── Panneau DONNÉES ─────────────────────────────────────────────────────────
+// ─── Body DONNÉES ────────────────────────────────────────────────────────────
+
+export function DonneesBody({ reading }: { reading: CelestialReading | null }) {
+  if (!reading) return <DonneesStub />;
+  return (
+    <div className="space-y-3 text-cockpit-xl leading-relaxed">
+      <AstroInfoCard reading={reading} />
+      <ScientificFooter />
+    </div>
+  );
+}
 
 export function DonneesPanel({ reading, onClose }: PanelProps) {
   return (
     <ReportPanelShell title="DONNÉES" subtitle="ASTRONOMIE BRUTE" onClose={onClose}>
-      {reading ? (
-        <div className="space-y-3 text-cockpit-xl leading-relaxed">
-          <AstroInfoCard reading={reading} />
-          <ScientificFooter />
-        </div>
-      ) : (
-        <DonneesStub />
-      )}
+      <DonneesBody reading={reading} />
     </ReportPanelShell>
   );
 }
@@ -223,6 +249,7 @@ export function FullReport({ reading }: { reading: CelestialReading }) {
       <RadarWheel reading={reading} />
       <PlanetTable reading={reading} />
       <HowToRead />
+      <TwoMotionsCard />
       <NotesCard reading={reading} />
       <AstroInfoCard reading={reading} />
       <ScientificFooter />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, useReducedMotion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useGeolocation } from '../hooks/useGeolocation';
 import {
   SpaceView,
@@ -13,19 +13,12 @@ import {
   Sidebar,
   SIDEBAR_COLLAPSED_PX,
   SIDEBAR_EXPANDED_PX,
-  type SectionKey,
+  type ReportPanelKey,
   type SidebarPanelKey,
 } from './sidebar';
-import {
-  CartePanel,
-  DonneesPanel,
-  FullReport,
-  LecturePanel,
-  ResumePanel,
-} from './RightPanel';
+import { FullReport } from './RightPanel';
+import { AnalysisModal } from './AnalysisModal';
 import { LegendPanel } from './LegendPanel';
-import { DockedPanel } from './ui';
-import { useCockpitAudio } from '../hooks/useCockpitAudio';
 import { useMobileLayout } from '../hooks/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
@@ -36,7 +29,6 @@ import {
   viewFilename,
 } from '../utils/exportReport';
 import type { CelestialReading } from '../utils/astroEngine';
-import { CONSTELLATION_LORE } from '../utils/constellationLore';
 import type { CityResult } from './CityAutocomplete';
 import { timezoneFromLatLon } from '../utils/timezone';
 import { useOrbitalPopulation } from '../hooks/useOrbitalPopulation';
@@ -47,11 +39,6 @@ const DEFAULT_CITY: CityResult = {
   lon: 2.3522,
   timezone: timezoneFromLatLon(48.8566, 2.3522),
 };
-
-// Second-tier dock width — clamped on narrow viewports so the canvas
-// always keeps a visible strip even with sidebar + panel both open.
-const dockWidthFor = (sidebarPx: number) =>
-  `min(20rem, calc(100vw - ${sidebarPx}px - 1rem))`;
 
 // Reveal sequence timings (unchanged).
 const REVEAL_LABEL_HOLD_MS = 3000;
@@ -70,45 +57,19 @@ function formatInputTime(now: Date): string {
   return `${hh}:${mm}`;
 }
 
-/** Section a panel belongs to — drives the auto-expand logic. */
-function sectionForPanel(panel: SidebarPanelKey | null): SectionKey | null {
-  if (panel === null) return null;
-  if (panel === 'body') return 'selection';
-  if (panel === 'legend') return null;
-  return 'analysis';
-}
-
-function selectedBodyLabel(body: SelectedBody | null): string | null {
-  if (!body) return null;
-  switch (body.kind) {
-    case 'star': {
-      const lore = CONSTELLATION_LORE[body.constellationAbbr as keyof typeof CONSTELLATION_LORE];
-      return lore ? `Étoile · ${lore.fr}` : 'Étoile';
-    }
-    case 'sun':
-      return 'Soleil';
-    case 'moon':
-      return 'Lune';
-    case 'planet':
-      return body.name;
-    case 'satellite':
-      return body.name;
-  }
-}
-
 export function Cockpit() {
   const isMobile = useMobileLayout();
 
   const [reading, setReading] = useState<CelestialReading | null>(null);
 
-  // The natal form lives at the top of the sidebar (always visible), so
-  // the dock starts empty. Analysis panels open from the sidebar nav once
-  // the user has computed a reading.
+  // The natal form lives at the top of the sidebar (always visible).
+  // Only floating panels (body picker, legend) live in activePanel now —
+  // analysis content moved to a centered modal opened from the sidebar CTA.
   const [activePanel, setActivePanel] = useState<SidebarPanelKey | null>(null);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [analysisTab, setAnalysisTab] = useState<ReportPanelKey>('resume');
+  const [analysisAttention, setAnalysisAttention] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedSection, setExpandedSection] = useState<SectionKey | null>(
-    'analysis',
-  );
 
   const [exporting, setExporting] = useState(false);
   const [exportingView, setExportingView] = useState(false);
@@ -120,8 +81,6 @@ export function Cockpit() {
   const [selectedBody, setSelectedBody] = useState<SelectedBody | null>(null);
   const [sideViewActive, setSideViewActive] = useState(false);
   const [mobileActiveTab, setMobileActiveTab] = useState<MobileTabKey | null>(null);
-
-  const reduceMotion = useReducedMotion();
 
   const {
     satellites: orbitalSatellites,
@@ -164,8 +123,6 @@ export function Cockpit() {
   const spaceViewRef = useRef<SpaceViewHandle>(null);
   const fullReportRef = useRef<HTMLDivElement>(null);
 
-  const audio = useCockpitAudio();
-
   const revealLabelTimerRef = useRef<number | null>(null);
   const revealPanelTimerRef = useRef<number | null>(null);
   const labelsRestoreRef = useRef<boolean | null>(null);
@@ -189,27 +146,31 @@ export function Cockpit() {
     }
   };
 
-  /** Open or close a panel; auto-expands the relevant sidebar section. */
   const togglePanel = (key: SidebarPanelKey) => {
     cancelPendingPanelOpen();
-    setActivePanel((prev) => {
-      const next = prev === key ? null : key;
-      const section = sectionForPanel(next);
-      if (section) setExpandedSection(section);
-      return next;
-    });
+    setActivePanel((prev) => (prev === key ? null : key));
   };
 
   const openPanel = (key: SidebarPanelKey) => {
     cancelPendingPanelOpen();
     setActivePanel(key);
-    const section = sectionForPanel(key);
-    if (section) setExpandedSection(section);
   };
 
   const closePanel = () => {
     cancelPendingPanelOpen();
     setActivePanel(null);
+  };
+
+  /** Open the analysis modal on a given tab (defaults to 'resume'). */
+  const openAnalysis = (tab: ReportPanelKey = 'resume') => {
+    cancelPendingPanelOpen();
+    setAnalysisTab(tab);
+    setAnalysisOpen(true);
+  };
+
+  const closeAnalysis = () => {
+    cancelPendingPanelOpen();
+    setAnalysisOpen(false);
   };
 
   /** Body picker callback — wires to the SÉLECTION section. */
@@ -254,7 +215,7 @@ export function Cockpit() {
     if (opts.openPanelAfter) {
       revealPanelTimerRef.current = window.setTimeout(() => {
         revealPanelTimerRef.current = null;
-        openPanel('resume');
+        openAnalysis('resume');
       }, REVEAL_PANEL_DELAY_MS);
     }
   };
@@ -262,33 +223,18 @@ export function Cockpit() {
   const handleJump = (r: CelestialReading) => {
     const isFirstCalc = reading == null;
     setReading(r);
-    if (!isFirstCalc) {
-      // Subsequent recomputes — keep the user's overlays/panel state intact.
-      // Dramatic reveal is reserved for the live → natal transition.
-      return;
-    }
-    // First calc: empty sky, scrub overlays, defer the RÉSUMÉ reveal so the
-    // user discovers the reading rather than landing on a wall of cards.
+    // Pulse the Analyse CTA so the user knows fresh data is ready, without
+    // pulling them into the modal — they open it on their own terms.
+    setAnalysisAttention((k) => k + 1);
+    if (!isFirstCalc) return;
+    // First calc only: empty sky, scrub overlays so the user discovers the
+    // sphere before any layer is painted on top.
     setShowGuides(false);
     setBodyLabelsEnabled(false);
     setSatellitesEnabled(false);
     setConstellationOverlayEnabled(false);
     cancelPendingPanelOpen();
     setActivePanel(null);
-    setExpandedSection('analysis');
-    if (reduceMotion) {
-      openPanel('resume');
-      return;
-    }
-    revealPanelTimerRef.current = window.setTimeout(() => {
-      revealPanelTimerRef.current = null;
-      openPanel('resume');
-    }, REVEAL_PANEL_DELAY_MS);
-  };
-
-  const toggleAudio = () => {
-    if (audio.enabled) audio.stop();
-    else audio.start();
   };
 
   const handleExport = async () => {
@@ -336,20 +282,10 @@ export function Cockpit() {
     else void el.requestFullscreen();
   };
 
-  // Canvas left inset: sidebar width (animated) + panel width if a panel
-  // is open. Right inset is always 0 — the second-tier dock lives next
-  // to the sidebar, on the left side of the viewport only.
+  // Canvas left inset: sidebar width only — body/legend float over the
+  // canvas as glassmorphism cards, and the analysis modal is centered.
   const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_PX : SIDEBAR_EXPANDED_PX;
-  const dockWidth = dockWidthFor(sidebarWidth);
-  // Body and legend float over the canvas as glassmorphism cards; only
-  // the dense analysis panels widen the canvas inset.
-  const isFloatingPanel = activePanel === 'body' || activePanel === 'legend';
-  const dockedPanelOpen = activePanel !== null && !isFloatingPanel;
-  const canvasInsetStyle = {
-    left: dockedPanelOpen
-      ? `calc(${sidebarWidth}px + ${dockWidth})`
-      : `${sidebarWidth}px`,
-  };
+  const canvasInsetStyle = { left: `${sidebarWidth}px` };
 
   const orbitalToggleHandler = () => {
     if (orbitalStatus === 'error') {
@@ -390,7 +326,6 @@ export function Cockpit() {
         onTimeChange={setTime}
         onCityChange={setUserCity}
         onJump={handleJump}
-        onBlip={audio.blip}
         reading={reading}
         selectedBody={selectedBody}
         onCloseSelection={() => handleBodySelect(null)}
@@ -413,8 +348,7 @@ export function Cockpit() {
         onRevealConstellation={() => revealConstellation({ openPanelAfter: false })}
         activeTab={mobileActiveTab}
         onActiveTabChange={setMobileActiveTab}
-        audioEnabled={audio.enabled}
-        onToggleAudio={toggleAudio}
+        analysisAttention={analysisAttention}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={toggleFullscreen}
         onExportView={handleExportView}
@@ -461,18 +395,22 @@ export function Cockpit() {
           reading={reading}
           observerLat={city.lat}
           observerLon={city.lon}
-          onOpenSummary={() => openPanel('resume')}
+          onOpenSummary={() => openAnalysis('resume')}
+          onFlySun={() => spaceViewRef.current?.flyToSun()}
+          onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
+          onFlyEarth={() => spaceViewRef.current?.flyToEarth()}
         />
       </div>
 
-      {/* === SIDEBAR — colonne unifiée (navigation, chronologie, analyse, système) === */}
+      {/* === SIDEBAR — colonne unifiée (formulaire, analyse, calques, système) === */}
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
-        expandedSection={expandedSection}
-        onExpandSection={setExpandedSection}
         activePanel={activePanel}
         onTogglePanel={togglePanel}
+        analysisOpen={analysisOpen}
+        analysisAttention={analysisAttention}
+        onOpenAnalysis={() => openAnalysis()}
         date={date}
         time={time}
         city={city}
@@ -480,13 +418,7 @@ export function Cockpit() {
         onTimeChange={setTime}
         onCityChange={setUserCity}
         onJump={handleJump}
-        onBlip={audio.blip}
         hasReading={!!reading}
-        hasSelectedBody={!!selectedBody}
-        selectedBodyLabel={selectedBodyLabel(selectedBody)}
-        onFlySun={() => spaceViewRef.current?.flyToSun()}
-        onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
-        onFlyEarth={() => spaceViewRef.current?.flyToEarth()}
         guidesEnabled={showGuides}
         onToggleGuides={() => setShowGuides((v) => !v)}
         bodyLabelsEnabled={bodyLabelsEnabled}
@@ -500,8 +432,6 @@ export function Cockpit() {
         hasSelectedStar={selectedBody?.kind === 'star'}
         sideViewActive={sideViewActive}
         onToggleSideView={() => setSideViewActive((v) => !v)}
-        audioEnabled={audio.enabled}
-        onToggleAudio={toggleAudio}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={toggleFullscreen}
         onExportView={handleExportView}
@@ -511,43 +441,21 @@ export function Cockpit() {
         canExportReport={!!reading}
       />
 
-      {/* === DOCKED PANEL — second-tier slide-out adjacent to the sidebar === */}
-      <DockedPanel
-        open={dockedPanelOpen}
-        sidebarWidth={sidebarWidth}
-        dockWidth={dockWidth}
-        panelId={
-          activePanel && !isFloatingPanel
-            ? `panel-${activePanel}`
-            : 'panel-second-tier'
-        }
-      >
-        {activePanel === 'resume' && (
-          <ResumePanel
-            reading={reading}
-            labelsEnabled={bodyLabelsEnabled}
-            onToggleLabels={() => setBodyLabelsEnabled((v) => !v)}
-            onRevealConstellation={() => {
-              closePanel();
-              revealConstellation({ openPanelAfter: false });
-            }}
-            onClose={closePanel}
-          />
-        )}
-        {activePanel === 'carte' && (
-          <CartePanel reading={reading} onClose={closePanel} />
-        )}
-        {activePanel === 'lecture' && (
-          <LecturePanel
-            reading={reading}
-            satellitesEnabled={satellitesEnabled}
-            onClose={closePanel}
-          />
-        )}
-        {activePanel === 'donnees' && (
-          <DonneesPanel reading={reading} onClose={closePanel} />
-        )}
-      </DockedPanel>
+      {/* === MODALE ANALYSE — onglets MON SIGNE / CARTE / LECTURE / DONNÉES === */}
+      <AnalysisModal
+        open={analysisOpen}
+        activeTab={analysisTab}
+        onActiveTabChange={setAnalysisTab}
+        onClose={closeAnalysis}
+        reading={reading}
+        labelsEnabled={bodyLabelsEnabled}
+        onToggleLabels={() => setBodyLabelsEnabled((v) => !v)}
+        onRevealConstellation={() => {
+          closeAnalysis();
+          revealConstellation({ openPanelAfter: false });
+        }}
+        satellitesEnabled={satellitesEnabled}
+      />
 
       {/* === FLOATING HUD CARDS — glassmorphism overlays above the sky === */}
       <AnimatePresence mode="wait">
@@ -558,7 +466,7 @@ export function Cockpit() {
             sidebarWidth={sidebarWidth}
             sideViewActive={sideViewActive}
             onToggleSideView={() => setSideViewActive((v) => !v)}
-            onClose={closePanel}
+            onClose={() => handleBodySelect(null)}
           />
         )}
         {activePanel === 'legend' && (

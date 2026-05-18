@@ -37,21 +37,45 @@ function getSeason(sunTropLon: number, lat: number): string {
   return (isNorth ? n : s)[idx];
 }
 
-function getTimeOfDay(utcHour: number): string {
-  if (utcHour >= 6 && utcHour < 12) return 'matin';
-  if (utcHour >= 12 && utcHour < 18) return 'après-midi';
-  if (utcHour >= 18) return 'soirée';
+function getTimeOfDay(localHour: number): string {
+  if (localHour >= 6 && localHour < 12) return 'matin';
+  if (localHour >= 12 && localHour < 18) return 'après-midi';
+  if (localHour >= 18) return 'soirée';
   return 'nuit';
+}
+
+/** Extracts the wall-clock hour in `timezone` for a given UTC date. Falls
+ *  back to UTC if the timezone is unknown or `Intl` rejects it. */
+function localHourIn(date: Date, timezone?: string): number {
+  if (!timezone) return date.getUTCHours();
+  try {
+    const part = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      hour: '2-digit',
+      hour12: false,
+    }).formatToParts(date).find((p) => p.type === 'hour');
+    const h = Number(part?.value);
+    // Intl can emit "24" for midnight in some locales — normalize to 0.
+    return Number.isFinite(h) ? h % 24 : date.getUTCHours();
+  } catch {
+    return date.getUTCHours();
+  }
 }
 
 // ─── En-tête naissance ───────────────────────────────────────────────────────
 
 export function BirthHeader({ reading }: { reading: CelestialReading }) {
-  const { date, placeLabel, latitude, longitude } = reading.input;
-  const dateStr = date.toLocaleDateString('fr-FR', {
+  const { date, placeLabel, latitude, longitude, timezone } = reading.input;
+  const dateFmt = new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: timezone ?? 'UTC',
   });
-  const timeStr = date.toISOString().slice(11, 16) + ' UTC';
+  const timeFmt = new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit', minute: '2-digit', hour12: false,
+    timeZone: timezone ?? 'UTC',
+  });
+  const dateStr = dateFmt.format(date);
+  const timeStr = timezone ? timeFmt.format(date) : `${timeFmt.format(date)} UTC`;
 
   return (
     <div className="pb-3 border-b border-border-hud-subtle">
@@ -87,7 +111,7 @@ export function ResumeCard({
   const moonLore = CONSTELLATION_LORE[reading.moon.constellation];
   const ascLore  = CONSTELLATION_LORE[reading.ascendantConstellation];
   const season   = getSeason(reading.sunEclipticLongitude, reading.input.latitude);
-  const timeDay  = getTimeOfDay(reading.input.date.getUTCHours());
+  const timeDay  = getTimeOfDay(localHourIn(reading.input.date, reading.input.timezone));
 
   return (
     <Section label="TON CIEL EN UN COUP D’ŒIL">
@@ -166,25 +190,64 @@ export function AscendantCard({ reading }: { reading: CelestialReading }) {
 export function HowToRead() {
   return (
     <Section label="COMMENT LIRE TA CARTE DU CIEL">
-      <div className="px-3 py-2.5 text-cockpit-sm leading-relaxed text-slate-300 space-y-1.5">
+      <div className="px-3 py-2.5 font-sans text-cockpit-xl leading-relaxed text-slate-300 space-y-2">
         <p>
           Ce que tu vois est le <strong className="text-violet-100 font-medium">ciel
           réel</strong> tel qu&apos;il était au-dessus du lieu, à la date et à
           l&apos;heure de ta naissance — pas un schéma symbolique.
         </p>
-        <p className="text-cockpit-sm text-slate-400">
-          Active les guides <span className="text-amber-300">⊕</span> dans la
-          console pour voir l&apos;axe terrestre (autour duquel la Terre tourne),
-          l&apos;équateur céleste (sa projection sur le ciel) et
-          l&apos;écliptique — le chemin apparent du Soleil sur l&apos;année. Les
-          treize constellations zodiacales sont celles que ce chemin traverse.
+        <p className="text-slate-400">
+          Active le calque <span className="text-amber-300">Repères</span> dans
+          la barre latérale pour voir l&apos;axe de rotation de la Terre,
+          l&apos;équateur céleste (sa projection sur la voûte) et
+          l&apos;écliptique — la trajectoire apparente du Soleil au fil de
+          l&apos;année. Les treize constellations zodiacales sont celles que ce
+          chemin traverse.
         </p>
-        <p className="text-cockpit-sm text-slate-500">
-          Les frontières dessinées sont celles de l&apos;IAU (1930), tracées
-          d&apos;après les positions des étoiles. Elles ne forment pas douze
-          cases égales : le Soleil reste 45 jours dans la Vierge, 6 dans le
-          Scorpion, 18 dans Ophiuchus. C&apos;est cette géométrie réelle que
-          le calendrier astrologique a lissée en douze parts de 30°.
+        <p className="text-slate-500">
+          Les frontières dessinées sont celles fixées par l&apos;IAU en 1930
+          (E. Delporte), tracées d&apos;après la position des étoiles. Elles ne
+          forment pas douze cases égales : le Soleil reste 45 jours dans la
+          Vierge, 19 dans Ophiuchus, et seulement 6 dans le Scorpion. C&apos;est
+          cette géométrie réelle que le calendrier astrologique a lissée en
+          douze parts de 30°.
+        </p>
+      </div>
+    </Section>
+  );
+}
+
+// ─── Deux mouvements de la Terre : Soleil vs Ascendant ──────────────────────
+
+export function TwoMotionsCard() {
+  return (
+    <Section label="DEUX MOUVEMENTS, DEUX SIGNES">
+      <div className="px-3 py-2.5 font-sans text-cockpit-xl leading-relaxed text-slate-300 space-y-2">
+        <p>
+          Ton <span className="text-yellow-300 font-medium">signe solaire</span>{' '}
+          dépend de la position du Soleil dans le zodiaque. Le Soleil met{' '}
+          <strong className="text-violet-100 font-medium">~365 jours</strong> à
+          parcourir l&apos;écliptique ; le calendrier astrologique la découpe en{' '}
+          <strong className="text-violet-100 font-medium">12 secteurs de 30°</strong>,
+          soit environ 30 jours chacun. C&apos;est pour ça qu&apos;une simple
+          date suffit à le déterminer.
+        </p>
+        <p>
+          Ton <span className="text-emerald-300 font-medium">ascendant</span>, lui, est
+          le signe qui pointait juste au-dessus de l&apos;horizon est à
+          l&apos;instant précis de ta naissance. Or la Terre fait un tour
+          sur elle-même en <strong className="text-violet-100 font-medium">24&nbsp;h</strong>{' '}
+          : les 360° du zodiaque défilent à l&apos;horizon en une journée, soit
+          un nouveau signe toutes les{' '}
+          <strong className="text-violet-100 font-medium">~2&nbsp;h</strong>.
+        </p>
+        <p className="text-slate-400">
+          D&apos;où la dissymétrie : la <strong className="text-slate-200 font-medium">révolution
+          annuelle</strong> de la Terre autour du Soleil règle le signe
+          solaire ; sa <strong className="text-slate-200 font-medium">rotation
+          quotidienne</strong> règle l&apos;ascendant. C&apos;est aussi pour ça
+          qu&apos;il faut le <em>lieu</em> : l&apos;horizon est dépend de la
+          latitude et de la longitude.
         </p>
       </div>
     </Section>
@@ -282,7 +345,7 @@ export function NotesCard({ reading }: { reading: CelestialReading }) {
 
   return (
     <Section label="TON SIGNE : ASTROLOGIQUE vs ASTRONOMIQUE">
-      <div className="px-3 py-2.5 text-cockpit-sm leading-relaxed space-y-2 text-slate-300">
+      <div className="px-3 py-2.5 font-sans text-cockpit-xl leading-relaxed space-y-2 text-slate-300">
         {tropicalLore ? (
           <>
             <p>
@@ -307,12 +370,12 @@ export function NotesCard({ reading }: { reading: CelestialReading }) {
             signe entier.
           </p>
         )}
-        <p className="text-cockpit-sm text-slate-400">
+        <p className="text-slate-400">
           Le calcul s&apos;appuie sur l&apos;astronomie de position : éphémérides
           de Meeus, frontières IAU/Delporte, repère ICRS&nbsp;J2000. Aucune
           interprétation symbolique — juste où étaient les astres.
         </p>
-        <p className="text-slate-500 text-cockpit-sm italic leading-relaxed pt-1 border-t border-border-hud-faint">
+        <p className="text-slate-500 italic leading-relaxed pt-1 border-t border-border-hud-faint">
           {sunLore.poetic}
         </p>
       </div>

@@ -32,7 +32,10 @@ export function RadarWheel({ reading }: Props) {
   const segments = useMemo(() => buildSegments(), []);
 
   return (
-    <svg viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`} className="w-full h-auto">
+    <svg
+      viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
+      className="block mx-auto w-full h-auto max-w-[min(100%,60vh)]"
+    >
       {/* — Disque de fond — */}
       <circle cx={CX} cy={CY} r={R_OUTER} fill="rgba(2,6,23,0.6)" />
       <circle cx={CX} cy={CY} r={R_OUTER}   fill="none" stroke="rgba(56,189,248,0.4)" strokeWidth={0.6} />
@@ -271,8 +274,16 @@ function Ascendant({ longitude }: { longitude: number }) {
 
 function CenterInfo({ reading }: { reading: CelestialReading }) {
   const date = reading.input.date;
-  const dateLabel = date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-  const timeLabel = date.toISOString().slice(11, 16);
+  const tz = reading.input.timezone ?? 'UTC';
+  const dateLabel = new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    timeZone: tz,
+  }).format(date);
+  const timeLabel = new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit', minute: '2-digit', hour12: false,
+    timeZone: tz,
+  }).format(date);
+  const timeSuffix = reading.input.timezone ? 'LOCAL' : 'UTC';
 
   return (
     <g>
@@ -303,7 +314,7 @@ function CenterInfo({ reading }: { reading: CelestialReading }) {
         letterSpacing="0.2em"
         textAnchor="middle"
       >
-        {timeLabel} UTC
+        {timeLabel} {timeSuffix}
       </text>
       {reading.input.placeLabel && (
         <text

@@ -6,8 +6,6 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
-  Volume2,
-  VolumeX,
 } from 'lucide-react';
 import { InfoCircleIcon } from '../ExploreSpacePopover';
 import { cn, MenuRow, surfaceClasses } from '../ui';
@@ -15,9 +13,6 @@ import { cn, MenuRow, surfaceClasses } from '../ui';
 interface MobileSystemDrawerProps {
   open: boolean;
   onClose: () => void;
-
-  audioEnabled: boolean;
-  onToggleAudio: () => void;
 
   fullscreenActive: boolean;
   onToggleFullscreen: () => void;
@@ -35,15 +30,13 @@ interface MobileSystemDrawerProps {
 /**
  * Pop-down system menu anchored under the top chip's "⋮" button. Hosts
  * the rarely-used controls that don't deserve a dedicated tab on mobile:
- * audio · fullscreen · legend · external links · two PNG exports.
+ * fullscreen · legend · external links · two PNG exports.
  *
  * A backdrop swallows outside clicks so the drawer dismisses naturally.
  */
 export function MobileSystemDrawer({
   open,
   onClose,
-  audioEnabled,
-  onToggleAudio,
   fullscreenActive,
   onToggleFullscreen,
   onOpenLegend,
@@ -89,22 +82,6 @@ export function MobileSystemDrawer({
             style={{ transformOrigin: 'top right' }}
           >
             <ul role="list" className="p-1">
-              <li>
-                <MenuRow
-                  kind="toggle"
-                  size="md"
-                  label={audioEnabled ? 'Couper le son' : 'Activer le son'}
-                  icon={
-                    audioEnabled ? (
-                      <Volume2 className="size-4" strokeWidth={1.4} aria-hidden />
-                    ) : (
-                      <VolumeX className="size-4" strokeWidth={1.4} aria-hidden />
-                    )
-                  }
-                  active={audioEnabled}
-                  onClick={onToggleAudio}
-                />
-              </li>
               <li>
                 <MenuRow
                   kind="toggle"

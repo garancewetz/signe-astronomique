@@ -5,16 +5,20 @@ import {
   Lock,
   Telescope,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { cn } from '../ui';
 
 export type MobileTabKey = 'selection' | 'display' | 'navigation' | 'analysis';
+
+const UNLOCK_WINDOW_MS = 1200;
 
 interface MobileTabBarProps {
   activeTab: MobileTabKey | null;
   onTabChange: (tab: MobileTabKey | null) => void;
   hasSelectedBody: boolean;
   hasReading: boolean;
+  /** Bumps on each new reading — pulses the Analyse tab (parity with desktop CTA). */
+  analysisAttention: number;
 }
 
 interface TabSpec {
@@ -38,7 +42,28 @@ export function MobileTabBar({
   onTabChange,
   hasSelectedBody,
   hasReading,
+  analysisAttention,
 }: MobileTabBarProps) {
+  // Pulse the Analyse tab whenever a new reading is computed. Same pattern
+  // as the desktop sidebar CTA — derive the trigger from a prop change at
+  // render time, then run the one-shot timer in an effect.
+  const [unlocking, setUnlocking] = useState(false);
+  const [lastAttention, setLastAttention] = useState(analysisAttention);
+  if (analysisAttention !== lastAttention) {
+    setLastAttention(analysisAttention);
+    if (analysisAttention !== 0) setUnlocking(true);
+  }
+  useEffect(() => {
+    if (!unlocking) return;
+    const id = window.setTimeout(() => setUnlocking(false), UNLOCK_WINDOW_MS);
+    return () => window.clearTimeout(id);
+  }, [unlocking]);
+
+  const analysisActive = activeTab === 'analysis';
+  // "Ready" mirrors the desktop CTA logic: reading present and the tab not
+  // currently the active one — that's when we want the glow to invite a tap.
+  const analysisReady = hasReading && !analysisActive;
+
   const tabs: TabSpec[] = [
     {
       key: 'selection',
@@ -79,6 +104,7 @@ export function MobileTabBar({
     >
       {tabs.map((tab) => {
         const active = activeTab === tab.key;
+        const isAnalysisTab = tab.key === 'analysis';
         return (
           <button
             key={tab.key}
@@ -98,6 +124,8 @@ export function MobileTabBar({
               active
                 ? 'text-cyan-100 bg-cyan-400/10'
                 : 'text-slate-300/85 hover:text-slate-100 hover:bg-violet-500/10',
+              isAnalysisTab && unlocking && 'animate-rail-unlock',
+              isAnalysisTab && analysisReady && !unlocking && 'animate-cta-glow',
             )}
           >
             <span

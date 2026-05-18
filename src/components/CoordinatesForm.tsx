@@ -17,7 +17,6 @@ interface CoordinatesFormProps {
   onTimeChange: (v: string) => void;
   onCityChange: (v: CityResult) => void;
   onJump: (reading: CelestialReading) => void;
-  onBlip: () => void;
   /** Override the outer `<form>` className. */
   className?: string;
 }
@@ -44,7 +43,7 @@ function formatNowTime(now: Date): string {
 export function CoordinatesForm({
   date, time, city,
   onDateChange, onTimeChange, onCityChange,
-  onJump, onBlip,
+  onJump,
   className,
 }: CoordinatesFormProps) {
   const reduceMotion = useReducedMotion();
@@ -53,7 +52,6 @@ export function CoordinatesForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (computing) return;
-    onBlip();
     setComputing(true);
     await new Promise((r) => setTimeout(r, 350));
     const reading = computeReading({
@@ -61,6 +59,7 @@ export function CoordinatesForm({
       latitude: city.lat,
       longitude: city.lon,
       placeLabel: city.label,
+      timezone: city.timezone,
     });
     onJump(reading);
     setComputing(false);
@@ -70,7 +69,6 @@ export function CoordinatesForm({
     const now = new Date();
     onDateChange(formatTodayDate(now));
     onTimeChange(formatNowTime(now));
-    onBlip();
     // "Aujourd'hui" bypasses the wall-clock-in-tz translation: we want the
     // actual current instant, so we feed `now` straight into computeReading.
     onJump(computeReading({
@@ -78,6 +76,7 @@ export function CoordinatesForm({
       latitude: city.lat,
       longitude: city.lon,
       placeLabel: city.label,
+      timezone: city.timezone,
     }));
   };
 

@@ -4,17 +4,25 @@ import {
   liveTelemetry,
   type CelestialReading,
 } from '../utils/astroEngine';
-
-const NATAL_DATE_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-  timeZone: 'UTC',
-});
+import { TooltipWrap } from './Tooltip';
+import { IconButton } from './ui';
 
 const LIVE_DATE_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',
   timeStyle: 'medium',
 });
+
+/** Birth-time formatter pinned to the birth location's timezone. Falls
+ *  back to UTC (with a visible suffix) when the timezone is unknown. */
+function formatNatalDate(date: Date, timezone: string | undefined): string {
+  const tz = timezone ?? 'UTC';
+  const fmt = new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: tz,
+  });
+  return timezone ? fmt.format(date) : `${fmt.format(date)} UTC`;
+}
 
 interface HudFrameProps {
   reading: CelestialReading | null;
@@ -24,6 +32,10 @@ interface HudFrameProps {
   observerLon: number;
   /** Opens the MON SIGNE panel — wired only when a natal reading is active. */
   onOpenSummary?: () => void;
+  /** Camera fly-to actions — exposed as quick-access buttons in the banner. */
+  onFlySun: () => void;
+  onFlyMoon: () => void;
+  onFlyEarth: () => void;
 }
 
 /**
@@ -36,6 +48,9 @@ export function HudFrame({
   observerLat,
   observerLon,
   onOpenSummary,
+  onFlySun,
+  onFlyMoon,
+  onFlyEarth,
 }: HudFrameProps) {
   const [liveNow, setLiveNow] = useState(() => new Date());
 
@@ -52,7 +67,7 @@ export function HudFrame({
     : null;
 
   const sub = reading
-    ? `${reading.input.placeLabel ?? 'Ciel natal'} · ${NATAL_DATE_FORMATTER.format(reading.input.date)} UTC`
+    ? `${reading.input.placeLabel ?? 'Ciel natal'} · ${formatNatalDate(reading.input.date, reading.input.timezone)}`
     : (() => {
         const { lstHours } = liveTelemetry(liveNow, observerLon);
         const latStr = `${Math.abs(observerLat).toFixed(2)}°${observerLat >= 0 ? 'N' : 'S'}`;
@@ -111,6 +126,65 @@ export function HudFrame({
         ) : (
           centerInner
         )}
+
+        {/* Caméra rapide — Soleil / Lune / Terre. Groupés dans un mini-rail
+            avec bordure et fond subtil pour qu'ils se lisent comme un
+            cluster « visée caméra » plutôt que des glyphes flottants à
+            droite du bloc centré. Position absolue pour ne pas pousser
+            le bloc centré ; pointer-events réactivés ponctuellement
+            (le banner parent est en pointer-events-none). */}
+        <div
+          role="group"
+          aria-label="Caméra rapide"
+          className="pointer-events-auto absolute right-3 inset-y-0
+                     my-1.5 flex items-center gap-0.5
+                     rounded-cockpit border border-border-hud-subtle
+                     bg-surface-console/55 backdrop-blur-sm
+                     px-1 shadow-cockpit-dock"
+        >
+          <TooltipWrap text="Centrer sur le Soleil" placement="bottom">
+            <IconButton
+              size="sm"
+              onClick={onFlySun}
+              aria-label="Centrer la caméra sur le Soleil"
+            >
+              <span
+                aria-hidden="true"
+                className="text-cockpit-glyph leading-none text-glyph-sun"
+              >
+                ☀
+              </span>
+            </IconButton>
+          </TooltipWrap>
+          <TooltipWrap text="Centrer sur la Lune" placement="bottom">
+            <IconButton
+              size="sm"
+              onClick={onFlyMoon}
+              aria-label="Centrer la caméra sur la Lune"
+            >
+              <span
+                aria-hidden="true"
+                className="text-cockpit-glyph leading-none text-glyph-moon"
+              >
+                ☾
+              </span>
+            </IconButton>
+          </TooltipWrap>
+          <TooltipWrap text="Revenir à la Terre" placement="bottom">
+            <IconButton
+              size="sm"
+              onClick={onFlyEarth}
+              aria-label="Revenir à la vue orbitale par défaut"
+            >
+              <span
+                aria-hidden="true"
+                className="text-cockpit-glyph leading-none text-glyph-earth"
+              >
+                ⊕
+              </span>
+            </IconButton>
+          </TooltipWrap>
+        </div>
       </div>
     </header>
   );

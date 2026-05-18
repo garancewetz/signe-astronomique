@@ -64,7 +64,7 @@ const SECTIONS: { title: string; links: { label: string; href: string }[] }[] = 
     ],
   },
   {
-    title: 'Cartes du ciel & éphemerides',
+    title: 'Cartes du ciel & éphémérides',
     links: [
       {
         label: 'Stellarium Web — ciel interactif',

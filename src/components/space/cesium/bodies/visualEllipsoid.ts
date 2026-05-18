@@ -20,7 +20,19 @@ import { realRadiusKm, type CelestialBodyKind } from './bodyRadii';
 const BODY_SIZE_EXAGGERATION = 100;
 
 const MIN_RADIUS_M = 8e5;
-const MAX_FRACTION_OF_DISTANCE = 0.012;
+
+// Cap = fraction de la distance géocentrique. Différencié pour préserver la
+// hiérarchie perceptive : Lune/Soleil = disques bien lisibles ; planètes =
+// petits points clairement plus petits que la Lune. Sinon le cap uniforme
+// fait que tout (Lune, Jupiter, Saturne…) finit à la même taille angulaire.
+const MAX_FRACTION_LUMINARY = 0.012; // moon · sun
+const MAX_FRACTION_PLANET   = 0.003; // ~4× plus serré → Jupiter ≈ 1/3 Lune
+
+function maxFractionOfDistance(kind: CelestialBodyKind): number {
+  return kind === 'moon' || kind === 'sun'
+    ? MAX_FRACTION_LUMINARY
+    : MAX_FRACTION_PLANET;
+}
 
 /**
  * @param kind                          identité du corps (proportions réelles)
@@ -37,6 +49,6 @@ export function visualEllipsoidRadiusMeters(
     return Math.max(exaggerated, MIN_RADIUS_M);
   }
 
-  const cap = distanceFromEarthCenterM * MAX_FRACTION_OF_DISTANCE;
+  const cap = distanceFromEarthCenterM * maxFractionOfDistance(kind);
   return Math.min(Math.max(exaggerated, MIN_RADIUS_M), cap);
 }

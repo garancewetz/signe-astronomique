@@ -3,7 +3,7 @@ export {
   SIDEBAR_COLLAPSED_PX,
   SIDEBAR_EXPANDED_PX,
 } from './Sidebar';
-export { AnalysisItem, SidebarItem } from './SidebarItem';
+export { SidebarItem } from './SidebarItem';
 export { SidebarHeader } from './SidebarHeader';
 export {
   SectionBadge,
@@ -11,4 +11,4 @@ export {
   SidebarSection,
 } from './SidebarSection';
 export { SystemDock } from './SystemDock';
-export type { ReportPanelKey, SectionKey, SidebarPanelKey } from './types';
+export type { ReportPanelKey, SidebarPanelKey } from './types';

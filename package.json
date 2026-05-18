@@ -40,6 +40,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@floating-ui/react": "0.27.16",
     "cesium": "1.140.0",
     "framer-motion": "12.38.0",
     "html2canvas-pro": "2.0.2",
@@ -51,7 +52,9 @@
     "tz-lookup": "6.1.25"
   },
   "knip": {
-    "ignore": ["src/types/tz-lookup.d.ts"]
+    "ignore": [
+      "src/types/tz-lookup.d.ts"
+    ]
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

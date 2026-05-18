@@ -3,10 +3,8 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { TooltipWrap } from '../Tooltip';
 import { cn, IconButton } from '../ui';
-import type { SectionKey } from './types';
 
 interface SectionProps {
-  sectionKey: SectionKey;
   title: string;
   icon: ReactNode;
   collapsed: boolean;

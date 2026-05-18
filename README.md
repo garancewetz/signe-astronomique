@@ -62,17 +62,31 @@ src/
 ├── components/
 │   ├── Cockpit.tsx               main container (form state, orchestration, sidebar layout)
 │   ├── HudFrame.tsx              cockpit frame (decorative overlays)
-│   ├── Sidebar.tsx               unified rail + console (left/right icons + dockable panels)
-│   ├── LegendPanel.tsx           orbital population legend (categories, counts, retry)
+│   ├── AnalysisModal.tsx         tabbed modal hosting the four report views
 │   ├── BodyInfoHud.tsx           HUD shown when a body is selected
+│   ├── LegendPanel.tsx           orbital population legend (categories, counts, retry)
 │   ├── RadarWheel.tsx            360° ecliptic radar (IAU angular sizes)
 │   ├── MissionLog.tsx            report cards (BirthHeader, AscendantCard, PlanetTable, …)
 │   ├── CityAutocomplete.tsx      Nominatim autocomplete
 │   ├── CoordinatesForm.tsx       date / time / location form
-│   ├── RightPanel.tsx            dockable right-side panel host
+│   ├── RightPanel.tsx            report panel bodies (Resume / Carte / Lecture / Donnees)
 │   ├── ExploreSpacePopover.tsx   sky-reading panel (legacy / mobile)
 │   ├── Tooltip.tsx               portal tooltip (anti-clipping)
-│   ├── mobile/                   mobile-specific cockpit, drawers, tab bar
+│   ├── sidebar/                  unified left rail + dockable console
+│   │   ├── Sidebar.tsx                    main aside, layer chips, analysis CTA
+│   │   ├── SidebarHeader.tsx              brand + collapse toggle
+│   │   ├── SidebarItem.tsx                chip / button row primitive
+│   │   ├── SidebarSection.tsx             section header + dividers
+│   │   ├── SystemDock.tsx                 pinned bottom dock (fullscreen, exports)
+│   │   └── types.ts                       SidebarPanelKey / ReportPanelKey
+│   ├── mobile/                   mobile cockpit (bottom sheet, drawers, tab bar)
+│   │   ├── MobileCockpit.tsx              mobile-first container
+│   │   ├── MobileTabBar.tsx               bottom tab bar (analysis / coords / system)
+│   │   ├── MobileAnalysisStack.tsx        stacked report sections on small screens
+│   │   ├── MobileCoordinatesModal.tsx     date / time / location modal
+│   │   ├── MobileSystemDrawer.tsx         system controls drawer
+│   │   ├── MobileSheetContent.tsx         body-info sheet content
+│   │   └── BottomSheet.tsx                gesture-driven sheet primitive
 │   ├── space/
 │   │   ├── SpaceView.tsx                  Cesium Viewer + camera + lifecycle + body picker
 │   │   └── cesium/
@@ -80,7 +94,7 @@ src/
 │   │       ├── mountPlanetsLayer.ts
 │   │       ├── mountMoonLayer.ts
 │   │       ├── mountSunLayer.ts           Cesium disk + pick entity
-│   │       ├── mountSatellitesLayer.ts    relics (ISS, Hubble, Starlink-0)
+│   │       ├── mountSatellitesLayer.ts    relics (ISS, Hubble, Sputnik, …)
 │   │       ├── mountOrbitalLayer.ts       full active orbital population
 │   │       ├── mountReferenceLines.ts     ecliptic, equator, meridian
 │   │       ├── mountObserverMarker.ts     "you are here" marker on the globe
@@ -89,11 +103,17 @@ src/
 │   │       ├── mountDistanceRuler.ts      light-year graduated ruler (side view)
 │   │       ├── bodies/                    IAU radii + proportional visual ellipsoid
 │   │       ├── sideView.ts                side ↔ Earth camera toggle
+│   │       ├── skyVector.ts               RA/Dec → celestial-sphere Cartesian
 │   │       ├── useBodyPicker.ts           click → entity hook with type guards on payloads
 │   │       └── cameraDirector.ts          flyTo helpers
-│   └── ui/                       shared primitives (Button, Input, Field, PanelShell, HudCard, …)
+│   └── ui/                       shared primitives
+│       ├── Button.tsx / IconButton.tsx
+│       ├── Input.tsx / Field.tsx
+│       ├── PanelShell.tsx / DockedPanel.tsx / PanelPlaceholder.tsx
+│       ├── HudCard.tsx / Surface.tsx / MenuRow.tsx
+│       ├── surfaceClasses.ts              shared HUD surface tokens
+│       └── cn.ts                          tailwind-merge wrapper
 ├── hooks/
-│   ├── useCockpitAudio.ts
 │   ├── useGeolocation.ts
 │   ├── useMobileLayout.ts
 │   ├── usePortalTarget.ts
@@ -129,9 +149,9 @@ src/
 
 ## Sidebar and panels
 
-The main UI sits on a unified [`Sidebar`](src/components/Sidebar.tsx) with two 50 px rails. Each icon opens a dockable panel that slides adjacent to the rail (form on the left, reports on the right). The Cesium canvas inset moves with the panel — no camera math, just a viewport change that triggers automatic recentering.
+The main UI sits on a unified [`Sidebar`](src/components/sidebar/Sidebar.tsx) — a single left aside that hosts the coordinates form, an analysis CTA that opens the [`AnalysisModal`](src/components/AnalysisModal.tsx), a flat grid of display-layer chips, and a pinned [`SystemDock`](src/components/sidebar/SystemDock.tsx). The Cesium canvas inset shifts with the sidebar's collapsed / expanded width — no camera math, just a viewport change that triggers automatic recentering.
 
-The Telescope slot appears only when a body is selected via click. It hosts [`BodyInfoHud`](src/components/BodyInfoHud.tsx), from which you toggle into **side view** or **depth view**.
+Selecting a body via click opens [`BodyInfoHud`](src/components/BodyInfoHud.tsx) as a floating panel. When the selection is a star, the sidebar's **side-view** chip activates — toggling it flips the Cesium camera into the perpendicular side view (and, paired with the radar, exposes the **depth view**).
 
 ## Body picker
 

@@ -126,7 +126,10 @@ export function mountMoonLayer(viewer: Viewer, opts: MountOptions): () => void {
       uniforms: {
         image: MOON_TEXTURE_URI,
         sunDirWorld,
-        earthshine: 0.06,
+        // Higher earthshine keeps the disk readable even near new moon, where
+        // the Earth-facing side would otherwise drop to a few % brightness and
+        // disappear against the black background. Terminator stays marked.
+        earthshine: 0.22,
         gamma: 0.85,
         brightness: 1.1,
       },

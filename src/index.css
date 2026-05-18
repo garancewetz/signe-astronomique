@@ -184,10 +184,19 @@ body {
   animation-delay: calc(var(--rail-index, 0) * 80ms);
 }
 
+/* Halo violet continu — CTA Analyse en attente d'ouverture. Plus marqué
+   que rail-breathe (qui sert à l'état verrouillé) pour appeler le clic. */
+@keyframes cta-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(167 139 250 / 0); }
+  50%      { box-shadow: 0 0 14px 2px rgb(167 139 250 / 0.55); }
+}
+.animate-cta-glow { animation: cta-glow 2.8s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
   .animate-rail-breathe,
-  .animate-rail-unlock {
+  .animate-rail-unlock,
+  .animate-cta-glow {
     animation: none;
     opacity: 0.85;
   }
