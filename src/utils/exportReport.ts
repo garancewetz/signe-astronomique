@@ -1,11 +1,14 @@
 import html2canvas from 'html2canvas-pro';
+import jsPDF from 'jspdf';
 
 /**
- * Capture composite : la vue 3D Cesium en arrière-plan + le rapport complet
- * (rendu hors-écran, contient toutes les sections empilées) collé sur le bord
- * droit du PNG. Le canvas de sortie s'allonge verticalement si le rapport
- * dépasse la hauteur du viewport — c'est volontaire : on exporte tout, pas
- * seulement ce qui tient à l'écran.
+ * Capture empilée verticalement : la vue 3D du ciel en haut, puis le rapport
+ * complet (toutes ses sections déjà empilées) dessous. Résultat : un PNG long
+ * format portrait, lisible comme une page.
+ *
+ * Le PNG prend la largeur naturelle du rapport (rendu hors-écran à `w-md`).
+ * La vue 3D est mise à l'échelle pour remplir cette largeur en conservant
+ * l'aspect du viewport.
  *
  * Pré-requis : le canvas Cesium doit avoir été créé avec
  * `preserveDrawingBuffer: true` (cf. SpaceView), sinon le buffer est vide
@@ -29,37 +32,44 @@ export async function exportTargetedPng(
 
   const reportW = reportEl.offsetWidth;
   const reportH = reportEl.offsetHeight;
-  const reportTop = 44; // top-11 ≈ aligné avec le bord supérieur des panels droits
-  const bottomPadding = 24;
 
+  // PDF-like portrait width (close to A4 at 96dpi). The report keeps its
+  // natural narrow width and sits centered; the sky view fills the full
+  // page width with the viewport's aspect ratio preserved.
+  const outW = Math.max(794, reportW);
   const viewportW = window.innerWidth;
   const viewportH = window.innerHeight;
-  const outH = Math.max(viewportH, reportTop + reportH + bottomPadding);
+  const skyAspect = viewportW / viewportH;
+  const skyH = outW / skyAspect;
+
+  const gap = 24;
+  const outH = skyH + gap + reportH + gap;
+  const reportLeft = Math.round((outW - reportW) / 2);
 
   const out = document.createElement('canvas');
-  out.width = Math.round(viewportW * scale);
+  out.width = Math.round(outW * scale);
   out.height = Math.round(outH * scale);
   const ctx = out.getContext('2d');
   if (!ctx) throw new Error('Impossible de créer le contexte 2D');
 
-  // Fond cockpit (au cas où la 3D laisse des bords transparents).
+  // Cockpit background (fills the gap and any transparent edges).
   ctx.fillStyle = '#02030a';
   ctx.fillRect(0, 0, out.width, out.height);
 
-  // Vue 3D : étirée pour remplir le viewport, ancrée en haut.
+  // Sky view on top, scaled to fill the output width.
   ctx.drawImage(
     spaceCanvas,
-    0, 0,
-    Math.round(viewportW * scale),
-    Math.round(viewportH * scale),
+    0,
+    0,
+    Math.round(outW * scale),
+    Math.round(skyH * scale),
   );
 
-  // Rapport : ancré au bord droit, à `reportTop` du haut.
-  const reportLeft = viewportW - reportW;
+  // Full report stacked below, centered horizontally.
   ctx.drawImage(
     reportCanvas,
     Math.round(reportLeft * scale),
-    Math.round(reportTop * scale),
+    Math.round((skyH + gap) * scale),
     Math.round(reportW * scale),
     Math.round(reportH * scale),
   );
