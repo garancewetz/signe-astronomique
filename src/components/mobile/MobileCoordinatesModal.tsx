@@ -3,10 +3,11 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { CoordinatesForm } from '../CoordinatesForm';
 import type { CityResult } from '../CityAutocomplete';
+import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
 import type { CelestialReading } from '../../utils/astroEngine';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
-import { fr } from '../../i18n/fr';
+import { useT } from '../../context/useLocale';
 
 interface MobileCoordinatesModalProps {
   open: boolean;
@@ -19,6 +20,10 @@ interface MobileCoordinatesModalProps {
   onTimeChange: (v: string) => void;
   onCityChange: (v: CityResult) => void;
   onJump: (reading: CelestialReading) => void;
+
+  searchHistory: SearchHistoryEntry[];
+  onRecordSearch: (entry: { date: string; time: string; city: CityResult }) => void;
+  onRemoveSearch: (signature: string) => void;
 }
 
 /**
@@ -37,7 +42,11 @@ export function MobileCoordinatesModal({
   onTimeChange,
   onCityChange,
   onJump,
+  searchHistory,
+  onRecordSearch,
+  onRemoveSearch,
 }: MobileCoordinatesModalProps) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const dialogRef = useFocusTrap<HTMLDivElement>(open);
   useBodyScrollLock(open);
@@ -59,7 +68,7 @@ export function MobileCoordinatesModal({
           ref={dialogRef}
           role="dialog"
           aria-modal="true"
-          aria-label={fr.mobile.coordinatesModal.ariaLabel}
+          aria-label={t.mobile.coordinatesModal.ariaLabel}
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
@@ -75,7 +84,7 @@ export function MobileCoordinatesModal({
             <button
               type="button"
               onClick={onClose}
-              aria-label={fr.mobile.coordinatesModal.closeAriaLabel}
+              aria-label={t.mobile.coordinatesModal.closeAriaLabel}
               className="cockpit-focus grid place-items-center
                          h-9 w-9 rounded
                          text-slate-300/85 hover:text-slate-100
@@ -85,10 +94,10 @@ export function MobileCoordinatesModal({
             </button>
             <div className="min-w-0">
               <div className="text-cockpit-xs tracking-cockpit-label uppercase text-accent-label/85">
-                {fr.mobile.coordinatesModal.sectionLabel}
+                {t.mobile.coordinatesModal.sectionLabel}
               </div>
               <h2 className="text-cockpit-md tracking-cockpit-tight text-accent-title uppercase truncate">
-                {fr.mobile.coordinatesModal.title}
+                {t.mobile.coordinatesModal.title}
               </h2>
             </div>
           </header>
@@ -105,6 +114,9 @@ export function MobileCoordinatesModal({
                 onJump(reading);
                 onClose();
               }}
+              history={searchHistory}
+              onRecordHistory={onRecordSearch}
+              onRemoveHistory={onRemoveSearch}
               className="px-4 py-4 space-y-3.5"
             />
           </div>

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { timezoneFromLatLon } from '../utils/timezone';
-import { fr } from '../i18n/fr';
+import { useT } from '../context/useLocale';
 
 export interface CityResult {
   label: string;
@@ -30,6 +30,7 @@ const SEARCH_DEBOUNCE_MS = 500;
 const MIN_QUERY_LENGTH = 3;
 
 export function CityAutocomplete({ value, onSelect, inputId }: Props) {
+  const t = useT();
   const [query, setQuery] = useState(value.label);
   const [results, setResults] = useState<CityResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -70,7 +71,7 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
         url.searchParams.set('q', trimmed);
         url.searchParams.set('format', 'json');
         url.searchParams.set('limit', '8');
-        url.searchParams.set('accept-language', 'fr');
+        url.searchParams.set('accept-language', t.cityAutocomplete.nominatimLang);
         const res = await fetch(url.toString(), { signal: controller.signal });
         if (id !== reqIdRef.current) return;
         if (!res.ok) {
@@ -78,8 +79,8 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
           setOpen(false);
           setErrorMsg(
             res.status === 429
-              ? fr.cityAutocomplete.errorRateLimit
-              : fr.cityAutocomplete.errorService,
+              ? t.cityAutocomplete.errorRateLimit
+              : t.cityAutocomplete.errorService,
           );
           return;
         }
@@ -103,7 +104,7 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
         if (id !== reqIdRef.current) return;
         setResults([]);
         setOpen(false);
-        setErrorMsg(fr.cityAutocomplete.errorNetwork);
+        setErrorMsg(t.cityAutocomplete.errorNetwork);
       } finally {
         if (id === reqIdRef.current) setLoading(false);
       }
@@ -113,7 +114,7 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, value.label]);
+  }, [query, value.label, t]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -161,7 +162,7 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
         id={inputId}
         type="text"
         value={query}
-        placeholder={fr.natalForm.placePlaceholder}
+        placeholder={t.natalForm.placePlaceholder}
         onChange={e => {
           const next = e.target.value;
           setQuery(next);

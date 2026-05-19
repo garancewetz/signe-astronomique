@@ -14,9 +14,10 @@ import {
   findConstellation,
   type CatalogStar,
 } from '../../../data/constellationCatalog';
-import { CONSTELLATION_LORE } from '../../../utils/constellationLore';
+import { loreName } from '../../../utils/constellationLore';
 import { starShellRadiusMExpanded } from '../../../utils/skyCoordinates';
 import { raDecToEcef } from './skyVector';
+import type { Locale } from '../../../i18n';
 
 const MAGNITUDE_LIMIT = 6.0;
 
@@ -41,6 +42,8 @@ interface MountOptions {
   constellationAbbr: string;
   /** GMST in radians for the ICRS→ECEF rotation. */
   gmstRad: number;
+  /** Active locale for the constellation label. */
+  locale: Locale;
 }
 
 /**
@@ -130,7 +133,7 @@ export function mountExplodedConstellation(
   if (brightest != null) {
     const localized = abbrToZodiacal(constellation.abbreviation);
     const labelText = localized
-      ? CONSTELLATION_LORE[localized].fr.toUpperCase()
+      ? loreName(localized, opts.locale).toUpperCase()
       : constellation.name.toUpperCase();
     created.push(
       viewer.entities.add({

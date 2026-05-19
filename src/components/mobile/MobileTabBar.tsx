@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { cn } from '../ui';
+import { useT } from '../../context/useLocale';
 
 export type MobileTabKey = 'selection' | 'display' | 'navigation' | 'analysis';
 
@@ -44,6 +45,7 @@ export function MobileTabBar({
   hasReading,
   analysisAttention,
 }: MobileTabBarProps) {
+  const t = useT();
   // Pulse the Analyse tab whenever a new reading is computed. Same pattern
   // as the desktop sidebar CTA — derive the trigger from a prop change at
   // render time, then run the one-shot timer in an effect.
@@ -67,25 +69,25 @@ export function MobileTabBar({
   const tabs: TabSpec[] = [
     {
       key: 'selection',
-      label: 'Sélection',
+      label: t.mobile.tabs.selection,
       icon: <Telescope className="size-4" strokeWidth={1.4} aria-hidden />,
       enabled: hasSelectedBody,
     },
     {
       key: 'display',
-      label: 'Affichage',
+      label: t.mobile.tabs.display,
       icon: <Eye className="size-4" strokeWidth={1.4} aria-hidden />,
       enabled: true,
     },
     {
       key: 'navigation',
-      label: 'Navigation',
+      label: t.mobile.tabs.navigation,
       icon: <Compass className="size-4" strokeWidth={1.4} aria-hidden />,
       enabled: true,
     },
     {
       key: 'analysis',
-      label: 'Analyse',
+      label: t.mobile.tabs.analysis,
       icon: <LayoutDashboard className="size-4" strokeWidth={1.4} aria-hidden />,
       enabled: hasReading,
       locked: !hasReading,
@@ -95,7 +97,7 @@ export function MobileTabBar({
   return (
     <nav
       role="tablist"
-      aria-label="Sections de la console mobile"
+      aria-label={t.mobile.cockpit.navAriaLabel}
       className="shrink-0 z-31
                  grid grid-cols-4 gap-1 px-2 pt-1.5
                  bg-surface-console/95 backdrop-blur-2xl

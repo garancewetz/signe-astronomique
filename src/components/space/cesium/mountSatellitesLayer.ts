@@ -13,10 +13,14 @@ import {
 } from 'cesium';
 import { gstime, propagate, type SatRec } from 'satellite.js';
 import type { ParsedRelic } from '../../../hooks/useSatelliteTracker';
+import { satelliteBlurb, satelliteName } from '../../../data/satellitesDB';
+import type { Locale } from '../../../i18n';
 
 interface MountOptions {
   /** Filtered + parsed relics from useSatelliteTracker. */
   satellites: ParsedRelic[];
+  /** Active locale — drives the label and click-payload language. */
+  locale: Locale;
   /**
    * Time source for propagation. Called every frame in live mode, once at
    * mount in fixed mode.
@@ -65,7 +69,7 @@ export function mountSatellitesLayer(
   viewer: Viewer,
   opts: MountOptions,
 ): () => void {
-  const { satellites, getTime, live, fadeInMs = 0, fadeInDelayMs = 0 } = opts;
+  const { satellites, locale, getTime, live, fadeInMs = 0, fadeInDelayMs = 0 } = opts;
   if (satellites.length === 0) return () => {};
 
   const created: Entity[] = [];
@@ -101,6 +105,8 @@ export function mountSatellitesLayer(
 
   for (const sat of satellites) {
     const { relic, satrec } = sat;
+    const displayName = satelliteName(relic, locale);
+    const displayBlurb = satelliteBlurb(relic, locale);
 
     // Per-satellite cache: the last position SGP4 ever returned successfully.
     // If SGP4 fails (numerical decay, far-from-epoch propagation, …) we
@@ -164,7 +170,7 @@ export function mountSatellitesLayer(
         scaleByDistance: new NearFarScalar(1.4e7, 1.2, 1.5e8, 0.6),
       },
       label: {
-        text: relic.name,
+        text: displayName,
         font: "10px 'JetBrains Mono', monospace",
         fillColor: labelFillColor,
         outlineColor: labelOutlineColor,
@@ -181,9 +187,9 @@ export function mountSatellitesLayer(
       properties: {
         kind: 'satellite',
         relicId: relic.id,
-        name: relic.name,
+        name: displayName,
         launchDate: relic.launchDate,
-        blurb: relic.blurb,
+        blurb: displayBlurb,
         glowColor: relic.glowColor,
       },
     });

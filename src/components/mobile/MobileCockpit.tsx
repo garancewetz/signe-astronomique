@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ChevronDown, MoreVertical } from 'lucide-react';
 import type { CityResult } from '../CityAutocomplete';
+import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
 import type { CelestialReading } from '../../utils/astroEngine';
 import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '../space/SpaceView';
@@ -13,7 +14,7 @@ import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
 import { MobileSheetContent } from './MobileSheetContent';
 import { MobileAnalysisStack } from './MobileAnalysisStack';
 import { MobileSystemDrawer } from './MobileSystemDrawer';
-import { fr } from '../../i18n/fr';
+import { useT } from '../../context/useLocale';
 
 const TOP_CHIP_PX = 44;
 const TAB_BAR_PX = 60; // h-12 button + py-1.5 (top + bottom flat case)
@@ -36,6 +37,11 @@ interface MobileCockpitProps {
   onTimeChange: (v: string) => void;
   onCityChange: (v: CityResult) => void;
   onJump: (reading: CelestialReading) => void;
+
+  // Recent searches
+  searchHistory: SearchHistoryEntry[];
+  onRecordSearch: (entry: { date: string; time: string; city: CityResult }) => void;
+  onRemoveSearch: (signature: string) => void;
 
   // Reading + selection state
   reading: CelestialReading | null;
@@ -62,8 +68,8 @@ interface MobileCockpitProps {
   onToggleFullscreen: () => void;
   onExportView: () => void;
   exportingView: boolean;
-  onExportReport: () => void;
-  exportingReport: boolean;
+  onExportPdf: () => void;
+  exportingPdf: boolean;
   canExportReport: boolean;
 }
 
@@ -84,6 +90,7 @@ interface MobileCockpitProps {
  * desktop and mobile share the same source of truth.
  */
 export function MobileCockpit(props: MobileCockpitProps) {
+  const t = useT();
   const {
     children,
     date,
@@ -93,6 +100,9 @@ export function MobileCockpit(props: MobileCockpitProps) {
     onTimeChange,
     onCityChange,
     onJump,
+    searchHistory,
+    onRecordSearch,
+    onRemoveSearch,
     reading,
     selectedBody,
     activeTab,
@@ -137,7 +147,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
       className="fixed inset-0 overflow-hidden bg-background flex flex-col"
     >
       <a href="#cockpit-main" className="skip-to-main">
-        {fr.cockpit.skipToMain}
+        {t.cockpit.skipToMain}
       </a>
 
       <header
@@ -150,7 +160,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         <button
           type="button"
           onClick={() => setCoordsOpen(true)}
-          aria-label={fr.mobile.coordinatesModal.editAriaLabel}
+          aria-label={t.mobile.coordinatesModal.editAriaLabel}
           aria-haspopup="dialog"
           aria-expanded={coordsOpen}
           className="cockpit-focus flex-1 min-w-0
@@ -164,7 +174,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
                        shadow-[0_0_8px_2px_rgba(103,232,249,0.55)]"
           />
           <span className="text-cockpit-sm tracking-cockpit-hud text-accent-title uppercase shrink-0">
-            CIEL&nbsp;RÉEL
+            {t.cockpit.brand}
           </span>
           <span className="text-cockpit-xs text-slate-400 truncate flex-1">
             · {date} · {city.label}
@@ -178,7 +188,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         <button
           type="button"
           onClick={() => setDrawerOpen((v) => !v)}
-          aria-label={fr.mobile.systemDrawer.openAriaLabel}
+          aria-label={t.mobile.systemDrawer.openAriaLabel}
           aria-haspopup="dialog"
           aria-expanded={drawerOpen}
           className="cockpit-focus shrink-0 grid place-items-center
@@ -202,7 +212,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         midPx={midPx}
         fullPx={fullPx}
         bottomOffset={SHEET_BOTTOM_OFFSET}
-        ariaLabel="Console mobile"
+        ariaLabel={t.mobile.cockpit.mainAriaLabel}
       >
         <div id="mobile-sheet" className="h-full">
           <MobileSheetContent
@@ -240,6 +250,9 @@ export function MobileCockpit(props: MobileCockpitProps) {
         onTimeChange={onTimeChange}
         onCityChange={onCityChange}
         onJump={onJump}
+        searchHistory={searchHistory}
+        onRecordSearch={onRecordSearch}
+        onRemoveSearch={onRemoveSearch}
       />
 
       <MobileAnalysisStack
@@ -258,8 +271,8 @@ export function MobileCockpit(props: MobileCockpitProps) {
         onOpenExploreSpace={() => setExploreOpen(true)}
         onExportView={props.onExportView}
         exportingView={props.exportingView}
-        onExportReport={props.onExportReport}
-        exportingReport={props.exportingReport}
+        onExportPdf={props.onExportPdf}
+        exportingPdf={props.exportingPdf}
         canExportReport={props.canExportReport}
       />
 

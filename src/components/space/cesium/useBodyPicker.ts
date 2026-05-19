@@ -48,7 +48,7 @@ interface MoonPayload {
   decDeg: number;
   distanceKm: number;
   illumination: number;
-  phaseName: string;
+  phaseKey: string;
 }
 
 interface PlanetPayload {
@@ -108,7 +108,7 @@ function isBodyPayload(value: unknown): value is BodyPayload {
         typeof v.decDeg === 'number' &&
         typeof v.distanceKm === 'number' &&
         typeof v.illumination === 'number' &&
-        typeof v.phaseName === 'string'
+        typeof v.phaseKey === 'string'
       );
     case 'planet':
       return (
@@ -159,7 +159,7 @@ function payloadToSelection(p: BodyPayload): SelectedBody {
         decDeg: p.decDeg,
         distanceKm: p.distanceKm,
         illumination: p.illumination,
-        phaseName: p.phaseName,
+        phaseKey: p.phaseKey,
       };
     case 'planet':
       return {

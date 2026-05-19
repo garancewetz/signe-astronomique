@@ -22,6 +22,8 @@ interface MountOptions {
   bodies: CelestialBody[];
   /** GMST en radians */
   gmstRad: number;
+  /** Locale-aware display name lookup for planets. */
+  nameOf: (id: PlanetId) => string;
   /** Étiquettes texte près des corps. */
   showLabels?: boolean;
 }
@@ -39,13 +41,15 @@ function compressedDistanceAU(realDistAU: number): number {
  * apparent est calibré pour rester visible depuis l’orbite Terre.
  */
 export function mountPlanetsLayer(viewer: Viewer, opts: MountOptions): () => void {
-  const { bodies, gmstRad, showLabels = true } = opts;
+  const { bodies, gmstRad, nameOf, showLabels = true } = opts;
   const created: Entity[] = [];
 
   const planets = bodies.filter((b) => b.id !== 'sun' && b.id !== 'moon');
 
   for (const body of planets) {
     if (body.distance == null) continue;
+    const planetId = body.id as PlanetId;
+    const displayName = nameOf(planetId);
 
     const position = raDecToEcef(
       raHoursToDegrees(body.ra),
@@ -55,7 +59,7 @@ export function mountPlanetsLayer(viewer: Viewer, opts: MountOptions): () => voi
     );
 
     const distM = Cartesian3.magnitude(position);
-    const r = visualEllipsoidRadiusMeters(body.id as PlanetId, distM);
+    const r = visualEllipsoidRadiusMeters(planetId, distM);
     const radii = new Cartesian3(r, r, r);
 
     const color = Color.fromCssColorString(body.color);
@@ -70,7 +74,7 @@ export function mountPlanetsLayer(viewer: Viewer, opts: MountOptions): () => voi
         ...(showLabels
           ? {
               label: {
-                text: `${body.glyph} ${body.name}`,
+                text: `${body.glyph} ${displayName}`,
                 font: "10px 'JetBrains Mono', monospace",
                 fillColor: color.withAlpha(0.88),
                 style: LabelStyle.FILL,
@@ -82,8 +86,8 @@ export function mountPlanetsLayer(viewer: Viewer, opts: MountOptions): () => voi
           : {}),
         properties: {
           kind: 'planet',
-          id: body.id,
-          name: body.name,
+          id: planetId,
+          name: displayName,
           glyph: body.glyph,
           color: body.color,
           constellation: body.constellation,

@@ -18,7 +18,10 @@ import {
   SPACE_AGE_START_YEAR,
   isSilentEra,
   relicsAvailableOn,
+  satelliteBlurb,
+  satelliteName,
 } from '../data/satellitesDB';
+import { useLocale, useT } from '../context/useLocale';
 
 export type ReportPanelKey = 'resume' | 'carte' | 'lecture' | 'donnees';
 
@@ -56,6 +59,7 @@ export function ResumeBody({
   onToggleLabels,
   onRevealConstellation,
 }: ResumeBodyProps) {
+  const t = useT();
   const LabelIcon = labelsEnabled ? EyeOff : Eye;
   if (!reading) return <ResumeStub />;
   return (
@@ -77,7 +81,7 @@ export function ResumeBody({
           className="size-4 text-violet-200 group-hover:text-white"
           strokeWidth={1.4}
         />
-        {labelsEnabled ? 'Masquer les constellations' : 'Voir les constellations'}
+        {labelsEnabled ? t.resumeBody.toggleLabelsHide : t.resumeBody.toggleLabelsShow}
       </button>
       <BirthHeader reading={reading} />
       <ResumeCard reading={reading} onRevealConstellation={onRevealConstellation} />
@@ -87,9 +91,14 @@ export function ResumeBody({
 }
 
 export function ResumePanel(props: ResumePanelProps) {
+  const t = useT();
   const { onClose, ...bodyProps } = props;
   return (
-    <ReportPanelShell title="MON SIGNE" subtitle="TON CIEL DE NAISSANCE" onClose={onClose}>
+    <ReportPanelShell
+      title={t.analysis.panelTitles.resume}
+      subtitle={t.analysis.panelSubtitles.resume}
+      onClose={onClose}
+    >
       <ResumeBody {...bodyProps} />
     </ReportPanelShell>
   );
@@ -108,10 +117,11 @@ export function CarteBody({ reading }: { reading: CelestialReading | null }) {
 }
 
 export function CartePanel({ reading, onClose }: PanelProps) {
+  const t = useT();
   return (
     <ReportPanelShell
-      title="CARTE"
-      subtitle="ROUE DES CONSTELLATIONS"
+      title={t.analysis.panelTitles.carte}
+      subtitle={t.analysis.panelSubtitles.carte}
       onClose={onClose}
     >
       <CarteBody reading={reading} />
@@ -145,8 +155,13 @@ export function LecturePanel({
   satellitesEnabled,
   onClose,
 }: LecturePanelProps) {
+  const t = useT();
   return (
-    <ReportPanelShell title="LECTURE" subtitle="COMPRENDRE TA CARTE" onClose={onClose}>
+    <ReportPanelShell
+      title={t.analysis.panelTitles.lecture}
+      subtitle={t.analysis.panelSubtitles.lecture}
+      onClose={onClose}
+    >
       <LectureBody reading={reading} satellitesEnabled={satellitesEnabled} />
     </ReportPanelShell>
   );
@@ -165,33 +180,33 @@ export function DonneesBody({ reading }: { reading: CelestialReading | null }) {
 }
 
 export function DonneesPanel({ reading, onClose }: PanelProps) {
+  const t = useT();
   return (
-    <ReportPanelShell title="DONNÉES" subtitle="ASTRONOMIE BRUTE" onClose={onClose}>
+    <ReportPanelShell
+      title={t.analysis.panelTitles.donnees}
+      subtitle={t.analysis.panelSubtitles.donnees}
+      onClose={onClose}
+    >
       <DonneesBody reading={reading} />
     </ReportPanelShell>
   );
 }
 
-/**
- * "Oracle" card for orbital relics — shown in LECTURE while the layer
- * is active. Two states:
- *   - silence: birth before 1957 (Sputnik hadn't launched yet);
- *   - list   : every relic launched on or before the natal date.
- */
 function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
+  const t = useT();
+  const { locale } = useLocale();
   if (isSilentEra(birthDate)) {
     return (
       <div className="rounded-panel border border-border-hud bg-surface/70
                       p-4 space-y-2">
         <div className="text-cockpit-md tracking-cockpit-caps text-accent-label/75">
-          ORACLE · RELIQUES ORBITALES
+          {t.relicsOracle.sectionLabel}
         </div>
         <p className="text-amber-100/85 italic text-cockpit-xl leading-relaxed">
-          « En cette année, l’orbite de la Terre n’appartenait qu’au silence. »
+          {t.relicsOracle.silencePoetic}
         </p>
         <p className="text-slate-400 text-cockpit-md leading-relaxed">
-          Aucun objet humain n’avait encore quitté l’atmosphère — le premier,
-          Spoutnik 1, ne serait lancé qu’en {SPACE_AGE_START_YEAR}.
+          {t.relicsOracle.silenceExplanation(SPACE_AGE_START_YEAR)}
         </p>
       </div>
     );
@@ -202,11 +217,10 @@ function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
     <div className="rounded-sm border border-cyan-400/20 bg-[#0a1424]/60
                     p-4 space-y-3">
       <div className="text-cockpit-md tracking-cockpit-caps text-cyan-300/75">
-        ORACLE · RELIQUES ORBITALES
+        {t.relicsOracle.sectionLabel}
       </div>
       <p className="text-slate-300 text-cockpit-lg leading-relaxed">
-        Au moment de ta naissance, ces objets humains tournaient (ou
-        avaient déjà tourné) autour de la Terre :
+        {t.relicsOracle.activeIntro}
       </p>
       <ul className="space-y-1.5 text-cockpit-md">
         {relics.map((r) => (
@@ -218,13 +232,13 @@ function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
             />
             <div className="min-w-0">
               <div className="text-slate-100">
-                {r.name}
+                {satelliteName(r, locale)}
                 <span className="text-slate-500 ml-1.5">
                   · {new Date(r.launchDate).getUTCFullYear()}
                 </span>
               </div>
               <div className="text-slate-400 italic text-cockpit-md leading-snug">
-                {r.blurb}
+                {satelliteBlurb(r, locale)}
               </div>
             </div>
           </li>
@@ -234,11 +248,11 @@ function RelicsOracleCard({ birthDate }: { birthDate: Date }) {
   );
 }
 
-// ─── Rapport complet (export PNG) ────────────────────────────────────────────
+// ─── Full report (PNG export) ─────────────────────────────────────────────────
 
 /**
- * Toutes les sections empilées. Rendu hors-écran et utilisé uniquement
- * pour l'export PNG : c'est ce qui est dessiné à droite de la vue 3D.
+ * All sections stacked. Rendered off-screen and used only for the PNG/PDF
+ * export — what gets drawn beside the 3D view.
  */
 export function FullReport({ reading }: { reading: CelestialReading }) {
   return (
@@ -257,17 +271,18 @@ export function FullReport({ reading }: { reading: CelestialReading }) {
   );
 }
 
-// ─── Coque commune (en-tête + corps scrollable + animation) ─────────────────
+// ─── Common shell (header + scrollable body + animation) ─────────────────────
 
 function ReportPanelShell({
   title, subtitle, onClose, children,
 }: { title: string; subtitle: string; onClose: () => void; children: ReactNode }) {
+  const t = useT();
   return (
     <PanelShell
       title={title}
       subtitle={subtitle}
       onClose={onClose}
-      closeAriaLabel={`Fermer le panneau ${title.toLowerCase()}`}
+      closeAriaLabel={t.analysis.panelCloseAriaLabel(title)}
       closeContent={<X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />}
       closeButtonClassName="h-8 w-8 p-0"
       bodyClassName="overflow-y-auto px-4 py-4 text-slate-200"
@@ -278,15 +293,8 @@ function ReportPanelShell({
   );
 }
 
-// ─── États vides (locked previews) ───────────────────────────────────────────
+// ─── Locked states (preview placeholders) ─────────────────────────────────────
 
-/**
- * Shared locked-state wrapper. Each panel provides its own preview
- * (the visual "what you'll get") and tagline; the wrapper handles the
- * common chrome — eyebrow label, headline, tagline. The natal form lives
- * permanently at the top of the sidebar, so the stub no longer needs
- * its own CTA — users are funneled straight to the always-visible form.
- */
 function LockedStub({
   preview,
   headline,
@@ -296,6 +304,7 @@ function LockedStub({
   headline: string;
   tagline: ReactNode;
 }) {
+  const t = useT();
   return (
     <div className="flex h-full min-h-0 flex-col gap-5 px-1 pt-2 pb-4 text-center">
       <div
@@ -308,7 +317,7 @@ function LockedStub({
 
       <div className="space-y-2 text-slate-300">
         <div className="text-cockpit-xs tracking-cockpit-label uppercase text-violet-300/70">
-          Aperçu verrouillé
+          {t.lockedStub.eyebrow}
         </div>
         <h2
           className="text-accent-title text-cockpit-lg tracking-cockpit-tight
@@ -323,7 +332,7 @@ function LockedStub({
 
       <p className="mt-auto pt-2 text-cockpit-xs tracking-cockpit-label
                     uppercase text-slate-500">
-        Saisis tes coordonnées dans la barre latérale
+        {t.lockedStub.sidebarHint}
       </p>
     </div>
   );
@@ -332,8 +341,6 @@ function LockedStub({
 /* ── Previews ───────────────────────────────────────────────────────────── */
 
 function ZodiacWheelPreview() {
-  // 12 spokes + a single highlighted arc segment hint at the eventual
-  // RadarWheel — without revealing which constellation is "yours".
   const spokes = Array.from({ length: 12 }, (_, i) => i);
   return (
     <svg
@@ -375,7 +382,6 @@ function ZodiacWheelPreview() {
           />
         );
       })}
-      {/* Highlighted arc — top-right slice */}
       <path
         d="M 50 4 A 46 46 0 0 1 89.85 27 L 79.45 33 A 34 34 0 0 0 50 16 Z"
         fill="rgb(196 181 253 / 0.18)"
@@ -388,8 +394,6 @@ function ZodiacWheelPreview() {
 }
 
 function SignePreview() {
-  // Sun + ecliptic horizon + a lone "?" — visual question that the
-  // panel will answer once data is entered.
   return (
     <div className="relative size-28 animate-rail-breathe">
       <svg viewBox="0 0 100 100" className="size-full">
@@ -432,7 +436,6 @@ function SignePreview() {
 }
 
 function LectureSkeletonPreview() {
-  // Article-style content skeleton: heading + paragraph lines.
   return (
     <div className="w-full max-w-[200px] space-y-2 opacity-65">
       <div className="h-2 w-2/3 rounded-full bg-violet-300/55" />
@@ -450,7 +453,6 @@ function LectureSkeletonPreview() {
 }
 
 function DonneesTablePreview() {
-  // Looks like the eventual AstroInfoCard's leftmost column.
   const rows: Array<[string, string]> = [
     ['α☉', '——h ——m'],
     ['δ☉', '——° ——′'],
@@ -479,19 +481,18 @@ function DonneesTablePreview() {
 /* ── Stubs ──────────────────────────────────────────────────────────────── */
 
 function ResumeStub() {
+  const t = useT();
   return (
     <LockedStub
       preview={<SignePreview />}
-      headline="Ton vrai signe, dans le ciel réel"
+      headline={t.lockedStub.resume.headline}
       tagline={
         <>
-          Le Soleil n&apos;était presque jamais dans la constellation de ton
-          horoscope. En 2 000 ans, l&apos;axe de la Terre a glissé d&apos;environ
-          une constellation entière — voici ton ciel{' '}
+          {t.lockedStub.resume.taglineLead}
           <strong className="text-amber-200 font-medium">
-            astronomique exact
+            {t.lockedStub.resume.taglineEmphasis}
           </strong>
-          , dérive comprise.
+          {t.lockedStub.resume.taglineTail}
         </>
       }
     />
@@ -499,19 +500,18 @@ function ResumeStub() {
 }
 
 function CarteStub() {
+  const t = useT();
   return (
     <LockedStub
       preview={<ZodiacWheelPreview />}
-      headline="La roue des vraies constellations"
+      headline={t.lockedStub.carte.headline}
       tagline={
         <>
-          Soleil, Lune et planètes projetés sur les{' '}
+          {t.lockedStub.carte.taglineLead}
           <strong className="text-violet-200 font-medium">
-            13 constellations
-          </strong>{' '}
-          qu&apos;ils traversent réellement — frontières fixées par
-          l&apos;Union astronomique internationale (1930), pas les
-          12 cases égales du zodiaque.
+            {t.lockedStub.carte.taglineEmphasis}
+          </strong>
+          {t.lockedStub.carte.taglineTail}
         </>
       }
     />
@@ -519,18 +519,20 @@ function CarteStub() {
 }
 
 function LectureStub() {
+  const t = useT();
   return (
     <LockedStub
       preview={<LectureSkeletonPreview />}
-      headline="Comprendre ta carte"
+      headline={t.lockedStub.lecture.headline}
       tagline={
         <>
-          Le <span className="text-amber-200">Soleil</span> (ta vraie
-          constellation), la <span className="text-slate-200">Lune</span>{' '}
-          (sa phase exacte) et l&apos;
-          <span className="text-emerald-200">ascendant</span> (le point
-          d&apos;horizon est qui se levait à ta naissance) — leur
-          définition astronomique, et comment les repérer dans le ciel.
+          {t.lockedStub.lecture.taglineLead}
+          <span className="text-amber-200">{t.lockedStub.lecture.taglineSun}</span>
+          {t.lockedStub.lecture.taglineSunDesc}
+          <span className="text-slate-200">{t.lockedStub.lecture.taglineMoon}</span>
+          {t.lockedStub.lecture.taglineMoonDesc}
+          <span className="text-emerald-200">{t.lockedStub.lecture.taglineAscendant}</span>
+          {t.lockedStub.lecture.taglineAscendantDesc}
         </>
       }
     />
@@ -538,17 +540,18 @@ function LectureStub() {
 }
 
 function DonneesStub() {
+  const t = useT();
   return (
     <LockedStub
       preview={<DonneesTablePreview />}
-      headline="Astronomie de position"
+      headline={t.lockedStub.donnees.headline}
       tagline={
         <>
-          Ascension droite, déclinaison, temps sidéral, obliquité de
-          l&apos;écliptique : les{' '}
-          <strong className="text-violet-200 font-medium">coordonnées brutes</strong>{' '}
-          du ciel à ta naissance — l&apos;équivalent céleste de la
-          latitude et de la longitude (Meeus 1998 · JPL · IAU&nbsp;1930).
+          {t.lockedStub.donnees.taglineLead}
+          <strong className="text-violet-200 font-medium">
+            {t.lockedStub.donnees.taglineEmphasis}
+          </strong>
+          {t.lockedStub.donnees.taglineTail}
         </>
       }
     />

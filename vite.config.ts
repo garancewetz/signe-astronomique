@@ -3,6 +3,7 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import cesium from 'vite-plugin-cesium'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 /**
  * Inject a production-only Content-Security-Policy meta tag into `index.html`.
@@ -57,5 +58,51 @@ function cspMetaTag(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), cesium(), tailwindcss(), cspMetaTag()],
+  plugins: [
+    react(),
+    cesium(),
+    tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: false,
+      includeAssets: ['favicon.svg', 'logo.svg', 'robots.txt'],
+      manifest: {
+        name: 'True Cosmic Sign',
+        short_name: 'Cosmic Sign',
+        description:
+          'Cockpit astronomique : ta vraie constellation solaire de naissance, calculée selon les frontières IAU 1930 (avec Ophiuchus).',
+        lang: 'fr',
+        dir: 'ltr',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        orientation: 'any',
+        background_color: '#060210',
+        theme_color: '#060210',
+        categories: ['education', 'science', 'utilities'],
+        icons: [
+          {
+            src: '/favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any',
+          },
+          {
+            src: '/logo.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,woff2,webmanifest}'],
+        globIgnores: ['**/Cesium/**', '**/cesium/**'],
+        navigateFallbackDenylist: [/^\/api\//, /^\/_/],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        cleanupOutdatedCaches: true,
+      },
+    }),
+    cspMetaTag(),
+  ],
 })

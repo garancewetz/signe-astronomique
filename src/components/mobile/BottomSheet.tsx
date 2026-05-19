@@ -7,6 +7,7 @@ import {
 } from 'framer-motion';
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { cn } from '../ui';
+import { useT } from '../../context/useLocale';
 
 export type SheetSnap = 'peek' | 'mid' | 'full';
 
@@ -47,9 +48,11 @@ export function BottomSheet({
   midPx,
   fullPx,
   bottomOffset = '0px',
-  ariaLabel = 'Console',
+  ariaLabel,
   children,
 }: BottomSheetProps) {
+  const t = useT();
+  const resolvedAriaLabel = ariaLabel ?? t.mobile.bottomSheet.defaultAriaLabel;
   const reduceMotion = useReducedMotion();
   const dragControls = useDragControls();
 
@@ -86,7 +89,7 @@ export function BottomSheet({
   return (
     <motion.aside
       role="region"
-      aria-label={ariaLabel}
+      aria-label={resolvedAriaLabel}
       drag="y"
       dragControls={dragControls}
       dragListener={false}
@@ -132,10 +135,10 @@ export function BottomSheet({
         }}
         aria-label={
           snap === 'full'
-            ? 'Replier la console'
+            ? t.mobile.bottomSheet.collapseAriaLabel
             : snap === 'mid'
-              ? 'Étendre la console'
-              : 'Ouvrir la console'
+              ? t.mobile.bottomSheet.expandAriaLabel
+              : t.mobile.bottomSheet.openAriaLabel
         }
         aria-expanded={snap !== 'peek'}
         className="cockpit-focus shrink-0 touch-none select-none

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './ErrorBoundary';
 import { CockpitFallback } from './CockpitFallback';
-import { fr } from '../i18n/fr';
+import { KeyboardHintChip } from './KeyboardHintChip';
+import { useT } from '../context/useLocale';
 import {
   SpaceView,
   LIVE_TLE_VALIDITY_MS,
@@ -27,12 +28,14 @@ import type { MobileTabKey } from './mobile/MobileTabBar';
 import type { CelestialReading } from '../utils/astroEngine';
 import { useOrbitalPopulation } from '../hooks/useOrbitalPopulation';
 import { useNatalForm } from '../hooks/useNatalForm';
+import { useSearchHistory } from '../hooks/useSearchHistory';
 import { useRevealSequence } from '../hooks/useRevealSequence';
 import { useExportHandlers } from '../hooks/useExportHandlers';
 import { CockpitDisplayProvider } from '../context/CockpitDisplayContext';
 
 export function Cockpit() {
   const isMobile = useMobileLayout();
+  const t = useT();
 
   const [reading, setReading] = useState<CelestialReading | null>(null);
 
@@ -74,13 +77,22 @@ export function Cockpit() {
   const constellationOverlayActive = constellationOverlayEnabled && orbitalAvailable;
 
   const { date, time, city, setDate, setTime, setUserCity } = useNatalForm();
+  const {
+    entries: searchHistory,
+    record: recordSearch,
+    remove: removeSearch,
+  } = useSearchHistory();
 
   const cockpitRef = useRef<HTMLDivElement>(null);
   const spaceViewRef = useRef<SpaceViewHandle>(null);
   const fullReportRef = useRef<HTMLDivElement>(null);
 
-  const { exporting, exportingView, handleExport, handleExportView } =
-    useExportHandlers({ spaceViewRef, fullReportRef, reading });
+  const {
+    exportingView,
+    exportingPdf,
+    handleExportView,
+    handleExportPdf,
+  } = useExportHandlers({ spaceViewRef, fullReportRef, reading });
 
   useEffect(() => {
     const onFs = () => setFullscreenActive(!!document.fullscreenElement);
@@ -106,6 +118,8 @@ export function Cockpit() {
       setActivePanel((prev) => (prev === key ? null : key)),
     [],
   );
+
+  const openLegend = useCallback(() => setActivePanel('legend'), []);
 
   const closePanel = useCallback(() => setActivePanel(null), []);
 
@@ -245,6 +259,9 @@ export function Cockpit() {
           onTimeChange={setTime}
           onCityChange={setUserCity}
           onJump={handleJump}
+          searchHistory={searchHistory}
+          onRecordSearch={recordSearch}
+          onRemoveSearch={removeSearch}
           reading={reading}
           selectedBody={selectedBody}
           onCloseSelection={clearSelection}
@@ -259,8 +276,8 @@ export function Cockpit() {
           onToggleFullscreen={toggleFullscreen}
           onExportView={handleExportView}
           exportingView={exportingView}
-          onExportReport={handleExport}
-          exportingReport={exporting}
+          onExportPdf={handleExportPdf}
+          exportingPdf={exportingPdf}
           canExportReport={!!reading}
         >
           {spaceView}
@@ -278,7 +295,7 @@ export function Cockpit() {
       className="fixed inset-0 overflow-hidden bg-background"
     >
       <a href="#cockpit-main" className="skip-to-main">
-        {fr.cockpit.skipToMain}
+        {t.cockpit.skipToMain}
       </a>
 
       {/* === VUE 3D — sélection de texte désactivée (navigation globe / capture) === */}
@@ -293,6 +310,12 @@ export function Cockpit() {
       {/* === VIGNETTE BOULE DE CRISTAL === */}
       <div className="absolute inset-0 z-1 pointer-events-none crystal-vignette" />
 
+      {/* === HINT CLAVIER — découverte de la navigation 3D au clavier === */}
+      <KeyboardHintChip
+        onOpen={openLegend}
+        hidden={activePanel === 'legend'}
+      />
+
       {/* === CADRE HUD (slim — état seul, branding déplacé en sidebar) === */}
       <div
         className="absolute top-0 z-10 pointer-events-none
@@ -304,13 +327,10 @@ export function Cockpit() {
           observerLat={city.lat}
           observerLon={city.lon}
           onOpenSummary={openSummary}
-          onFlySun={flyToSun}
-          onFlyMoon={flyToMoon}
-          onFlyEarth={flyToEarth}
         />
       </div>
 
-      {/* === SIDEBAR — colonne unifiée (formulaire, analyse, calques, système) === */}
+      {/* === SIDEBAR — colonne unifiée (formulaire, analyse, caméra, calques, système) === */}
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebarCollapsed}
@@ -326,13 +346,19 @@ export function Cockpit() {
         onTimeChange={setTime}
         onCityChange={setUserCity}
         onJump={handleJump}
+        searchHistory={searchHistory}
+        onRecordSearch={recordSearch}
+        onRemoveSearch={removeSearch}
         hasReading={!!reading}
+        onFlySun={flyToSun}
+        onFlyMoon={flyToMoon}
+        onFlyEarth={flyToEarth}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={toggleFullscreen}
         onExportView={handleExportView}
         exportingView={exportingView}
-        onExportReport={handleExport}
-        exportingReport={exporting}
+        onExportPdf={handleExportPdf}
+        exportingPdf={exportingPdf}
         canExportReport={!!reading}
       />
 

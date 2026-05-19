@@ -23,7 +23,7 @@ import {
 } from '../../../utils/skyCoordinates';
 import { raDecToEcef } from './skyVector';
 import { visualEllipsoidRadiusMeters } from './bodies';
-import type { IauConstellation } from '../../../utils/astroEngine';
+import type { IauConstellation, MoonPhaseKey } from '../../../utils/astroEngine';
 
 const MOON_TEXTURE_URI = buildModuleUrl('Assets/Textures/moonSmall.jpg');
 
@@ -61,8 +61,10 @@ interface MountOptions {
   distanceKm: number;
   /** Illuminated fraction [0..1] — used only for the label tint. */
   illumination: number;
-  /** Phase name (Pleine, Premier croissant…). */
-  phaseName: string;
+  /** Stable phase identifier — localized by display layers. */
+  phaseKey: MoonPhaseKey;
+  /** Localized display name (e.g. "Lune"/"Moon") for the in-scene label. */
+  displayName: string;
   /** IAU constellation the Moon is currently in. */
   constellation: IauConstellation;
   /** Sun right-ascension in hours (drives the terminator). */
@@ -86,8 +88,9 @@ export function mountMoonLayer(viewer: Viewer, opts: MountOptions): () => void {
     decDeg,
     distanceKm,
     illumination,
-    phaseName,
+    phaseKey,
     constellation,
+    displayName,
     sunRaHours,
     sunDecDeg,
     gmstRad,
@@ -143,13 +146,13 @@ export function mountMoonLayer(viewer: Viewer, opts: MountOptions): () => void {
   const proxyEntity = new Entity({
     properties: {
       kind: 'moon',
-      name: 'Lune',
+      name: displayName,
       constellation,
       raHours,
       decDeg,
       distanceKm,
       illumination,
-      phaseName,
+      phaseKey,
     },
   });
 
@@ -182,7 +185,7 @@ export function mountMoonLayer(viewer: Viewer, opts: MountOptions): () => void {
     ? viewer.entities.add({
         position: moonPos,
         label: {
-          text: '☾ Lune',
+          text: `☾ ${displayName}`,
           font: "10px 'JetBrains Mono', monospace",
           fillColor: moonColor.withAlpha(0.95),
           style: LabelStyle.FILL,

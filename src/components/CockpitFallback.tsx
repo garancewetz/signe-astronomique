@@ -1,5 +1,5 @@
 import { Button, Surface } from './ui';
-import { fr } from '../i18n/fr';
+import { useT } from '../context/useLocale';
 
 interface CockpitFallbackProps {
   /** When provided, replaces the default reload action with a soft retry. */
@@ -18,21 +18,22 @@ export function CockpitFallback({
   title,
   description,
 }: CockpitFallbackProps) {
+  const t = useT();
   const isInline = variant === 'inline';
   const resolvedTitle =
     title ??
-    (isInline ? fr.errorBoundary.inlineTitle : fr.errorBoundary.fullscreenTitle);
+    (isInline ? t.errorBoundary.inlineTitle : t.errorBoundary.fullscreenTitle);
   const resolvedDescription =
     description ??
     (isInline
-      ? fr.errorBoundary.inlineDescription
-      : fr.errorBoundary.fullscreenDescription);
+      ? t.errorBoundary.inlineDescription
+      : t.errorBoundary.fullscreenDescription);
 
   const handleReload = () => window.location.reload();
   const primaryAction = onReset ?? handleReload;
   const primaryLabel = onReset
-    ? fr.errorBoundary.retry
-    : fr.errorBoundary.reload;
+    ? t.errorBoundary.retry
+    : t.errorBoundary.reload;
 
   const content = (
     <Surface
@@ -42,7 +43,7 @@ export function CockpitFallback({
       className="max-w-md w-full px-6 py-7 rounded-panel text-center space-y-4"
     >
       <div className="text-cockpit-sm tracking-cockpit-label text-accent-label">
-        {fr.errorBoundary.label}
+        {t.errorBoundary.label}
       </div>
       <h1 className="text-cockpit-xl tracking-cockpit-tight text-accent-title">
         {resolvedTitle}

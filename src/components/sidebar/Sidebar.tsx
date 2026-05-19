@@ -15,9 +15,10 @@ import { type CityResult } from '../CityAutocomplete';
 import { cn, IconButton, surfaceClasses } from '../ui';
 import { TooltipWrap } from '../Tooltip';
 import { CoordinatesForm } from '../CoordinatesForm';
+import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
 import { type CelestialReading } from '../../utils/astroEngine';
 import { useCockpitDisplay } from '../../context/useCockpitDisplay';
-import { fr } from '../../i18n/fr';
+import { useT } from '../../context/useLocale';
 import { SidebarHeader } from './SidebarHeader';
 import { SystemDock } from './SystemDock';
 import type { SidebarPanelKey } from './types';
@@ -48,7 +49,17 @@ interface SidebarProps {
   onCityChange: (v: CityResult) => void;
   onJump: (reading: CelestialReading) => void;
 
+  // Recent searches surfaced under the form
+  searchHistory: SearchHistoryEntry[];
+  onRecordSearch: (entry: { date: string; time: string; city: CityResult }) => void;
+  onRemoveSearch: (signature: string) => void;
+
   hasReading: boolean;
+
+  // Camera fly-to actions — destinations rail above the layer grid.
+  onFlySun: () => void;
+  onFlyMoon: () => void;
+  onFlyEarth: () => void;
 
   // System
   fullscreenActive: boolean;
@@ -57,8 +68,8 @@ interface SidebarProps {
   // Exports
   onExportView: () => void;
   exportingView: boolean;
-  onExportReport: () => void;
-  exportingReport: boolean;
+  onExportPdf: () => void;
+  exportingPdf: boolean;
   canExportReport: boolean;
 }
 
@@ -69,6 +80,7 @@ interface SidebarProps {
  * each layer stays one click away without forcing the user to expand.
  */
 export function Sidebar(props: SidebarProps) {
+  const t = useT();
   const {
     collapsed,
     onToggleCollapsed,
@@ -84,13 +96,19 @@ export function Sidebar(props: SidebarProps) {
     onTimeChange,
     onCityChange,
     onJump,
+    searchHistory,
+    onRecordSearch,
+    onRemoveSearch,
     hasReading,
+    onFlySun,
+    onFlyMoon,
+    onFlyEarth,
     fullscreenActive,
     onToggleFullscreen,
     onExportView,
     exportingView,
-    onExportReport,
-    exportingReport,
+    onExportPdf,
+    exportingPdf,
     canExportReport,
   } = props;
 
@@ -130,11 +148,11 @@ export function Sidebar(props: SidebarProps) {
 
   const orbitalAriaLabel = orbitalAvailable
     ? orbitalStatus === 'loading'
-      ? 'Population orbitale — chargement Celestrak…'
+      ? t.sidebar.layers.orbitalAria.loading
       : orbitalStatus === 'error'
-        ? 'Population orbitale — réessayer'
-        : 'Population orbitale (temps réel)'
-    : 'Population orbitale — indisponible loin de la date du jour';
+        ? t.sidebar.layers.orbitalAria.error
+        : t.sidebar.layers.orbitalAria.live
+    : t.sidebar.layers.orbitalAria.unavailable;
 
   const orbitalStatusDot: LayerDef['status'] =
     orbitalStatus === 'loading'
@@ -146,21 +164,21 @@ export function Sidebar(props: SidebarProps) {
   const layers: LayerDef[] = [
     {
       key: 'labels',
-      label: 'Noms',
+      label: t.sidebar.layers.labels,
       icon: <Tag className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: bodyLabelsEnabled,
       onClick: toggleBodyLabels,
     },
     {
       key: 'guides',
-      label: 'Repères',
+      label: t.sidebar.layers.guides,
       icon: <Globe2 className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: guidesEnabled,
       onClick: toggleGuides,
     },
     {
       key: 'orbital',
-      label: 'Orbital',
+      label: t.sidebar.layers.orbital,
       icon: <Network className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: constellationOverlayEnabled,
       disabled: !orbitalAvailable,
@@ -170,14 +188,14 @@ export function Sidebar(props: SidebarProps) {
     },
     {
       key: 'relics',
-      label: 'Reliques',
+      label: t.sidebar.layers.relics,
       icon: <Satellite className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: satellitesEnabled,
       onClick: toggleSatellites,
     },
     {
       key: 'side-view',
-      label: hasSelectedStar ? 'Vue de côté' : 'Vue de côté · sélectionne une étoile',
+      label: hasSelectedStar ? t.sidebar.layers.sideView : t.sidebar.layers.sideViewLocked,
       icon: <Axis3d className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: sideViewActive,
       disabled: !hasSelectedStar,
@@ -188,7 +206,7 @@ export function Sidebar(props: SidebarProps) {
 
   return (
     <motion.aside
-      aria-label={fr.cockpit.sidebarLabel}
+      aria-label={t.cockpit.sidebarLabel}
       initial={false}
       animate={{ width: collapsed ? COLLAPSED_PX : EXPANDED_PX }}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
@@ -211,6 +229,9 @@ export function Sidebar(props: SidebarProps) {
           onTimeChange={onTimeChange}
           onCityChange={onCityChange}
           onJump={onJump}
+          history={searchHistory}
+          onRecordHistory={onRecordSearch}
+          onRemoveHistory={onRemoveSearch}
         />
       )}
 
@@ -226,6 +247,19 @@ export function Sidebar(props: SidebarProps) {
         className="flex-1 min-h-0 overflow-y-auto overscroll-contain
                    [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
+        {collapsed ? (
+          <CollapsedCameraRail
+            onFlySun={onFlySun}
+            onFlyMoon={onFlyMoon}
+            onFlyEarth={onFlyEarth}
+          />
+        ) : (
+          <ExpandedCameraSection
+            onFlySun={onFlySun}
+            onFlyMoon={onFlyMoon}
+            onFlyEarth={onFlyEarth}
+          />
+        )}
         {collapsed ? (
           <CollapsedLayerRail layers={layers} />
         ) : (
@@ -244,8 +278,8 @@ export function Sidebar(props: SidebarProps) {
         onToggleFullscreen={onToggleFullscreen}
         onExportView={onExportView}
         exportingView={exportingView}
-        onExportReport={onExportReport}
-        exportingReport={exportingReport}
+        onExportPdf={onExportPdf}
+        exportingPdf={exportingPdf}
         canExportReport={canExportReport}
       />
     </motion.aside>
@@ -269,9 +303,10 @@ function AnalysisCTA({
   unlocking,
   onClick,
 }: AnalysisCTAProps) {
+  const t = useT();
   const ariaLabel = locked
-    ? fr.analysisCta.lockedAriaLabel
-    : fr.analysisCta.openAriaLabel;
+    ? t.analysisCta.lockedAriaLabel
+    : t.analysisCta.openAriaLabel;
 
   // "Ready" = a reading exists and the modal is closed. That's the state we
   // want to advertise visually so the user notices fresh data without us
@@ -282,7 +317,7 @@ function AnalysisCTA({
     return (
       <div className="flex flex-col items-center py-2">
         <TooltipWrap
-          text={locked ? fr.analysisCta.tooltipLocked : fr.analysisCta.tooltipReady}
+          text={locked ? t.analysisCta.tooltipLocked : t.analysisCta.tooltipReady}
           placement="right"
         >
           <IconButton
@@ -342,7 +377,7 @@ function AnalysisCTA({
         >
           <Sparkles className="size-4" strokeWidth={1.4} />
         </span>
-        <span className="flex-1 min-w-0 truncate text-left">{fr.analysisCta.label}</span>
+        <span className="flex-1 min-w-0 truncate text-left">{t.analysisCta.label}</span>
         <span
           aria-hidden="true"
           className={cn(
@@ -378,13 +413,14 @@ interface LayerDef {
 }
 
 function ExpandedLayerGrid({ layers }: { layers: LayerDef[] }) {
+  const t = useT();
   return (
-    <section aria-label="Calques d’affichage" className="px-3 pt-2 pb-2">
+    <section aria-label={t.sidebar.layersSectionAriaLabel} className="px-3 pt-2 pb-2">
       <div
         className="px-1 pb-2 text-cockpit-xs tracking-cockpit-label uppercase
                    text-slate-500"
       >
-        Calques
+        {t.sidebar.layersSectionLabel}
       </div>
       <div className="grid grid-cols-2 gap-1.5">
         {layers.map(({ key, ...chipProps }) => (
@@ -457,6 +493,124 @@ function LayerChip({
   );
 }
 
+/* ── Camera dock — quick fly-to (Sun / Moon / Earth) ──────────────────── */
+
+interface CameraDockProps {
+  onFlySun: () => void;
+  onFlyMoon: () => void;
+  onFlyEarth: () => void;
+}
+
+interface CameraDestination {
+  key: 'sun' | 'moon' | 'earth';
+  glyph: string;
+  glyphClass: string;
+  label: string;
+  tooltip: string;
+  ariaLabel: string;
+}
+
+function useCameraDestinations(): readonly CameraDestination[] {
+  const t = useT();
+  return [
+    {
+      key: 'sun',
+      glyph: '☀',
+      glyphClass: 'text-glyph-sun',
+      label: t.sidebar.cameraDestinations.sun.label,
+      tooltip: t.sidebar.cameraDestinations.sun.tooltip,
+      ariaLabel: t.sidebar.cameraDestinations.sun.ariaLabel,
+    },
+    {
+      key: 'moon',
+      glyph: '☾',
+      glyphClass: 'text-glyph-moon',
+      label: t.sidebar.cameraDestinations.moon.label,
+      tooltip: t.sidebar.cameraDestinations.moon.tooltip,
+      ariaLabel: t.sidebar.cameraDestinations.moon.ariaLabel,
+    },
+    {
+      key: 'earth',
+      glyph: '⊕',
+      glyphClass: 'text-glyph-earth',
+      label: t.sidebar.cameraDestinations.earth.label,
+      tooltip: t.sidebar.cameraDestinations.earth.tooltip,
+      ariaLabel: t.sidebar.cameraDestinations.earth.ariaLabel,
+    },
+  ];
+}
+
+function ExpandedCameraSection({ onFlySun, onFlyMoon, onFlyEarth }: CameraDockProps) {
+  const t = useT();
+  const destinations = useCameraDestinations();
+  const handlers = { sun: onFlySun, moon: onFlyMoon, earth: onFlyEarth };
+  return (
+    <section
+      aria-label={t.sidebar.cameraSectionAriaLabel}
+      className="px-3 pt-2 pb-2 border-b border-border-hud-faint"
+    >
+      <div
+        className="px-1 pb-2 text-cockpit-xs tracking-cockpit-label uppercase
+                   text-slate-500"
+      >
+        {t.sidebar.cameraSectionLabel}
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {destinations.map(({ key, glyph, glyphClass, tooltip, ariaLabel }) => (
+          <TooltipWrap key={key} text={tooltip} placement="bottom">
+            <IconButton
+              size="lg"
+              onClick={handlers[key]}
+              aria-label={ariaLabel}
+              className="w-full"
+            >
+              <span
+                aria-hidden="true"
+                className={cn('text-cockpit-glyph leading-none', glyphClass)}
+              >
+                {glyph}
+              </span>
+            </IconButton>
+          </TooltipWrap>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CollapsedCameraRail({ onFlySun, onFlyMoon, onFlyEarth }: CameraDockProps) {
+  const t = useT();
+  const destinations = useCameraDestinations();
+  const handlers = { sun: onFlySun, moon: onFlyMoon, earth: onFlyEarth };
+  return (
+    <ul
+      role="list"
+      aria-label={t.sidebar.cameraSectionAriaLabel}
+      className="flex flex-col items-center gap-1 pt-2 pb-2 mb-1
+                 border-b border-border-hud-faint"
+    >
+      {destinations.map(({ key, glyph, glyphClass, tooltip, ariaLabel }) => (
+        <li key={key}>
+          <TooltipWrap text={tooltip} placement="right">
+            <IconButton
+              size="lg"
+              onClick={handlers[key]}
+              aria-label={ariaLabel}
+            >
+              <span
+                aria-hidden="true"
+                className={cn('text-cockpit-glyph leading-none', glyphClass)}
+              >
+                {glyph}
+              </span>
+            </IconButton>
+          </TooltipWrap>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /* ── Orbital error ribbon — visible when Celestrak fetch fails ──────────── */
 
 interface OrbitalErrorRibbonProps {
@@ -464,6 +618,7 @@ interface OrbitalErrorRibbonProps {
 }
 
 function OrbitalErrorRibbon({ onRetry }: OrbitalErrorRibbonProps) {
+  const t = useT();
   return (
     <div
       role="status"
@@ -478,11 +633,11 @@ function OrbitalErrorRibbon({ onRetry }: OrbitalErrorRibbonProps) {
         aria-hidden
       />
       <div className="flex-1 min-w-0 space-y-1">
-        <p className="leading-snug">{fr.orbital.errorBody}</p>
+        <p className="leading-snug">{t.orbital.errorBody}</p>
         <button
           type="button"
           onClick={onRetry}
-          aria-label={fr.orbital.retryAriaLabel}
+          aria-label={t.orbital.retryAriaLabel}
           className="cockpit-focus inline-flex items-center gap-1
                      px-1.5 py-0.5 rounded
                      text-cockpit-xs tracking-cockpit-label uppercase
@@ -491,7 +646,7 @@ function OrbitalErrorRibbon({ onRetry }: OrbitalErrorRibbonProps) {
                      transition-colors"
         >
           <RefreshCcw className="size-3" strokeWidth={1.6} aria-hidden />
-          {fr.orbital.retryLabel}
+          {t.orbital.retryLabel}
         </button>
       </div>
     </div>
@@ -501,10 +656,11 @@ function OrbitalErrorRibbon({ onRetry }: OrbitalErrorRibbonProps) {
 /* ── Layer rail (collapsed) — icon-only column ──────────────────────────── */
 
 function CollapsedLayerRail({ layers }: { layers: LayerDef[] }) {
+  const t = useT();
   return (
     <ul
       role="list"
-      aria-label="Calques d’affichage"
+      aria-label={t.sidebar.layersSectionAriaLabel}
       className="flex flex-col items-center gap-1 pt-2"
     >
       {layers.map((layer) => (

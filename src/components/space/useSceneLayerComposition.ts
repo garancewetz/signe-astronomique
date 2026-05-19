@@ -1,6 +1,7 @@
 import { useEffect, type MutableRefObject } from 'react';
 import { JulianDate, type Viewer } from 'cesium';
 import type { CelestialReading } from '../../utils/astroEngine';
+import type { PlanetId } from '../../utils/planetEngine';
 import { gmstRadians } from '../../utils/skyCoordinates';
 import { mountStarsLayer } from './cesium/mountStarsLayer';
 import { mountSunLayer } from './cesium/mountSunLayer';
@@ -28,6 +29,12 @@ interface UseSceneLayerCompositionArgs {
   showBodyLabels: boolean;
   /** Dims the stars and skips the reference-line layer to keep the diagram clean. */
   sideViewActive: boolean;
+  /** Locale-aware body labels surfaced to the Cesium layers. */
+  bodyNames: {
+    sun: string;
+    moon: string;
+    planet: (id: PlanetId) => string;
+  };
 }
 
 /**
@@ -48,6 +55,7 @@ export function useSceneLayerComposition({
   showGuides,
   showBodyLabels,
   sideViewActive,
+  bodyNames,
 }: UseSceneLayerCompositionArgs): void {
   useEffect(() => {
     const viewer = viewerRef.current;
@@ -90,6 +98,7 @@ export function useSceneLayerComposition({
         decDeg: active.sunDec,
         gmstRad,
         constellation: active.trueConstellation,
+        displayName: bodyNames.sun,
         showLabels: showBodyLabels,
       }),
     );
@@ -99,8 +108,9 @@ export function useSceneLayerComposition({
         decDeg: active.moon.dec,
         distanceKm: active.moon.distanceKm,
         illumination: active.moon.illumination,
-        phaseName: active.moon.phaseName,
+        phaseKey: active.moon.phaseKey,
         constellation: active.moon.constellation,
+        displayName: bodyNames.moon,
         sunRaHours: active.sunRA,
         sunDecDeg: active.sunDec,
         gmstRad,
@@ -111,6 +121,7 @@ export function useSceneLayerComposition({
       mountPlanetsLayer(viewer, {
         bodies: active.bodies,
         gmstRad,
+        nameOf: bodyNames.planet,
         showLabels: showBodyLabels,
       }),
     );
@@ -147,5 +158,6 @@ export function useSceneLayerComposition({
     showGuides,
     showBodyLabels,
     sideViewActive,
+    bodyNames,
   ]);
 }

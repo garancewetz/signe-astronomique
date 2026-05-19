@@ -4,8 +4,10 @@ import {
   type CelestialReading,
   type IauConstellation,
 } from '../utils/astroEngine';
-import { CONSTELLATION_LORE } from '../utils/constellationLore';
-import { fr } from '../i18n/fr';
+import { loreName } from '../utils/constellationLore';
+import { useLocale, useT } from '../context/useLocale';
+import type { Copy } from '../i18n/fr';
+import type { Locale } from '../i18n';
 
 interface Props {
   reading: CelestialReading | null;
@@ -30,10 +32,15 @@ const R_LABEL     = 160;
  * progression mathématique anti-horaire.
  */
 export const RadarWheel = memo(function RadarWheel({ reading }: Props) {
+  const t = useT();
+  const { locale } = useLocale();
   const segments = useMemo(() => buildSegments(), []);
   const titleId = useId();
   const descId = useId();
-  const { title, description } = useMemo(() => buildA11yText(reading), [reading]);
+  const { title, description } = useMemo(
+    () => buildA11yText(reading, t, locale),
+    [reading, t, locale],
+  );
 
   return (
     <svg
@@ -79,7 +86,7 @@ export const RadarWheel = memo(function RadarWheel({ reading }: Props) {
               style={{ textTransform: 'uppercase' }}
               transform={tangentRotate(seg.midDeg, R_LABEL)}
             >
-              {CONSTELLATION_LORE[seg.name].fr}
+              {loreName(seg.name, locale)}
             </text>
             {/* Indicateur de taille angulaire (en degrés) */}
             <text
@@ -166,37 +173,38 @@ export const RadarWheel = memo(function RadarWheel({ reading }: Props) {
       })}
 
       {/* — Ascendant : flèche depuis l'extérieur — */}
-      {reading && <Ascendant longitude={reading.ascendantLongitude} />}
+      {reading && <Ascendant longitude={reading.ascendantLongitude} ascLabel={t.radarWheel.asc} />}
 
       {/* — Centre : métadonnées — */}
-      {reading && <CenterInfo reading={reading} />}
+      {reading && <CenterInfo reading={reading} t={t} />}
     </svg>
   );
 });
 
 // ─── A11y text ──────────────────────────────────────────────────────────────
 
-function buildA11yText(reading: CelestialReading | null): {
-  title: string;
-  description: string;
-} {
+function buildA11yText(
+  reading: CelestialReading | null,
+  t: Copy,
+  locale: Locale,
+): { title: string; description: string } {
   if (!reading) {
     return {
-      title: fr.radarWheel.emptyTitle,
-      description: fr.radarWheel.emptyDescription,
+      title: t.radarWheel.emptyTitle,
+      description: t.radarWheel.emptyDescription,
     };
   }
-  const sunName = CONSTELLATION_LORE[reading.trueConstellation].fr;
+  const sunName = loreName(reading.trueConstellation, locale);
   const tz = reading.input.timezone ?? 'UTC';
-  const dateLabel = new Intl.DateTimeFormat('fr-FR', {
+  const dateLabel = new Intl.DateTimeFormat(t.intlLocale, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
     timeZone: tz,
   }).format(reading.input.date);
   return {
-    title: fr.radarWheel.title(sunName),
-    description: fr.radarWheel.description({
+    title: t.radarWheel.title(sunName),
+    description: t.radarWheel.description({
       dateLabel,
       place: reading.input.placeLabel ?? '',
       sunName,
@@ -284,7 +292,7 @@ function buildSegments(): Segment[] {
 
 // ─── Ascendant ──────────────────────────────────────────────────────────────
 
-function Ascendant({ longitude }: { longitude: number }) {
+function Ascendant({ longitude, ascLabel }: { longitude: number; ascLabel: string }) {
   const a1 = polarToCartesian(longitude, R_OUTER + 8);
   const a2 = polarToCartesian(longitude, R_OUTER - 4);
   return (
@@ -303,7 +311,7 @@ function Ascendant({ longitude }: { longitude: number }) {
         textAnchor="middle"
         dominantBaseline="middle"
       >
-        ASC
+        {ascLabel}
       </text>
     </g>
   );
@@ -311,18 +319,18 @@ function Ascendant({ longitude }: { longitude: number }) {
 
 // ─── Centre : métadonnées ───────────────────────────────────────────────────
 
-function CenterInfo({ reading }: { reading: CelestialReading }) {
+function CenterInfo({ reading, t }: { reading: CelestialReading; t: Copy }) {
   const date = reading.input.date;
   const tz = reading.input.timezone ?? 'UTC';
-  const dateLabel = new Intl.DateTimeFormat('fr-FR', {
+  const dateLabel = new Intl.DateTimeFormat(t.intlLocale, {
     day: '2-digit', month: 'short', year: 'numeric',
     timeZone: tz,
   }).format(date);
-  const timeLabel = new Intl.DateTimeFormat('fr-FR', {
+  const timeLabel = new Intl.DateTimeFormat(t.intlLocale, {
     hour: '2-digit', minute: '2-digit', hour12: false,
     timeZone: tz,
   }).format(date);
-  const timeSuffix = reading.input.timezone ? 'LOCAL' : 'UTC';
+  const timeSuffix = reading.input.timezone ? t.radarWheel.localSuffix : t.radarWheel.utcSuffix;
 
   return (
     <g>
@@ -334,7 +342,7 @@ function CenterInfo({ reading }: { reading: CelestialReading }) {
         letterSpacing="0.3em"
         textAnchor="middle"
       >
-        TC ÉCLIPTIQUE J2000
+        {t.radarWheel.centerLabel}
       </text>
       <text
         x={CX} y={CY - 4}

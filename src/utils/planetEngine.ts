@@ -24,23 +24,25 @@ export type PlanetId =
 
 interface PlanetMeta {
   id: PlanetId;
-  /** Nom français */
+  /** French name. */
   fr: string;
-  /** Couleur de marqueur (hex) */
+  /** English name. */
+  en: string;
+  /** Marker color (hex). */
   color: string;
-  /** Symbole astronomique unicode */
+  /** Unicode astronomical glyph. */
   glyph: string;
 }
 
 export const PLANETS_META: Record<PlanetId, PlanetMeta> = {
-  mercury: { id: 'mercury', fr: 'Mercure', color: '#a3a3a3', glyph: '☿' },
-  venus:   { id: 'venus',   fr: 'Vénus',   color: '#fde68a', glyph: '♀' },
-  mars:    { id: 'mars',    fr: 'Mars',    color: '#fb7185', glyph: '♂' },
-  jupiter: { id: 'jupiter', fr: 'Jupiter', color: '#fdba74', glyph: '♃' },
-  saturn:  { id: 'saturn',  fr: 'Saturne', color: '#facc15', glyph: '♄' },
-  uranus:  { id: 'uranus',  fr: 'Uranus',  color: '#7dd3fc', glyph: '♅' },
-  neptune: { id: 'neptune', fr: 'Neptune', color: '#60a5fa', glyph: '♆' },
-  pluto:   { id: 'pluto',   fr: 'Pluton',  color: '#a78bfa', glyph: '♇' },
+  mercury: { id: 'mercury', fr: 'Mercure', en: 'Mercury', color: '#a3a3a3', glyph: '☿' },
+  venus:   { id: 'venus',   fr: 'Vénus',   en: 'Venus',   color: '#fde68a', glyph: '♀' },
+  mars:    { id: 'mars',    fr: 'Mars',    en: 'Mars',    color: '#fb7185', glyph: '♂' },
+  jupiter: { id: 'jupiter', fr: 'Jupiter', en: 'Jupiter', color: '#fdba74', glyph: '♃' },
+  saturn:  { id: 'saturn',  fr: 'Saturne', en: 'Saturn',  color: '#facc15', glyph: '♄' },
+  uranus:  { id: 'uranus',  fr: 'Uranus',  en: 'Uranus',  color: '#7dd3fc', glyph: '♅' },
+  neptune: { id: 'neptune', fr: 'Neptune', en: 'Neptune', color: '#60a5fa', glyph: '♆' },
+  pluto:   { id: 'pluto',   fr: 'Pluton',  en: 'Pluto',   color: '#a78bfa', glyph: '♇' },
 };
 
 // ─── Éléments orbitaux JPL (1800-2050) ──────────────────────────────────────

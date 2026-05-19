@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   Download,
-  FileText,
+  FileDown,
   List,
   Loader2,
   Maximize2,
@@ -12,7 +12,8 @@ import { InfoCircleIcon } from '../ExploreSpacePopover';
 import { cn, MenuRow, surfaceClasses } from '../ui';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
-import { fr } from '../../i18n/fr';
+import { useLocale, useT } from '../../context/useLocale';
+import { LOCALES, type Locale } from '../../i18n';
 
 interface MobileSystemDrawerProps {
   open: boolean;
@@ -26,8 +27,8 @@ interface MobileSystemDrawerProps {
 
   onExportView: () => void;
   exportingView: boolean;
-  onExportReport: () => void;
-  exportingReport: boolean;
+  onExportPdf: () => void;
+  exportingPdf: boolean;
   canExportReport: boolean;
 }
 
@@ -47,10 +48,12 @@ export function MobileSystemDrawer({
   onOpenExploreSpace,
   onExportView,
   exportingView,
-  onExportReport,
-  exportingReport,
+  onExportPdf,
+  exportingPdf,
   canExportReport,
 }: MobileSystemDrawerProps) {
+  const t = useT();
+  const { locale, setLocale } = useLocale();
   const reduceMotion = useReducedMotion();
   const drawerRef = useFocusTrap<HTMLDivElement>(open);
   useBodyScrollLock(open);
@@ -71,7 +74,7 @@ export function MobileSystemDrawer({
           <motion.button
             key="system-drawer-backdrop"
             type="button"
-            aria-label={fr.mobile.systemDrawer.backdropAriaLabel}
+            aria-label={t.mobile.systemDrawer.backdropAriaLabel}
             className="fixed inset-0 z-40 bg-overlay/40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -84,7 +87,7 @@ export function MobileSystemDrawer({
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
-            aria-label={fr.mobile.systemDrawer.ariaLabel}
+            aria-label={t.mobile.systemDrawer.ariaLabel}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
@@ -102,7 +105,7 @@ export function MobileSystemDrawer({
                 <MenuRow
                   kind="toggle"
                   size="md"
-                  label={fullscreenActive ? 'Quitter le plein écran' : 'Plein écran'}
+                  label={fullscreenActive ? t.mobile.systemDrawer.fullscreenExit : t.mobile.systemDrawer.fullscreenEnter}
                   icon={
                     fullscreenActive ? (
                       <Minimize2 className="size-4" strokeWidth={1.4} aria-hidden />
@@ -116,10 +119,53 @@ export function MobileSystemDrawer({
               </li>
               <DrawerDivider />
               <li>
+                <div className="px-2 py-1.5 flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex flex-col leading-tight">
+                    <span className="text-cockpit-sm text-slate-100 font-medium truncate">
+                      {t.mobile.systemDrawer.language.label}
+                    </span>
+                    <span className="text-cockpit-xs text-slate-500 truncate">
+                      {t.mobile.systemDrawer.language.sublabel}
+                    </span>
+                  </div>
+                  <div
+                    role="group"
+                    aria-label={t.languageSwitcher.ariaLabel}
+                    className={cn(
+                      'inline-flex items-stretch rounded shrink-0',
+                      'border border-border-hud-faint bg-surface-console/55',
+                      'overflow-hidden text-cockpit-xs tracking-cockpit-label uppercase font-mono',
+                    )}
+                  >
+                    {LOCALES.map((option, idx) => {
+                      const active = option === locale;
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => setLocale(option as Locale)}
+                          className={cn(
+                            'cockpit-focus px-2 py-1 leading-none transition-colors',
+                            idx > 0 && 'border-l border-border-hud-faint',
+                            active
+                              ? 'bg-violet-500/20 text-violet-50'
+                              : 'text-slate-400 hover:text-slate-100 hover:bg-violet-500/10',
+                          )}
+                        >
+                          {t.languageSwitcher.shortOptions[option as Locale]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </li>
+              <DrawerDivider />
+              <li>
                 <MenuRow
                   size="md"
-                  label="Légende"
-                  sublabel="Symboles · couleurs · calques"
+                  label={t.mobile.systemDrawer.legend.label}
+                  sublabel={t.mobile.systemDrawer.legend.sublabel}
                   icon={<List className="size-4" strokeWidth={1.4} aria-hidden />}
                   onClick={() => {
                     onClose();
@@ -130,8 +176,8 @@ export function MobileSystemDrawer({
               <li>
                 <MenuRow
                   size="md"
-                  label="Liens utiles"
-                  sublabel="Cartes du ciel · éphémérides"
+                  label={t.mobile.systemDrawer.explore.label}
+                  sublabel={t.mobile.systemDrawer.explore.sublabel}
                   icon={<InfoCircleIcon />}
                   onClick={() => {
                     onClose();
@@ -143,8 +189,8 @@ export function MobileSystemDrawer({
               <li>
                 <MenuRow
                   size="md"
-                  label="Exporter la vue"
-                  sublabel="PNG du ciel 3D"
+                  label={t.mobile.systemDrawer.exportView.label}
+                  sublabel={t.mobile.systemDrawer.exportView.sublabel}
                   icon={
                     exportingView ? (
                       <Loader2 className="size-4 animate-spin" strokeWidth={1.5} aria-hidden />
@@ -159,21 +205,21 @@ export function MobileSystemDrawer({
               <li>
                 <MenuRow
                   size="md"
-                  label="Exporter le rapport"
+                  label={t.mobile.systemDrawer.exportReport.label}
                   sublabel={
                     canExportReport
-                      ? 'PNG vue + carte complète'
-                      : 'Calcule d’abord ton ciel'
+                      ? t.mobile.systemDrawer.exportReport.sublabelReady
+                      : t.mobile.systemDrawer.exportReport.sublabelLocked
                   }
                   icon={
-                    exportingReport ? (
+                    exportingPdf ? (
                       <Loader2 className="size-4 animate-spin" strokeWidth={1.5} aria-hidden />
                     ) : (
-                      <FileText className="size-4" strokeWidth={1.4} aria-hidden />
+                      <FileDown className="size-4" strokeWidth={1.4} aria-hidden />
                     )
                   }
-                  disabled={!canExportReport || exportingReport}
-                  onClick={onExportReport}
+                  disabled={!canExportReport || exportingPdf}
+                  onClick={onExportPdf}
                 />
               </li>
             </ul>

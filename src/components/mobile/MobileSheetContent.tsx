@@ -15,6 +15,7 @@ import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '../space/SpaceView';
 import { MenuRow } from '../ui';
 import { useCockpitDisplay } from '../../context/useCockpitDisplay';
+import { useT } from '../../context/useLocale';
 import type { MobileTabKey } from './MobileTabBar';
 
 interface MobileSheetContentProps {
@@ -34,12 +35,6 @@ interface MobileSheetContentProps {
   onCloseSelection: () => void;
 }
 
-/**
- * Routes the mobile bottom sheet's content based on the active tab. When
- * no tab is active, falls back to a "home" surface showing the primary
- * CTA. Each tab is a flat list of toggles / actions / panel-openers
- * styled for thumb reach.
- */
 export function MobileSheetContent(props: MobileSheetContentProps) {
   const { activeTab } = props;
 
@@ -50,15 +45,14 @@ export function MobileSheetContent(props: MobileSheetContentProps) {
   return <HomeContent {...props} />;
 }
 
-/* ── Home (no active tab) ────────────────────────────────────────────────── */
-
 function HomeContent({
   hasReading,
   onOpenCoords,
 }: MobileSheetContentProps) {
+  const t = useT();
   return (
     <SheetSection>
-      <SheetEyebrow>Console</SheetEyebrow>
+      <SheetEyebrow>{t.mobile.sheet.home.eyebrow}</SheetEyebrow>
 
       <button
         type="button"
@@ -70,30 +64,28 @@ function HomeContent({
                    transition-all inline-flex items-center justify-center gap-2"
       >
         <span aria-hidden className="text-violet-200/90 leading-none">✦</span>
-        {hasReading ? 'MODIFIER MES COORDONNÉES' : 'CALCULER MON SIGNE'}
+        {hasReading ? t.mobile.sheet.home.ctaModifyCoords : t.mobile.sheet.home.ctaCalculate}
       </button>
 
       <p className="pt-2 text-cockpit-xs text-slate-400/85 leading-relaxed">
-        Choisis une section dans la barre du bas — affichage, navigation,
-        ou analyse une fois ton ciel calculé.
+        {t.mobile.sheet.home.hint}
       </p>
     </SheetSection>
   );
 }
 
-/* ── Selection ───────────────────────────────────────────────────────────── */
-
 function SelectionContent({
   selectedBody,
   onCloseSelection,
 }: MobileSheetContentProps) {
+  const t = useT();
   const { sideViewActive, toggleSideView } = useCockpitDisplay();
   if (!selectedBody) {
     return (
       <SheetSection>
-        <SheetEyebrow>Sélection</SheetEyebrow>
+        <SheetEyebrow>{t.mobile.sheet.selection.eyebrow}</SheetEyebrow>
         <p className="text-cockpit-sm text-slate-400/85 leading-relaxed">
-          Tape un astre dans la vue 3D pour voir ses informations ici.
+          {t.mobile.sheet.selection.empty}
         </p>
       </SheetSection>
     );
@@ -109,9 +101,8 @@ function SelectionContent({
   );
 }
 
-/* ── Display ─────────────────────────────────────────────────────────────── */
-
 function DisplayContent() {
+  const t = useT();
   const {
     bodyLabelsEnabled,
     toggleBodyLabels,
@@ -128,22 +119,22 @@ function DisplayContent() {
     toggleSideView,
   } = useCockpitDisplay();
   const orbitalSublabel = !orbitalAvailable
-    ? 'Indisponible loin du jour J'
+    ? t.mobile.sheet.display.orbital.sublabelUnavailable
     : orbitalStatus === 'loading'
-      ? 'Chargement Celestrak…'
+      ? t.mobile.sheet.display.orbital.sublabelLoading
       : orbitalStatus === 'error'
-        ? 'Réessayer'
-        : 'Temps réel · Celestrak';
+        ? t.mobile.sheet.display.orbital.sublabelError
+        : t.mobile.sheet.display.orbital.sublabelLive;
 
   return (
     <SheetSection>
-      <SheetEyebrow>Affichage</SheetEyebrow>
+      <SheetEyebrow>{t.mobile.sheet.display.eyebrow}</SheetEyebrow>
 
       <MenuRow
         kind="toggle"
         size="lg"
-        label="Noms et lignes"
-        sublabel="Astres · constellations"
+        label={t.mobile.sheet.display.labels.label}
+        sublabel={t.mobile.sheet.display.labels.sublabel}
         icon={<Tag className="size-4" strokeWidth={1.35} aria-hidden />}
         active={bodyLabelsEnabled}
         onClick={toggleBodyLabels}
@@ -151,8 +142,8 @@ function DisplayContent() {
       <MenuRow
         kind="toggle"
         size="lg"
-        label="Repères du ciel"
-        sublabel="Axe · équateur · écliptique"
+        label={t.mobile.sheet.display.guides.label}
+        sublabel={t.mobile.sheet.display.guides.sublabel}
         icon={<Globe2 className="size-4" strokeWidth={1.35} aria-hidden />}
         active={guidesEnabled}
         onClick={toggleGuides}
@@ -160,7 +151,7 @@ function DisplayContent() {
       <MenuRow
         kind="toggle"
         size="lg"
-        label="Population orbitale"
+        label={t.mobile.sheet.display.orbital.label}
         sublabel={orbitalSublabel}
         icon={<Network className="size-4" strokeWidth={1.4} aria-hidden />}
         active={constellationOverlayEnabled}
@@ -171,8 +162,8 @@ function DisplayContent() {
       <MenuRow
         kind="toggle"
         size="lg"
-        label="Reliques orbitales"
-        sublabel="Satellites historiques"
+        label={t.mobile.sheet.display.relics.label}
+        sublabel={t.mobile.sheet.display.relics.sublabel}
         icon={<Satellite className="size-4" strokeWidth={1.4} aria-hidden />}
         active={satellitesEnabled}
         onClick={toggleSatellites}
@@ -183,11 +174,11 @@ function DisplayContent() {
       <MenuRow
         kind="toggle"
         size="lg"
-        label="Perspective axiale"
+        label={t.mobile.sheet.display.sideView.label}
         sublabel={
           hasSelectedStar
-            ? 'Vue de côté · constellation'
-            : 'Sélectionne une étoile'
+            ? t.mobile.sheet.display.sideView.sublabelReady
+            : t.mobile.sheet.display.sideView.sublabelLocked
         }
         icon={<Axis3d className="size-4" strokeWidth={1.4} aria-hidden />}
         active={sideViewActive}
@@ -199,38 +190,37 @@ function DisplayContent() {
   );
 }
 
-/* ── Navigation ──────────────────────────────────────────────────────────── */
-
 function NavigationContent({
   onFlySun,
   onFlyMoon,
   onFlyEarth,
 }: MobileSheetContentProps) {
+  const t = useT();
   return (
     <SheetSection>
-      <SheetEyebrow>Navigation</SheetEyebrow>
+      <SheetEyebrow>{t.mobile.sheet.navigation.eyebrow}</SheetEyebrow>
 
       <MenuRow
         size="lg"
         chevron
-        label="Soleil"
-        sublabel="Centrer la caméra"
+        label={t.mobile.sheet.navigation.sun.label}
+        sublabel={t.mobile.sheet.navigation.sun.sublabel}
         icon={<span className="text-cockpit-glyph leading-none text-glyph-sun">☀</span>}
         onClick={onFlySun}
       />
       <MenuRow
         size="lg"
         chevron
-        label="Lune"
-        sublabel="Centrer la caméra"
+        label={t.mobile.sheet.navigation.moon.label}
+        sublabel={t.mobile.sheet.navigation.moon.sublabel}
         icon={<span className="text-cockpit-glyph leading-none text-glyph-moon">☾</span>}
         onClick={onFlyMoon}
       />
       <MenuRow
         size="lg"
         chevron
-        label="Terre"
-        sublabel="Vue orbitale par défaut"
+        label={t.mobile.sheet.navigation.earth.label}
+        sublabel={t.mobile.sheet.navigation.earth.sublabel}
         icon={<span className="text-cockpit-glyph leading-none text-glyph-earth">⊕</span>}
         onClick={onFlyEarth}
       />
@@ -238,39 +228,35 @@ function NavigationContent({
   );
 }
 
-/* ── Analysis ────────────────────────────────────────────────────────────── */
-
-// The "Analyse" tab is gated by `hasReading` inside MobileTabBar (the button
-// is disabled until a reading exists), so this content always renders with a
-// reading in hand — no empty-state branch needed.
 function AnalysisContent({
   onSelectAnalysisPanel,
 }: MobileSheetContentProps) {
+  const t = useT();
   return (
     <SheetSection>
-      <SheetEyebrow>Analyse</SheetEyebrow>
+      <SheetEyebrow>{t.mobile.sheet.analysis.eyebrow}</SheetEyebrow>
 
       <MenuRow
         size="lg"
         chevron
-        label="Mon signe"
-        sublabel="Ton ciel de naissance"
+        label={t.mobile.sheet.analysis.resume.label}
+        sublabel={t.mobile.sheet.analysis.resume.sublabel}
         icon={<Sparkles className="size-4" strokeWidth={1.4} aria-hidden />}
         onClick={() => onSelectAnalysisPanel('resume')}
       />
       <MenuRow
         size="lg"
         chevron
-        label="Carte"
-        sublabel="Roue des constellations"
+        label={t.mobile.sheet.analysis.carte.label}
+        sublabel={t.mobile.sheet.analysis.carte.sublabel}
         icon={<Map className="size-4" strokeWidth={1.4} aria-hidden />}
         onClick={() => onSelectAnalysisPanel('carte')}
       />
       <MenuRow
         size="lg"
         chevron
-        label="Lecture"
-        sublabel="Comprendre ta carte"
+        label={t.mobile.sheet.analysis.lecture.label}
+        sublabel={t.mobile.sheet.analysis.lecture.sublabel}
         icon={<BookOpen className="size-4" strokeWidth={1.4} aria-hidden />}
         onClick={() => onSelectAnalysisPanel('lecture')}
       />
@@ -280,16 +266,14 @@ function AnalysisContent({
       <MenuRow
         size="lg"
         chevron
-        label="Données"
-        sublabel="Astronomie brute"
+        label={t.mobile.sheet.analysis.donnees.label}
+        sublabel={t.mobile.sheet.analysis.donnees.sublabel}
         icon={<Atom className="size-4" strokeWidth={1.4} aria-hidden />}
         onClick={() => onSelectAnalysisPanel('donnees')}
       />
     </SheetSection>
   );
 }
-
-/* ── Building blocks ─────────────────────────────────────────────────────── */
 
 function SheetSection({ children }: { children: ReactNode }) {
   return <div className="px-3 pt-1 pb-4 space-y-1">{children}</div>;

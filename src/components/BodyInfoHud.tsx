@@ -5,7 +5,8 @@ import {
   type CatalogConstellation,
   type CatalogStar,
 } from '../data/constellationCatalog';
-import { CONSTELLATION_LORE } from '../utils/constellationLore';
+import { loreName } from '../utils/constellationLore';
+import { PLANETS_META } from '../utils/planetEngine';
 import { AU_KM } from '../utils/skyCoordinates';
 import type {
   SelectedBody,
@@ -16,7 +17,10 @@ import type {
   SelectedSun,
 } from './space/SpaceView';
 import { Button, HudCard, type HudCardVariant, cn } from './ui';
-import { fr } from '../i18n/fr';
+import { useLocale, useT } from '../context/useLocale';
+import type { Copy } from '../i18n/fr';
+import type { Locale } from '../i18n';
+import type { MoonPhaseKey } from '../utils/astroEngine';
 
 interface Props {
   selected: SelectedBody | null;
@@ -119,26 +123,32 @@ function StarCard({
   onToggleSideView: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
+  const { locale } = useLocale();
   const resolved = useMemo(() => resolveStar(selected), [selected]);
   if (!resolved) return null;
   const { star, constellation, closest, ratio } = resolved;
   const localizedName = (() => {
     const zodiacal = abbrToZodiacal(constellation.abbreviation);
-    return zodiacal ? CONSTELLATION_LORE[zodiacal].fr : constellation.name;
+    return zodiacal ? loreName(zodiacal, locale) : constellation.name;
   })();
   const isClosestSelf = star === closest;
   const ratioText = isClosestSelf
-    ? `étoile la plus proche du dessin`
-    : `${ratio < 10 ? ratio.toFixed(1) : Math.round(ratio)}× plus loin que ${closest.name} (${formatLightYears(closest.distance_ly)})`;
+    ? t.bodyInfo.star.closestSelf
+    : t.bodyInfo.star.ratioFarther(
+        ratio < 10 ? ratio.toFixed(1) : Math.round(ratio).toString(),
+        closest.name,
+        formatLightYears(closest.distance_ly, locale),
+      );
 
   return (
     <HudCard
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel={fr.panels.body.closeStar}
+      closeAriaLabel={t.panels.body.closeStar}
       subtitle={
-        <>ÉTOILE · {constellation.abbreviation.toUpperCase()} · {localizedName}</>
+        <>{t.bodyInfo.star.eyebrowPrefix} · {constellation.abbreviation.toUpperCase()} · {localizedName}</>
       }
       title={
         <>
@@ -148,21 +158,19 @@ function StarCard({
       }
       footer={
         <p className="text-cockpit-xs text-slate-500 leading-snug">
-          Bascule sur l'axe pour voir le dessin se disloquer : depuis la Terre,
-          les étoiles semblent alignées ; vues de côté, elles sont séparées
-          par des centaines d'années-lumière.
+          {t.bodyInfo.star.footer}
         </p>
       }
     >
       <InfoGrid
         rows={[
-          { label: 'DISTANCE', value: formatLightYears(star.distance_ly) },
-          { label: 'MAGNITUDE', value: star.mag.toFixed(2) },
-          { label: 'PROFONDEUR', value: ratioText },
+          { label: t.bodyInfo.star.rows.distance, value: formatLightYears(star.distance_ly, locale) },
+          { label: t.bodyInfo.star.rows.magnitude, value: star.mag.toFixed(2) },
+          { label: t.bodyInfo.star.rows.depth, value: ratioText },
         ]}
       />
       <ModeToggle
-        label="PERSPECTIVE_AXIALE"
+        label={t.bodyInfo.star.modeToggleLabel}
         active={sideViewActive}
         onToggle={onToggleSideView}
       />
@@ -183,36 +191,37 @@ function SunCard({
   variant: HudCardVariant;
   onClose: () => void;
 }) {
-  const constellationFr = CONSTELLATION_LORE[selected.constellation].fr;
+  const t = useT();
+  const { locale } = useLocale();
+  const constellationLabel = loreName(selected.constellation, locale);
   return (
     <HudCard
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel={fr.panels.body.closeSun}
-      subtitle={<>ÉTOILE HÔTE</>}
+      closeAriaLabel={t.panels.body.closeSun}
+      subtitle={<>{t.bodyInfo.sun.eyebrow}</>}
       title={
         <>
           <span className="text-glyph-sun mr-1.5">☀</span>
-          {selected.name}
+          {t.bodies.sun}
         </>
       }
       footer={
         <p className="text-cockpit-xs text-slate-500 leading-snug">
-          L'étoile la plus proche : 8 minutes-lumière. Sa lumière éclaire le
-          ciel diurne et masque toutes les autres.
+          {t.bodyInfo.sun.footer}
         </p>
       }
     >
       <InfoGrid
         rows={[
           {
-            label: 'CONSTELLATION',
-            value: `${constellationFr} (${selected.constellation})`,
+            label: t.bodyInfo.sun.rows.constellation,
+            value: `${constellationLabel} (${selected.constellation})`,
           },
-          { label: 'DISTANCE', value: formatAU(1) },
-          { label: 'RA / DEC', value: formatRaDec(selected.raHours, selected.decDeg) },
-          { label: 'MAGNITUDE', value: '−26,7' },
+          { label: t.bodyInfo.sun.rows.distance, value: formatAU(1, locale) },
+          { label: t.bodyInfo.sun.rows.raDec, value: formatRaDec(selected.raHours, selected.decDeg) },
+          { label: t.bodyInfo.sun.rows.magnitude, value: t.bodyInfo.sun.magnitudeValue },
         ]}
       />
     </HudCard>
@@ -232,31 +241,34 @@ function MoonCard({
   variant: HudCardVariant;
   onClose: () => void;
 }) {
-  const constellationFr = CONSTELLATION_LORE[selected.constellation].fr;
+  const t = useT();
+  const { locale } = useLocale();
+  const constellationLabel = loreName(selected.constellation, locale);
   const illumPct = `${Math.round(selected.illumination * 100)} %`;
+  const phaseLabel = t.moonPhases[selected.phaseKey as MoonPhaseKey] ?? selected.phaseKey;
   return (
     <HudCard
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel={fr.panels.body.closeMoon}
-      subtitle={<>SATELLITE NATUREL</>}
+      closeAriaLabel={t.panels.body.closeMoon}
+      subtitle={<>{t.bodyInfo.moon.eyebrow}</>}
       title={
         <>
           <span className="text-glyph-moon mr-1.5">☾</span>
-          {selected.name}
+          {t.bodies.moon}
         </>
       }
     >
       <InfoGrid
         rows={[
           {
-            label: 'CONSTELLATION',
-            value: `${constellationFr} (${selected.constellation})`,
+            label: t.bodyInfo.moon.rows.constellation,
+            value: `${constellationLabel} (${selected.constellation})`,
           },
-          { label: 'DISTANCE', value: formatKm(selected.distanceKm) },
-          { label: 'PHASE', value: `${selected.phaseName} · ${illumPct}` },
-          { label: 'RA / DEC', value: formatRaDec(selected.raHours, selected.decDeg) },
+          { label: t.bodyInfo.moon.rows.distance, value: formatKm(selected.distanceKm, locale) },
+          { label: t.bodyInfo.moon.rows.phase, value: `${phaseLabel} · ${illumPct}` },
+          { label: t.bodyInfo.moon.rows.raDec, value: formatRaDec(selected.raHours, selected.decDeg) },
         ]}
       />
     </HudCard>
@@ -276,31 +288,35 @@ function PlanetCard({
   variant: HudCardVariant;
   onClose: () => void;
 }) {
-  const constellationFr = CONSTELLATION_LORE[selected.constellation].fr;
+  const t = useT();
+  const { locale } = useLocale();
+  const constellationLabel = loreName(selected.constellation, locale);
+  const planetName =
+    locale === 'en' ? PLANETS_META[selected.id].en : PLANETS_META[selected.id].fr;
   return (
     <HudCard
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel={`Fermer le panneau ${selected.name}`}
-      subtitle={<>PLANÈTE</>}
+      closeAriaLabel={t.panels.body.closeNamed(planetName)}
+      subtitle={<>{t.bodyInfo.planet.eyebrow}</>}
       title={
         <>
           <span className="mr-1.5" style={{ color: selected.color }}>
             {selected.glyph}
           </span>
-          {selected.name}
+          {planetName}
         </>
       }
     >
       <InfoGrid
         rows={[
           {
-            label: 'CONSTELLATION',
-            value: `${constellationFr} (${selected.constellation})`,
+            label: t.bodyInfo.planet.rows.constellation,
+            value: `${constellationLabel} (${selected.constellation})`,
           },
-          { label: 'DISTANCE', value: formatAU(selected.distanceAU) },
-          { label: 'RA / DEC', value: formatRaDec(selected.raHours, selected.decDeg) },
+          { label: t.bodyInfo.planet.rows.distance, value: formatAU(selected.distanceAU, locale) },
+          { label: t.bodyInfo.planet.rows.raDec, value: formatRaDec(selected.raHours, selected.decDeg) },
         ]}
       />
     </HudCard>
@@ -320,13 +336,14 @@ function SatelliteCard({
   variant: HudCardVariant;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
     <HudCard
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel={`Fermer le panneau ${selected.name}`}
-      subtitle={<>RELIQUE ORBITALE</>}
+      closeAriaLabel={t.panels.body.closeNamed(selected.name)}
+      subtitle={<>{t.bodyInfo.satellite.eyebrow}</>}
       title={
         <>
           <span
@@ -348,7 +365,7 @@ function SatelliteCard({
     >
       <InfoGrid
         rows={[
-          { label: 'LANCEMENT', value: formatLaunchDate(selected.launchDate) },
+          { label: t.bodyInfo.satellite.rows.launch, value: formatLaunchDate(selected.launchDate, t) },
         ]}
       />
     </HudCard>
@@ -421,28 +438,36 @@ function SwitchKnob({ active }: { active: boolean }) {
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
-function formatLightYears(ly: number): string {
-  if (ly >= 1000) return `${(ly / 1000).toFixed(1)} kal`;
-  if (ly >= 100) return `${Math.round(ly).toLocaleString('fr-FR')} al`;
-  if (ly >= 10) return `${ly.toFixed(0)} al`;
-  return `${ly.toFixed(1)} al`;
+function formatLightYears(ly: number, locale: Locale): string {
+  const intl = locale === 'en' ? 'en-US' : 'fr-FR';
+  // "al" (année-lumière) in FR, "ly" in EN.
+  const unit = locale === 'en' ? 'ly' : 'al';
+  const kiloUnit = locale === 'en' ? 'kly' : 'kal';
+  if (ly >= 1000) return `${(ly / 1000).toFixed(1)} ${kiloUnit}`;
+  if (ly >= 100) return `${Math.round(ly).toLocaleString(intl)} ${unit}`;
+  if (ly >= 10) return `${ly.toFixed(0)} ${unit}`;
+  return `${ly.toFixed(1)} ${unit}`;
 }
 
-function formatAU(au: number): string {
+function formatAU(au: number, locale: Locale): string {
+  const intl = locale === 'en' ? 'en-US' : 'fr-FR';
+  // AU in EN, UA in FR.
+  const unit = locale === 'en' ? 'AU' : 'UA';
   if (au < 0.1)
-    return `${(au * AU_KM).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} km`;
-  return `${au.toFixed(au < 1 ? 3 : 2)} UA`;
+    return `${(au * AU_KM).toLocaleString(intl, { maximumFractionDigits: 0 })} km`;
+  return `${au.toFixed(au < 1 ? 3 : 2)} ${unit}`;
 }
 
-function formatKm(km: number): string {
-  return `${km.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} km`;
+function formatKm(km: number, locale: Locale): string {
+  const intl = locale === 'en' ? 'en-US' : 'fr-FR';
+  return `${km.toLocaleString(intl, { maximumFractionDigits: 0 })} km`;
 }
 
-function formatLaunchDate(iso: string): string {
+function formatLaunchDate(iso: string, t: Copy): string {
   const [y, m, d] = iso.split('-').map(Number);
   if (!y || !m || !d) return iso;
   const date = new Date(Date.UTC(y, m - 1, d));
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(t.intlLocale, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

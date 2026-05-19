@@ -1,8 +1,8 @@
 import { PLANETS_META } from '../utils/astroEngine';
-import { SATELLITE_RELICS } from '../data/satellitesDB';
-import { ORBITAL_CATEGORIES } from '../data/orbitalCategories';
+import { SATELLITE_RELICS, satelliteName } from '../data/satellitesDB';
+import { ORBITAL_CATEGORIES, orbitalCategoryLabel } from '../data/orbitalCategories';
 import { cn, HudCard, type HudCardVariant } from './ui';
-import { fr } from '../i18n/fr';
+import { useLocale, useT } from '../context/useLocale';
 import { useCockpitDisplay } from '../context/useCockpitDisplay';
 
 interface LegendPanelProps {
@@ -23,6 +23,8 @@ export function LegendPanel({
   variant = 'floating',
   sidebarWidth = 0,
 }: LegendPanelProps) {
+  const t = useT();
+  const { locale } = useLocale();
   const {
     bodyLabelsEnabled,
     toggleBodyLabels,
@@ -39,36 +41,41 @@ export function LegendPanel({
     <HudCard
       variant={variant}
       sidebarWidth={sidebarWidth}
-      title="LÉGENDE"
-      subtitle="SYMBOLES · COULEURS · CALQUES"
+      title={t.legend.title}
+      subtitle={t.legend.subtitle}
       onClose={onClose}
-      closeAriaLabel={fr.panels.legend.closeAriaLabel}
+      closeAriaLabel={t.panels.legend.closeAriaLabel}
     >
       <div className="space-y-4 text-cockpit-sm text-slate-200">
         <Section
-          title="ASTRES"
+          title={t.legend.sections.bodies}
           active={bodyLabelsEnabled}
           onToggle={toggleBodyLabels}
         >
-          <Row glyph="☀" color="#fcd34d" name="Soleil" />
-          <Row glyph="☾" color="#e2e8f0" name="Lune" />
+          <Row glyph="☀" color="#fcd34d" name={t.legend.bodyLabels.sun} />
+          <Row glyph="☾" color="#e2e8f0" name={t.legend.bodyLabels.moon} />
           {planetEntries.map((p) => (
-            <Row key={p.id} glyph={p.glyph} color={p.color} name={p.fr} />
+            <Row
+              key={p.id}
+              glyph={p.glyph}
+              color={p.color}
+              name={locale === 'en' ? p.en : p.fr}
+            />
           ))}
         </Section>
 
         <Section
-          title="REPÈRES DU CIEL"
+          title={t.legend.sections.guides}
           active={guidesEnabled}
           onToggle={toggleGuides}
         >
-          <LineRow color="#fde68a" label="Axe terrestre (rotation)" />
-          <LineRow color="#60a5fa" label="Équateur céleste" />
-          <LineRow color="#fbbf24" label="Écliptique (chemin du Soleil)" />
+          <LineRow color="#fde68a" label={t.legend.guideLabels.axis} />
+          <LineRow color="#60a5fa" label={t.legend.guideLabels.equator} />
+          <LineRow color="#fbbf24" label={t.legend.guideLabels.ecliptic} />
         </Section>
 
         <Section
-          title="RELIQUES ORBITALES"
+          title={t.legend.sections.relics}
           active={satellitesEnabled}
           onToggle={toggleSatellites}
         >
@@ -76,24 +83,70 @@ export function LegendPanel({
             <DotRow
               key={r.id}
               color={r.glowColor}
-              label={r.name}
+              label={satelliteName(r, locale)}
               year={new Date(r.launchDate).getUTCFullYear()}
             />
           ))}
         </Section>
 
         <Section
-          title="POPULATION ORBITALE"
+          title={t.legend.sections.orbital}
           active={constellationOverlayEnabled}
           onToggle={toggleConstellationOverlay}
           disabled={!orbitalAvailable}
         >
           {Object.values(ORBITAL_CATEGORIES).map((cat) => (
-            <DotRow key={cat.label} color={cat.hex} label={cat.label} note="temps réel" />
+            <DotRow
+              key={cat.label}
+              color={cat.hex}
+              label={orbitalCategoryLabel(cat, locale)}
+              note={t.legend.orbitalRealTime}
+            />
           ))}
         </Section>
+
+        <KeyboardSection />
       </div>
     </HudCard>
+  );
+}
+
+function KeyboardSection() {
+  const t = useT();
+  return (
+    <div>
+      <div
+        className={cn(
+          'flex items-center gap-2 w-full mb-1.5',
+          'text-cockpit-xs tracking-cockpit-caps uppercase',
+          'text-accent-label/75',
+        )}
+      >
+        <span className="flex-1 text-left truncate">
+          {t.keyboardShortcuts.sectionLabel.toUpperCase()}
+        </span>
+      </div>
+      <ul className="space-y-1 text-cockpit-sm">
+        {t.keyboardShortcuts.rows.map((row) => (
+          <li key={row.keys} className="flex items-center gap-3">
+            <kbd
+              className={cn(
+                'shrink-0 inline-flex items-center justify-center min-w-26',
+                'px-1.5 py-0.5 rounded',
+                'border border-border-hud-faint bg-surface-console/55',
+                'font-mono text-cockpit-sm tracking-tight text-slate-100',
+              )}
+            >
+              {row.keys}
+            </kbd>
+            <span className="text-slate-300">{row.desc}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-cockpit-xs text-slate-500 leading-relaxed">
+        {t.keyboardShortcuts.sideViewNote}
+      </p>
+    </div>
   );
 }
 
@@ -110,13 +163,14 @@ function Section({
   disabled?: boolean;
   children: React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div>
       <button
         type="button"
         role="switch"
         aria-checked={active}
-        aria-label={`${title} — ${active ? 'visible' : 'masqué'}`}
+        aria-label={`${title} — ${active ? t.legend.toggleVisible : t.legend.toggleHidden}`}
         onClick={disabled ? undefined : onToggle}
         disabled={disabled}
         className={cn(

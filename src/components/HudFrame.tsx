@@ -1,22 +1,16 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import {
   formatLST,
   liveTelemetry,
   type CelestialReading,
 } from '../utils/astroEngine';
-import { TooltipWrap } from './Tooltip';
-import { IconButton } from './ui';
-
-const LIVE_DATE_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
-  dateStyle: 'medium',
-  timeStyle: 'medium',
-});
+import { useT } from '../context/useLocale';
 
 /** Birth-time formatter pinned to the birth location's timezone. Falls
  *  back to UTC (with a visible suffix) when the timezone is unknown. */
-function formatNatalDate(date: Date, timezone: string | undefined): string {
+function formatNatalDate(date: Date, timezone: string | undefined, intlLocale: string): string {
   const tz = timezone ?? 'UTC';
-  const fmt = new Intl.DateTimeFormat('fr-FR', {
+  const fmt = new Intl.DateTimeFormat(intlLocale, {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: tz,
@@ -32,26 +26,28 @@ interface HudFrameProps {
   observerLon: number;
   /** Opens the MON SIGNE panel — wired only when a natal reading is active. */
   onOpenSummary?: () => void;
-  /** Camera fly-to actions — exposed as quick-access buttons in the banner. */
-  onFlySun: () => void;
-  onFlyMoon: () => void;
-  onFlyEarth: () => void;
 }
 
 /**
- * Slim status banner — pure mode + live telemetry. Branding now lives in
- * the sidebar header so this bar carries no logo or right-side spacer;
- * the entire band is reserved for the centered status block.
+ * Slim status banner — pure mode + live telemetry. Branding lives in the
+ * sidebar header and camera fly-to controls now sit in the sidebar's
+ * Caméra section, so this bar carries only the centered status block.
  */
 export const HudFrame = memo(function HudFrame({
   reading,
   observerLat,
   observerLon,
   onOpenSummary,
-  onFlySun,
-  onFlyMoon,
-  onFlyEarth,
 }: HudFrameProps) {
+  const t = useT();
+  const liveDateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(t.intlLocale, {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+      }),
+    [t.intlLocale],
+  );
   const [liveNow, setLiveNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -61,18 +57,18 @@ export const HudFrame = memo(function HudFrame({
   }, [reading]);
 
   const isNatal = !!reading;
-  const mode = isNatal ? 'CIEL NATAL' : 'CIEL EN DIRECT';
+  const mode = isNatal ? t.hudFrame.modeNatal : t.hudFrame.modeLive;
   const main = reading
     ? `${reading.trueConstellation} · ${reading.moon.constellation}`
     : null;
 
   const sub = reading
-    ? `${reading.input.placeLabel ?? 'Ciel natal'} · ${formatNatalDate(reading.input.date, reading.input.timezone)}`
+    ? `${reading.input.placeLabel ?? t.hudFrame.placeLabelFallback} · ${formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale)}`
     : (() => {
         const { lstHours } = liveTelemetry(liveNow, observerLon);
         const latStr = `${Math.abs(observerLat).toFixed(2)}°${observerLat >= 0 ? 'N' : 'S'}`;
         const lonStr = `${Math.abs(observerLon).toFixed(2)}°${observerLon >= 0 ? 'E' : 'W'}`;
-        return `${LIVE_DATE_FORMATTER.format(liveNow)} · LST ${formatLST(lstHours)} · ${latStr} ${lonStr}`;
+        return `${liveDateFormatter.format(liveNow)} · LST ${formatLST(lstHours)} · ${latStr} ${lonStr}`;
       })();
 
   const summaryClickable = isNatal && !!onOpenSummary;
@@ -104,7 +100,7 @@ export const HudFrame = memo(function HudFrame({
       className="relative h-11
                  bg-linear-to-b from-hud-bar/95 via-hud-bar/70 to-transparent"
     >
-      <h1 className="sr-only">Carte du ciel réel</h1>
+      <h1 className="sr-only">{t.cockpit.srTitle}</h1>
 
       <div
         aria-hidden="true"
@@ -119,72 +115,13 @@ export const HudFrame = memo(function HudFrame({
             onClick={onOpenSummary}
             className="cockpit-focus pointer-events-auto min-w-0 max-w-full inline-block
                        rounded-cockpit transition-opacity hover:opacity-85"
-            aria-label={`Ouvrir la fiche MON SIGNE — ${mode} · ${main}`}
+            aria-label={t.hudFrame.summaryAriaLabel(mode, main ?? '')}
           >
             {centerInner}
           </button>
         ) : (
           centerInner
         )}
-
-        {/* Caméra rapide — Soleil / Lune / Terre. Groupés dans un mini-rail
-            avec bordure et fond subtil pour qu'ils se lisent comme un
-            cluster « visée caméra » plutôt que des glyphes flottants à
-            droite du bloc centré. Position absolue pour ne pas pousser
-            le bloc centré ; pointer-events réactivés ponctuellement
-            (le banner parent est en pointer-events-none). */}
-        <div
-          role="group"
-          aria-label="Caméra rapide"
-          className="pointer-events-auto absolute right-3 inset-y-0
-                     my-1.5 flex items-center gap-0.5
-                     rounded-cockpit border border-border-hud-subtle
-                     bg-surface-console/55 backdrop-blur-sm
-                     px-1 shadow-cockpit-dock"
-        >
-          <TooltipWrap text="Centrer sur le Soleil" placement="bottom">
-            <IconButton
-              size="sm"
-              onClick={onFlySun}
-              aria-label="Centrer la caméra sur le Soleil"
-            >
-              <span
-                aria-hidden="true"
-                className="text-cockpit-glyph leading-none text-glyph-sun"
-              >
-                ☀
-              </span>
-            </IconButton>
-          </TooltipWrap>
-          <TooltipWrap text="Centrer sur la Lune" placement="bottom">
-            <IconButton
-              size="sm"
-              onClick={onFlyMoon}
-              aria-label="Centrer la caméra sur la Lune"
-            >
-              <span
-                aria-hidden="true"
-                className="text-cockpit-glyph leading-none text-glyph-moon"
-              >
-                ☾
-              </span>
-            </IconButton>
-          </TooltipWrap>
-          <TooltipWrap text="Revenir à la Terre" placement="bottom">
-            <IconButton
-              size="sm"
-              onClick={onFlyEarth}
-              aria-label="Revenir à la vue orbitale par défaut"
-            >
-              <span
-                aria-hidden="true"
-                className="text-cockpit-glyph leading-none text-glyph-earth"
-              >
-                ⊕
-              </span>
-            </IconButton>
-          </TooltipWrap>
-        </div>
       </div>
     </header>
   );

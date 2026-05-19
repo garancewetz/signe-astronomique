@@ -16,95 +16,17 @@ function GithubMark(props: SVGProps<SVGSVGElement>) {
   );
 }
 import { usePortalTarget } from '../hooks/usePortalTarget';
-import { fr } from '../i18n/fr';
+import { useT } from '../context/useLocale';
 import { cn, surfaceClasses } from './ui';
 
 const CONTACT_EMAIL = 'garance.wetzel@gmail.com';
-
-const SECTIONS: { title: string; links: { label: string; href: string }[] }[] = [
-  {
-    title: 'NASA',
-    links: [
-      {
-        label: 'Science — système solaire (missions, données)',
-        href: 'https://science.nasa.gov/solar-system/',
-      },
-      {
-        label: 'Science — univers (galaxies, trous noirs, cosmologie)',
-        href: 'https://science.nasa.gov/universe/',
-      },
-      {
-        label: 'Image du jour (APOD)',
-        href: 'https://apod.nasa.gov/apod/astropix.html',
-      },
-      {
-        label: 'James Webb Space Telescope',
-        href: 'https://webb.nasa.gov/',
-      },
-      {
-        label: 'NASA+ — vidéos et directs',
-        href: 'https://plus.nasa.gov/',
-      },
-    ],
-  },
-  {
-    title: 'ESA & partenaires',
-    links: [
-      {
-        label: 'ESA — exploration scientifique',
-        href: 'https://www.esa.int/Science_Exploration/Space_Science',
-      },
-      {
-        label: 'Gaia — carte de milliards d’étoiles',
-        href: 'https://www.cosmos.esa.int/web/gaia',
-      },
-      {
-        label: 'Hubble / observations',
-        href: 'https://esahubble.org/',
-      },
-    ],
-  },
-  {
-    title: 'Cartes du ciel & éphémérides',
-    links: [
-      {
-        label: 'Stellarium Web — ciel interactif',
-        href: 'https://stellarium-web.org/',
-      },
-      {
-        label: 'TheSkyLive — positions planètes et comètes',
-        href: 'https://theskylive.com/',
-      },
-      {
-        label: 'Heavens-Above — passages ISS et satellites',
-        href: 'https://www.heavens-above.com/',
-      },
-    ],
-  },
-  {
-    title: 'Données & pédagogie',
-    links: [
-      {
-        label: 'JPL Horizons — éphémérides précises',
-        href: 'https://ssd.jpl.nasa.gov/horizons/',
-      },
-      {
-        label: 'NASA SpacePlace — vulgarisation jeunes publics',
-        href: 'https://spaceplace.nasa.gov/',
-      },
-      {
-        label: 'IAU — astronomie et nomenclature',
-        href: 'https://www.iau.org/',
-      },
-    ],
-  },
-];
 
 interface Props {
   onClose: () => void;
 }
 
 export function ExploreSpacePopover({ onClose }: Props) {
+  const t = useT();
   const reduceMotion = useReducedMotion();
   const portalTarget = usePortalTarget();
   const [emailCopied, setEmailCopied] = useState(false);
@@ -154,7 +76,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
     >
       <button
         type="button"
-        aria-label={fr.panels.explore.closeAriaLabel}
+        aria-label={t.panels.explore.closeAriaLabel}
         className="fixed inset-0 z-0 bg-overlay/75 backdrop-blur-[2px]"
         onClick={onClose}
       />
@@ -175,12 +97,10 @@ export function ExploreSpacePopover({ onClose }: Props) {
               id="explore-space-title"
               className="text-cockpit-lg tracking-cockpit-label text-accent-label"
             >
-              CONTINUER À EXPLORER LE CIEL
+              {t.exploreSpace.title}
             </div>
             <p className="text-cockpit-sm text-slate-500 mt-1 leading-snug">
-              Si la précession et le ciel réel t’intriguent : observatoires, cartes
-              du ciel interactives, éphémérides, vulgarisation. Sources officielles
-              (NASA, ESA, IAU). Les liens s’ouvrent dans un nouvel onglet.
+              {t.exploreSpace.subtitle}
             </p>
           </div>
           <button
@@ -188,15 +108,15 @@ export function ExploreSpacePopover({ onClose }: Props) {
             onClick={onClose}
             className="cockpit-focus shrink-0 inline-flex items-center gap-2 h-9 px-2.5 rounded-panel border border-border-hud-subtle
                        text-slate-400 hover:text-white hover:bg-violet-500/15 transition text-cockpit-sm tracking-cockpit-wide"
-            aria-label="Fermer"
+            aria-label={t.exploreSpace.closeAriaLabel}
           >
             <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />
-            <span>FERMER</span>
+            <span>{t.exploreSpace.closeLabel}</span>
           </button>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-5">
-          {SECTIONS.map((section) => (
+          {t.exploreSpace.sections.map((section) => (
             <section key={section.title}>
               <h3 className="text-cockpit-xs tracking-cockpit-hud text-accent-label/75 mb-2">
                 {section.title}
@@ -230,14 +150,14 @@ export function ExploreSpacePopover({ onClose }: Props) {
                      px-4 py-2.5 border-t border-border-hud-muted"
         >
           <span className="text-cockpit-xs tracking-cockpit-hud uppercase text-slate-500">
-            Conçu par Garance Wetzel
+            {t.exploreSpace.footerCredit}
           </span>
           <div className="flex items-center gap-1">
             <a
               href="https://github.com/garancewetz"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="GitHub de Garance Wetzel"
+              aria-label={t.exploreSpace.githubAriaLabel}
               className="cockpit-focus grid place-items-center
                          size-8 rounded
                          text-slate-400 hover:text-violet-200
@@ -250,10 +170,10 @@ export function ExploreSpacePopover({ onClose }: Props) {
               onClick={handleCopyEmail}
               aria-label={
                 emailCopied
-                  ? `Email copié : ${CONTACT_EMAIL}`
-                  : `Copier l’email : ${CONTACT_EMAIL}`
+                  ? t.exploreSpace.emailCopiedAriaLabel(CONTACT_EMAIL)
+                  : t.exploreSpace.emailCopyAriaLabel(CONTACT_EMAIL)
               }
-              title={emailCopied ? 'Email copié' : `Copier ${CONTACT_EMAIL}`}
+              title={emailCopied ? t.exploreSpace.emailCopiedTitle : t.exploreSpace.emailCopyTitle(CONTACT_EMAIL)}
               className="cockpit-focus relative grid place-items-center
                          size-8 rounded
                          text-slate-400 hover:text-violet-200
@@ -277,7 +197,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
                              text-cockpit-xs tracking-cockpit-hud uppercase text-violet-200
                              shadow-cockpit-sheet"
                 >
-                  Copié
+                  {t.exploreSpace.emailCopiedBadge}
                 </span>
               )}
             </button>

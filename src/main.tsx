@@ -1,9 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { CockpitFallback } from './components/CockpitFallback'
+import { LocaleProvider } from './context/LocaleContext'
+
+registerSW({ immediate: true })
 
 // Intentional dev-tools banner — author signature for curious visitors.
 // Not a leftover debug statement; the project lint convention bans console.log
@@ -32,8 +36,10 @@ console.log(
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary fallback={<CockpitFallback />}>
-      <App />
-    </ErrorBoundary>
+    <LocaleProvider>
+      <ErrorBoundary fallback={<CockpitFallback />}>
+        <App />
+      </ErrorBoundary>
+    </LocaleProvider>
   </StrictMode>,
 )

@@ -23,6 +23,8 @@ interface MountOptions {
   gmstRad: number;
   /** IAU constellation the Sun is currently in. */
   constellation: IauConstellation;
+  /** Localized display name (e.g. "Soleil"/"Sun") for the in-scene label. */
+  displayName: string;
   /** Render the textual label next to the disk. */
   showLabels?: boolean;
 }
@@ -34,7 +36,7 @@ interface MountOptions {
  * generously sized so a user clicking the visible disk lands on it.
  */
 export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
-  const { raHours, decDeg, gmstRad, constellation, showLabels = false } = opts;
+  const { raHours, decDeg, gmstRad, constellation, displayName, showLabels = false } = opts;
 
   const position = raDecToEcef(
     raHoursToDegrees(raHours),
@@ -55,7 +57,7 @@ export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
     ...(showLabels
       ? {
           label: {
-            text: '☀ Soleil',
+            text: `☀ ${displayName}`,
             font: "10px 'JetBrains Mono', monospace",
             fillColor: Color.fromCssColorString('#fcd34d').withAlpha(0.9),
             style: LabelStyle.FILL,
@@ -67,7 +69,7 @@ export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
       : {}),
     properties: {
       kind: 'sun',
-      name: 'Soleil',
+      name: displayName,
       constellation,
       raHours,
       decDeg,

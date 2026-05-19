@@ -61,6 +61,16 @@ export interface CelestialBody {
   distance?: number;
 }
 
+export type MoonPhaseKey =
+  | 'new'
+  | 'waxingCrescent'
+  | 'firstQuarter'
+  | 'waxingGibbous'
+  | 'full'
+  | 'waningGibbous'
+  | 'lastQuarter'
+  | 'waningCrescent';
+
 interface MoonReading {
   /** Longitude écliptique géocentrique apparente, degrés [0..360) */
   eclipticLongitude: number;
@@ -74,9 +84,8 @@ interface MoonReading {
   elongation: number;
   /** Fraction illuminée [0..1] */
   illumination: number;
-  /** Phase littérale */
-  phaseName: 'Nouvelle' | 'Premier croissant' | 'Premier quartier' | 'Gibbeuse croissante'
-            | 'Pleine' | 'Gibbeuse décroissante' | 'Dernier quartier' | 'Dernier croissant';
+  /** Stable phase identifier — localized by consumers via i18n. */
+  phaseKey: MoonPhaseKey;
   /** Constellation IAU dans laquelle se trouve la Lune */
   constellation: IauConstellation;
   /** Distance Terre-Lune (km) — varie de ~363 000 (périgée) à ~405 000 (apogée) */
@@ -412,16 +421,16 @@ function eclipticToEquatorial(lonDeg: number, latDeg: number, epsDeg: number): E
 
 // ─── Phase de la Lune ───────────────────────────────────────────────────────
 
-function phaseName(elongation: number): MoonReading['phaseName'] {
+function phaseKey(elongation: number): MoonPhaseKey {
   const e = norm360(elongation);
-  if (e < 22.5 || e >= 337.5) return 'Nouvelle';
-  if (e < 67.5)                return 'Premier croissant';
-  if (e < 112.5)               return 'Premier quartier';
-  if (e < 157.5)               return 'Gibbeuse croissante';
-  if (e < 202.5)               return 'Pleine';
-  if (e < 247.5)               return 'Gibbeuse décroissante';
-  if (e < 292.5)               return 'Dernier quartier';
-  return 'Dernier croissant';
+  if (e < 22.5 || e >= 337.5) return 'new';
+  if (e < 67.5)                return 'waxingCrescent';
+  if (e < 112.5)               return 'firstQuarter';
+  if (e < 157.5)               return 'waxingGibbous';
+  if (e < 202.5)               return 'full';
+  if (e < 247.5)               return 'waningGibbous';
+  if (e < 292.5)               return 'lastQuarter';
+  return 'waningCrescent';
 }
 
 /** Convertit une longitude tropicale en constellation IAU. */
@@ -532,7 +541,7 @@ export function computeReading(input: BirthInput): CelestialReading {
       dec: moonEq.dec,
       elongation,
       illumination,
-      phaseName: phaseName(elongation),
+      phaseKey: phaseKey(elongation),
       constellation: eclipticToConstellation(moon.lon, jd),
       distanceKm: moon.distanceKm,
     },

@@ -43,6 +43,8 @@ import { attachKeyboardNav } from './cesium/viewerKeyboard';
 import { useSceneLayerComposition } from './useSceneLayerComposition';
 import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
 import type { OrbitalSat } from '../../hooks/useOrbitalPopulation';
+import { useLocale, useT } from '../../context/useLocale';
+import { PLANETS_META } from '../../utils/planetEngine';
 
 export interface SpaceViewHandle {
   /**
@@ -96,7 +98,7 @@ export interface SelectedMoon {
   decDeg: number;
   distanceKm: number;
   illumination: number;
-  phaseName: string;
+  phaseKey: string;
 }
 
 export interface SelectedPlanet {
@@ -438,6 +440,18 @@ export function SpaceView({
     };
   }, []);
 
+  const t = useT();
+  const { locale } = useLocale();
+  const bodyNames = useMemo(
+    () => ({
+      sun: t.bodies.sun,
+      moon: t.bodies.moon,
+      planet: (id: PlanetId) =>
+        locale === 'en' ? PLANETS_META[id].en : PLANETS_META[id].fr,
+    }),
+    [t, locale],
+  );
+
   // 2. Remontage des layers + animation caméra
   useSceneLayerComposition({
     viewerRef,
@@ -450,6 +464,7 @@ export function SpaceView({
     showGuides,
     showBodyLabels,
     sideViewActive,
+    bodyNames,
   });
 
   // Relics layer: kept on its own effect so it doesn't re-mount on every
@@ -464,6 +479,7 @@ export function SpaceView({
     }
     const cleanup = mountSatellitesLayer(viewer, {
       satellites: trackedSatellites,
+      locale,
       // Natal: frozen date. Live: now, re-evaluated each frame by the
       // layer's internal CallbackProperty.
       getTime: () => reading?.input.date ?? new Date(),
@@ -474,7 +490,7 @@ export function SpaceView({
       fadeInDelayMs: relicsHistoricalReveal ? SWARM_FADE_OUT_MS : 0,
     });
     return cleanup;
-  }, [showSatellites, trackedSatellites, reading, relicsHistoricalReveal]);
+  }, [showSatellites, trackedSatellites, reading, relicsHistoricalReveal, locale]);
 
   // Orbital population overlay: live propagation (new Date()), gated by date.
   // birthYear is kept as a defense-in-depth filter inside mountOrbitalLayer,
@@ -594,9 +610,10 @@ export function SpaceView({
     const cleanup = mountExplodedConstellation(viewer, {
       constellationAbbr: selectedStar.constellationAbbr,
       gmstRad,
+      locale,
     });
     return cleanup;
-  }, [selectedStar, sideViewActive, reading, liveReading]);
+  }, [selectedStar, sideViewActive, reading, liveReading, locale]);
 
   // Distance ruler along the Earth→constellation axis with calibrated
   // 100 ly ticks. Mounted only in Side View.

@@ -1,4 +1,5 @@
 import type { OrbitalCategory } from '../hooks/useOrbitalPopulation';
+import type { Locale } from '../i18n';
 
 /**
  * Single source of truth for the orbital overlay palette.
@@ -18,12 +19,19 @@ export interface OrbitalCategoryStyle {
   pixelSize: number;
   /** User-facing French label shown in the legend. */
   label: string;
+  /** English label. */
+  labelEn: string;
 }
 
 export const ORBITAL_CATEGORIES: Record<OrbitalCategory, OrbitalCategoryStyle> = {
-  starlink: { hex: '#22d3ee', alpha: 0.28, pixelSize: 1.5, label: 'Starlink / comms LEO' },
-  weather:  { hex: '#fbbf24', alpha: 0.55, pixelSize: 2.5, label: 'Météo / sciences' },
-  nav:      { hex: '#f59e0b', alpha: 0.60, pixelSize: 2.8, label: 'Navigation (GPS…)' },
-  comm:     { hex: '#818cf8', alpha: 0.45, pixelSize: 2.2, label: 'Communications GEO' },
-  other:    { hex: '#94a3b8', alpha: 0.35, pixelSize: 1.8, label: 'Autres actifs' },
+  starlink: { hex: '#22d3ee', alpha: 0.28, pixelSize: 1.5, label: 'Starlink / comms LEO',     labelEn: 'Starlink / LEO comms' },
+  weather:  { hex: '#fbbf24', alpha: 0.55, pixelSize: 2.5, label: 'Météo / sciences',          labelEn: 'Weather / science' },
+  nav:      { hex: '#f59e0b', alpha: 0.60, pixelSize: 2.8, label: 'Navigation (GPS…)',         labelEn: 'Navigation (GPS…)' },
+  comm:     { hex: '#818cf8', alpha: 0.45, pixelSize: 2.2, label: 'Communications GEO',        labelEn: 'GEO communications' },
+  other:    { hex: '#94a3b8', alpha: 0.35, pixelSize: 1.8, label: 'Autres actifs',             labelEn: 'Other assets' },
 };
+
+/** Locale-aware orbital category label. */
+export function orbitalCategoryLabel(style: OrbitalCategoryStyle, locale: Locale): string {
+  return locale === 'en' ? style.labelEn : style.label;
+}

@@ -19,15 +19,21 @@
  * digits don't matter — only the data columns do.
  */
 
+import type { Locale } from '../i18n';
+
 export interface SatelliteRelic {
   /** Stable internal id (slug). */
   id: string;
-  /** Display name shown on Cesium labels. */
+  /** Display name (French) shown on Cesium labels. */
   name: string;
+  /** Display name (English). */
+  nameEn: string;
   /** Launch date (ISO YYYY-MM-DD). Used for temporal filtering. */
   launchDate: string;
-  /** Short narrative shown in the Lecture panel when the relic is listed. */
+  /** Short narrative (French) shown in the Lecture panel when the relic is listed. */
   blurb: string;
+  /** Short narrative (English). */
+  blurbEn: string;
   /** CSS color of the glowing point (cyan by default, amber for pioneers). */
   glowColor: string;
   /** TLE pair (line1, line2) for SGP4. */
@@ -42,8 +48,10 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
   {
     id: 'sputnik-1',
     name: 'Sputnik 1',
+    nameEn: 'Sputnik 1',
     launchDate: '1957-10-04',
     blurb: 'Le premier murmure humain en orbite : 21 jours de bip avant l\'épuisement des piles, puis trois mois d\'orbite silencieuse jusqu\'à sa rentrée.',
+    blurbEn: 'The first human whisper in orbit: 21 days of beeping before the batteries ran out, then three silent months circling Earth before reentry.',
     glowColor: '#fbbf24',
     tle: [
       '1 00002U 57001B   57277.00000000  .00000000  00000-0  00000-0 0  9999',
@@ -53,8 +61,10 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
   {
     id: 'telstar-1',
     name: 'Telstar 1',
+    nameEn: 'Telstar 1',
     launchDate: '1962-07-10',
     blurb: 'La première image télévisée traversant l\'Atlantique par l\'espace.',
+    blurbEn: 'The first television image to cross the Atlantic through space.',
     glowColor: '#fcd34d',
     tle: [
       '1 00340U 62029A   62192.50000000  .00000000  00000-0  00000-0 0  9999',
@@ -64,8 +74,10 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
   {
     id: 'landsat-1',
     name: 'Landsat 1',
+    nameEn: 'Landsat 1',
     launchDate: '1972-07-23',
     blurb: 'Le premier regard systématique de la Terre sur elle-même.',
+    blurbEn: 'Earth’s first systematic look at itself.',
     glowColor: '#7dd3fc',
     tle: [
       '1 06126U 72058A   72205.50000000  .00000000  00000-0  00000-0 0  9999',
@@ -75,8 +87,10 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
   {
     id: 'mir',
     name: 'Mir',
+    nameEn: 'Mir',
     launchDate: '1986-02-19',
     blurb: 'La grande maison soviétique en orbite, habitée pendant quinze ans.',
+    blurbEn: 'The great Soviet home in orbit, inhabited for fifteen years.',
     glowColor: '#f472b6',
     tle: [
       '1 16609U 86017A   86053.00000000  .00000000  00000-0  00000-0 0  9999',
@@ -86,8 +100,10 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
   {
     id: 'hubble',
     name: 'Hubble',
+    nameEn: 'Hubble',
     launchDate: '1990-04-24',
     blurb: 'L\'œil hors de l\'atmosphère qui nous a appris la profondeur du temps.',
+    blurbEn: 'The eye beyond the atmosphere that taught us the depth of time.',
     glowColor: '#a78bfa',
     // Epoch: day 126 of 2026 = 2026-05-06. Hubble at ~535 km, 28.47° incl.
     tle: [
@@ -98,8 +114,10 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
   {
     id: 'iss',
     name: 'Station spatiale internationale',
+    nameEn: 'International Space Station',
     launchDate: '1998-11-20',
     blurb: 'Un avant-poste habité en permanence depuis l\'an 2000.',
+    blurbEn: 'An outpost continuously inhabited since the year 2000.',
     glowColor: '#67e8f9',
     // Epoch: day 126 of 2026 = 2026-05-06. ISS at ~420 km, 51.64° incl.
     tle: [
@@ -110,8 +128,10 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
   {
     id: 'starlink',
     name: 'Starlink (constellation)',
+    nameEn: 'Starlink (constellation)',
     launchDate: '2019-05-24',
     blurb: 'Le premier maillage commercial à grande échelle de l\'orbite basse.',
+    blurbEn: 'The first large-scale commercial mesh in low Earth orbit.',
     glowColor: '#22d3ee',
     // Epoch: day 126 of 2026 = 2026-05-06. Representative Starlink LEO at
     // ~550 km, 53° incl. The constellation has thousands of birds; we only
@@ -122,6 +142,16 @@ export const SATELLITE_RELICS: SatelliteRelic[] = [
     ],
   },
 ];
+
+/** Locale-aware satellite display name. */
+export function satelliteName(s: SatelliteRelic, locale: Locale): string {
+  return locale === 'en' ? s.nameEn : s.name;
+}
+
+/** Locale-aware satellite blurb. */
+export function satelliteBlurb(s: SatelliteRelic, locale: Locale): string {
+  return locale === 'en' ? s.blurbEn : s.blurb;
+}
 
 /** Year of the very first human object in orbit. Before: silence. */
 export const SPACE_AGE_START_YEAR = 1957;

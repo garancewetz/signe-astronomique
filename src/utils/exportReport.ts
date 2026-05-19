@@ -2,110 +2,122 @@ import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 
 /**
- * Capture empilée verticalement : la vue 3D du ciel en haut, puis le rapport
- * complet (toutes ses sections déjà empilées) dessous. Résultat : un PNG long
- * format portrait, lisible comme une page.
+ * A4 portrait PDF: the sky view fills the first page as a cover, then the
+ * full report flows across subsequent pages. The report image is sliced
+ * canvas-side so each PDF page gets a clean chunk (no half-cut lines of text
+ * across page breaks beyond what natural pagination produces).
  *
- * Le PNG prend la largeur naturelle du rapport (rendu hors-écran à `w-md`).
- * La vue 3D est mise à l'échelle pour remplir cette largeur en conservant
- * l'aspect du viewport.
- *
- * Pré-requis : le canvas Cesium doit avoir été créé avec
- * `preserveDrawingBuffer: true` (cf. SpaceView), sinon le buffer est vide
- * au moment où on le lit. Pour la même raison on demande à la SpaceView
- * de forcer un `viewer.render()` synchrone avant de nous remettre le canvas.
+ * Prerequisite: the Cesium canvas must have been created with
+ * `preserveDrawingBuffer: true` (cf. SpaceView), otherwise the buffer is
+ * empty when read. For the same reason we ask SpaceView to force a
+ * synchronous `viewer.render()` before handing us the canvas.
  */
-export async function exportTargetedPng(
+export async function exportTargetedPdf(
   spaceCanvas: HTMLCanvasElement,
   reportEl: HTMLElement,
-  filename = 'astrolabe-report.png',
+  filename: string,
 ): Promise<void> {
-  const dpr = window.devicePixelRatio || 1;
-  const scale = Math.max(2, dpr);
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 24;
+  const bgRgb: [number, number, number] = [2, 3, 10];
 
+  // --- Page 1: sky view, fit-to-page preserving aspect, vertically centered.
+  pdf.setFillColor(...bgRgb);
+  pdf.rect(0, 0, pageW, pageH, 'F');
+
+  const skyAspect = spaceCanvas.width / spaceCanvas.height;
+  const maxSkyW = pageW - margin * 2;
+  const maxSkyH = pageH - margin * 2;
+  let skyW = maxSkyW;
+  let skyH = skyW / skyAspect;
+  if (skyH > maxSkyH) {
+    skyH = maxSkyH;
+    skyW = skyH * skyAspect;
+  }
+  const skyX = (pageW - skyW) / 2;
+  const skyY = (pageH - skyH) / 2;
+  pdf.addImage(
+    spaceCanvas.toDataURL('image/jpeg', 0.92),
+    'JPEG',
+    skyX,
+    skyY,
+    skyW,
+    skyH,
+  );
+
+  // --- Subsequent pages: paginated report.
+  const dpr = window.devicePixelRatio || 1;
+  const captureScale = Math.max(2, dpr);
   const reportCanvas = await html2canvas(reportEl, {
-    backgroundColor: null,
-    scale,
+    backgroundColor: '#02030a',
+    scale: captureScale,
     useCORS: true,
     logging: false,
   });
 
-  const reportW = reportEl.offsetWidth;
-  const reportH = reportEl.offsetHeight;
+  const usableW = pageW - margin * 2;
+  const usableH = pageH - margin * 2;
+  // Conversion: source pixels → PDF points.
+  const ptPerPx = usableW / reportCanvas.width;
+  const chunkPxH = Math.floor(usableH / ptPerPx);
 
-  // PDF-like portrait width (close to A4 at 96dpi). The report keeps its
-  // natural narrow width and sits centered; the sky view fills the full
-  // page width with the viewport's aspect ratio preserved.
-  const outW = Math.max(794, reportW);
-  const viewportW = window.innerWidth;
-  const viewportH = window.innerHeight;
-  const skyAspect = viewportW / viewportH;
-  const skyH = outW / skyAspect;
+  let yPx = 0;
+  while (yPx < reportCanvas.height) {
+    const slicePxH = Math.min(chunkPxH, reportCanvas.height - yPx);
+    const slice = document.createElement('canvas');
+    slice.width = reportCanvas.width;
+    slice.height = slicePxH;
+    const sctx = slice.getContext('2d');
+    if (!sctx) throw new Error('Impossible de créer le contexte 2D');
+    sctx.fillStyle = '#02030a';
+    sctx.fillRect(0, 0, slice.width, slice.height);
+    sctx.drawImage(reportCanvas, 0, -yPx);
 
-  const gap = 24;
-  const outH = skyH + gap + reportH + gap;
-  const reportLeft = Math.round((outW - reportW) / 2);
+    pdf.addPage();
+    pdf.setFillColor(...bgRgb);
+    pdf.rect(0, 0, pageW, pageH, 'F');
+    pdf.addImage(
+      slice.toDataURL('image/jpeg', 0.92),
+      'JPEG',
+      margin,
+      margin,
+      usableW,
+      slicePxH * ptPerPx,
+    );
 
-  const out = document.createElement('canvas');
-  out.width = Math.round(outW * scale);
-  out.height = Math.round(outH * scale);
-  const ctx = out.getContext('2d');
-  if (!ctx) throw new Error('Impossible de créer le contexte 2D');
+    yPx += slicePxH;
+  }
 
-  // Cockpit background (fills the gap and any transparent edges).
-  ctx.fillStyle = '#02030a';
-  ctx.fillRect(0, 0, out.width, out.height);
-
-  // Sky view on top, scaled to fill the output width.
-  ctx.drawImage(
-    spaceCanvas,
-    0,
-    0,
-    Math.round(outW * scale),
-    Math.round(skyH * scale),
-  );
-
-  // Full report stacked below, centered horizontally.
-  ctx.drawImage(
-    reportCanvas,
-    Math.round(reportLeft * scale),
-    Math.round((skyH + gap) * scale),
-    Math.round(reportW * scale),
-    Math.round(reportH * scale),
-  );
-
-  const blob = await new Promise<Blob | null>((resolve) =>
-    out.toBlob(resolve, 'image/png'),
-  );
-  if (!blob) throw new Error('Impossible de générer le PNG');
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  pdf.save(filename);
 }
 
-/** Génère un nom de fichier daté basé sur l'input. */
-export function reportFilename(date: Date, place?: string): string {
+/** Génère un nom de fichier daté basé sur l'input (sans extension). */
+function reportFileSlug(date: Date, place?: string): string {
   const iso = date.toISOString().slice(0, 10);
-  const slug = place ? `-${place.toLowerCase().normalize('NFD').replace(/[^\w]/g, '')}` : '';
-  return `astrolabe_${iso}${slug}.png`;
+  const slug = place
+    ? `_${place
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[^\w]+/g, '-')
+        .replace(/^-+|-+$/g, '')}`
+    : '';
+  return `signe-astronomique_${iso}${slug}`;
 }
 
-/**
- * Nom de fichier pour une capture **vue 3D seule** (sans panneau rapport).
- */
+/** PDF filename for the full report (sky cover + paginated report). */
+export function reportPdfFilename(date: Date, place?: string): string {
+  return `${reportFileSlug(date, place)}.pdf`;
+}
+
+/** PNG filename for a sky-view-only capture (no report panel). */
 export function viewFilename(dateForFile: Date | null, place?: string): string {
   if (dateForFile) {
-    const base = reportFilename(dateForFile, place).replace(/\.png$/i, '');
-    return `${base}_vue-seule.png`;
+    return `${reportFileSlug(dateForFile, place)}_vue-seule.png`;
   }
   const iso = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-  return `astrolabe_vue-seule_${iso}.png`;
+  return `signe-astronomique_vue-seule_${iso}.png`;
 }
 
 /**

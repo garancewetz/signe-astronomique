@@ -13,7 +13,7 @@ import { Button, cn, surfaceClasses } from './ui';
 import type { CelestialReading } from '../utils/astroEngine';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
-import { fr } from '../i18n/fr';
+import { useT } from '../context/useLocale';
 
 interface TabDef {
   key: ReportPanelKey;
@@ -21,13 +21,6 @@ interface TabDef {
   sublabel: string;
   Icon: LucideIcon;
 }
-
-const TABS: readonly TabDef[] = [
-  { key: 'resume', ...fr.analysis.tabs.resume, Icon: Sparkles },
-  { key: 'carte', ...fr.analysis.tabs.carte, Icon: Map },
-  { key: 'lecture', ...fr.analysis.tabs.lecture, Icon: BookOpen },
-  { key: 'donnees', ...fr.analysis.tabs.donnees, Icon: Atom },
-];
 
 interface AnalysisModalProps {
   open: boolean;
@@ -61,6 +54,13 @@ export function AnalysisModal({
   onRevealConstellation,
   satellitesEnabled,
 }: AnalysisModalProps) {
+  const t = useT();
+  const TABS: readonly TabDef[] = [
+    { key: 'resume', ...t.analysis.tabs.resume, Icon: Sparkles },
+    { key: 'carte', ...t.analysis.tabs.carte, Icon: Map },
+    { key: 'lecture', ...t.analysis.tabs.lecture, Icon: BookOpen },
+    { key: 'donnees', ...t.analysis.tabs.donnees, Icon: Atom },
+  ];
   const reduceMotion = useReducedMotion();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useFocusTrap<HTMLDivElement>(open);
@@ -79,7 +79,7 @@ export function AnalysisModal({
     if (open) closeBtnRef.current?.focus({ preventScroll: true });
   }, [open]);
 
-  const tabIdx = TABS.findIndex((t) => t.key === activeTab);
+  const tabIdx = TABS.findIndex((tab) => tab.key === activeTab);
 
   const handleTabKey = (e: React.KeyboardEvent<HTMLButtonElement>) => {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
@@ -136,13 +136,13 @@ export function AnalysisModal({
                   className="text-cockpit-sm tracking-cockpit-label
                              text-accent-label mb-0.5"
                 >
-                  {fr.analysis.sectionLabel}
+                  {t.analysis.sectionLabel}
                 </div>
                 <h2
                   id="analysis-modal-title"
                   className="text-cockpit-lg tracking-cockpit-tight text-accent-title"
                 >
-                  {fr.analysis.title}
+                  {t.analysis.title}
                 </h2>
               </div>
               <Button
@@ -151,7 +151,7 @@ export function AnalysisModal({
                 variant="outline"
                 size="sm"
                 className="shrink-0 h-8 w-8 p-0"
-                aria-label={fr.analysis.closeAriaLabel}
+                aria-label={t.analysis.closeAriaLabel}
               >
                 <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />
               </Button>
@@ -159,7 +159,7 @@ export function AnalysisModal({
 
             <nav
               role="tablist"
-              aria-label={fr.analysis.tablistAriaLabel}
+              aria-label={t.analysis.tablistAriaLabel}
               className="flex border-b border-border-hud overflow-x-auto
                          [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
             >

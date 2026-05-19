@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import {
   Download,
-  FileText,
+  FileDown,
   List,
   Loader2,
   Maximize2,
@@ -11,6 +11,7 @@ import {
 import { TooltipWrap } from '../Tooltip';
 import { ExploreSpacePopover, InfoCircleIcon } from '../ExploreSpacePopover';
 import { cn, IconButton, type IconButtonActiveTone } from '../ui';
+import { useT } from '../../context/useLocale';
 
 interface SystemDockProps {
   collapsed: boolean;
@@ -20,8 +21,8 @@ interface SystemDockProps {
   onToggleFullscreen: () => void;
   onExportView: () => void;
   exportingView: boolean;
-  onExportReport: () => void;
-  exportingReport: boolean;
+  onExportPdf: () => void;
+  exportingPdf: boolean;
   canExportReport: boolean;
 }
 
@@ -33,17 +34,18 @@ export function SystemDock({
   onToggleFullscreen,
   onExportView,
   exportingView,
-  onExportReport,
-  exportingReport,
+  onExportPdf,
+  exportingPdf,
   canExportReport,
 }: SystemDockProps) {
+  const t = useT();
   const [exploreOpen, setExploreOpen] = useState(false);
 
   return (
     <>
       <footer
         role="group"
-        aria-label="Système"
+        aria-label={t.systemDock.sectionAriaLabel}
         className={cn(
           'shrink-0 border-t border-border-hud-faint',
           'pb-[env(safe-area-inset-bottom,0)]',
@@ -53,8 +55,8 @@ export function SystemDock({
         )}
       >
         <SystemButton
-          tooltip="Ressources externes : cartes du ciel, éphémérides…"
-          ariaLabel="Ouvrir la liste de liens utiles"
+          tooltip={t.systemDock.explore.tooltip}
+          ariaLabel={t.systemDock.explore.ariaLabel}
           active={exploreOpen}
           activeTone="sky"
           onClick={() => setExploreOpen((v) => !v)}
@@ -62,8 +64,8 @@ export function SystemDock({
           <InfoCircleIcon />
         </SystemButton>
         <SystemButton
-          tooltip="Légende — symboles, couleurs, calques"
-          ariaLabel="Ouvrir la légende"
+          tooltip={t.systemDock.legend.tooltip}
+          ariaLabel={t.systemDock.legend.ariaLabel}
           active={legendActive}
           activeTone="sky"
           onClick={onToggleLegend}
@@ -71,8 +73,8 @@ export function SystemDock({
           <List className="size-4" strokeWidth={1.4} aria-hidden />
         </SystemButton>
         <SystemButton
-          tooltip={fullscreenActive ? 'Quitter le plein écran' : 'Passer en plein écran'}
-          ariaLabel={fullscreenActive ? 'Quitter le plein écran' : 'Passer en plein écran'}
+          tooltip={fullscreenActive ? t.systemDock.fullscreen.tooltipExit : t.systemDock.fullscreen.tooltipEnter}
+          ariaLabel={fullscreenActive ? t.systemDock.fullscreen.tooltipExit : t.systemDock.fullscreen.tooltipEnter}
           active={fullscreenActive}
           activeTone="sky"
           onClick={onToggleFullscreen}
@@ -84,8 +86,8 @@ export function SystemDock({
           )}
         </SystemButton>
         <SystemButton
-          tooltip="Enregistre la vue 3D actuelle dans un fichier image PNG"
-          ariaLabel="Exporter la vue 3D en image PNG"
+          tooltip={t.systemDock.exportView.tooltip}
+          ariaLabel={t.systemDock.exportView.ariaLabel}
           onClick={onExportView}
           disabled={exportingView}
         >
@@ -98,19 +100,19 @@ export function SystemDock({
         <SystemButton
           tooltip={
             canExportReport
-              ? exportingReport
-                ? 'Capture en cours…'
-                : 'Enregistre la vue 3D et le rapport complet en PNG'
-              : 'Calcule d’abord un thème natal pour exporter le rapport'
+              ? exportingPdf
+                ? t.systemDock.exportPdf.tooltipGenerating
+                : t.systemDock.exportPdf.tooltipReady
+              : t.systemDock.exportPdf.tooltipLocked
           }
-          ariaLabel="Exporter la vue 3D et le rapport complet en PNG"
-          onClick={onExportReport}
-          disabled={!canExportReport || exportingReport}
+          ariaLabel={t.systemDock.exportPdf.ariaLabel}
+          onClick={onExportPdf}
+          disabled={!canExportReport || exportingPdf}
         >
-          {exportingReport ? (
+          {exportingPdf ? (
             <Spinner />
           ) : (
-            <FileText className="size-4" strokeWidth={1.35} aria-hidden />
+            <FileDown className="size-4" strokeWidth={1.35} aria-hidden />
           )}
         </SystemButton>
       </footer>
