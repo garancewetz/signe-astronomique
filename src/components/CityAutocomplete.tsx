@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { timezoneFromLatLon } from '../utils/timezone';
+import { fr } from '../i18n/fr';
 
 export interface CityResult {
   label: string;
@@ -18,20 +19,30 @@ interface NominatimResult {
 interface Props {
   value: CityResult;
   onSelect: (city: CityResult) => void;
+  /** Set on the inner `<input>` so a parent `<Field htmlFor>` can bind. */
+  inputId?: string;
 }
 
-export function CityAutocomplete({ value, onSelect }: Props) {
+// Nominatim usage policy — keep request volume modest. 500 ms debounce +
+// 3-char minimum is gentler than typing-speed bursts while still feeling
+// reactive at a touch keyboard.
+const SEARCH_DEBOUNCE_MS = 500;
+const MIN_QUERY_LENGTH = 3;
+
+export function CityAutocomplete({ value, onSelect, inputId }: Props) {
   const [query, setQuery] = useState(value.label);
   const [results, setResults] = useState<CityResult[]>([]);
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [lastValueLabel, setLastValueLabel] = useState(value.label);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const reqIdRef = useRef(0);
   const listboxId = useId();
+  const statusId = useId();
 
   // React docs "Adjusting state on prop change" pattern — render-time setState,
   // bounded by the lastValueLabel guard so it can't loop. Replaces a
@@ -43,13 +54,15 @@ export function CityAutocomplete({ value, onSelect }: Props) {
       setResults([]);
       setOpen(false);
       setLoading(false);
+      setErrorMsg(null);
     }
   }
 
   useEffect(() => {
     const trimmed = query.trim();
-    if (trimmed.length < 2 || trimmed === value.label) return;
+    if (trimmed.length < MIN_QUERY_LENGTH || trimmed === value.label) return;
     const id = ++reqIdRef.current;
+    const controller = new AbortController();
 
     const timer = setTimeout(async () => {
       try {
@@ -58,8 +71,18 @@ export function CityAutocomplete({ value, onSelect }: Props) {
         url.searchParams.set('format', 'json');
         url.searchParams.set('limit', '8');
         url.searchParams.set('accept-language', 'fr');
-        const res = await fetch(url.toString());
+        const res = await fetch(url.toString(), { signal: controller.signal });
         if (id !== reqIdRef.current) return;
+        if (!res.ok) {
+          setResults([]);
+          setOpen(false);
+          setErrorMsg(
+            res.status === 429
+              ? fr.cityAutocomplete.errorRateLimit
+              : fr.cityAutocomplete.errorService,
+          );
+          return;
+        }
         const data = (await res.json()) as NominatimResult[];
         const cities = data.map<CityResult>(r => {
           const lat = parseFloat(r.lat);
@@ -74,14 +97,22 @@ export function CityAutocomplete({ value, onSelect }: Props) {
         setResults(cities);
         setHighlighted(0);
         setOpen(true);
-      } catch {
-        // Silent — Nominatim may rate-limit; user can keep typing.
+        setErrorMsg(null);
+      } catch (err) {
+        if ((err as { name?: string })?.name === 'AbortError') return;
+        if (id !== reqIdRef.current) return;
+        setResults([]);
+        setOpen(false);
+        setErrorMsg(fr.cityAutocomplete.errorNetwork);
       } finally {
         if (id === reqIdRef.current) setLoading(false);
       }
-    }, 350);
+    }, SEARCH_DEBOUNCE_MS);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [query, value.label]);
 
   useEffect(() => {
@@ -127,15 +158,17 @@ export function CityAutocomplete({ value, onSelect }: Props) {
     <div ref={wrapRef} className="relative">
       <input
         ref={inputRef}
+        id={inputId}
         type="text"
         value={query}
-        placeholder="Ville de naissance…"
+        placeholder={fr.natalForm.placePlaceholder}
         onChange={e => {
           const next = e.target.value;
           setQuery(next);
           setOpen(true);
+          setErrorMsg(null);
           const trimmed = next.trim();
-          if (trimmed.length < 2 || trimmed === value.label) {
+          if (trimmed.length < MIN_QUERY_LENGTH || trimmed === value.label) {
             setResults([]);
             setLoading(false);
           } else {
@@ -155,6 +188,8 @@ export function CityAutocomplete({ value, onSelect }: Props) {
         aria-autocomplete="list"
         aria-expanded={open && results.length > 0}
         aria-controls={listboxId}
+        aria-describedby={errorMsg ? statusId : undefined}
+        aria-invalid={errorMsg ? true : undefined}
       />
       {loading && (
         <span
@@ -165,6 +200,18 @@ export function CityAutocomplete({ value, onSelect }: Props) {
           ✦
         </span>
       )}
+      <div
+        id={statusId}
+        role="status"
+        aria-live="polite"
+        className={
+          errorMsg
+            ? 'mt-1 text-cockpit-xs tracking-cockpit-label text-rose-300/90'
+            : 'sr-only'
+        }
+      >
+        {errorMsg ?? ''}
+      </div>
       {open && results.length > 0 && (
         <ul
           id={listboxId}

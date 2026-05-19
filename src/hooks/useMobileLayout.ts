@@ -18,7 +18,7 @@ function readMatch(): boolean {
  * to an external monitor stays on the desktop layout.
  */
 export function useMobileLayout(): boolean {
-  const [isMobile, setIsMobile] = useState<boolean>(readMatch);
+  const [isMobile, setIsMobile] = useState<boolean>(() => readMatch());
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {

@@ -1,0 +1,151 @@
+import { useEffect, type MutableRefObject } from 'react';
+import { JulianDate, type Viewer } from 'cesium';
+import type { CelestialReading } from '../../utils/astroEngine';
+import { gmstRadians } from '../../utils/skyCoordinates';
+import { mountStarsLayer } from './cesium/mountStarsLayer';
+import { mountSunLayer } from './cesium/mountSunLayer';
+import { mountMoonLayer } from './cesium/mountMoonLayer';
+import { mountPlanetsLayer } from './cesium/mountPlanetsLayer';
+import { mountReferenceLines } from './cesium/mountReferenceLines';
+import { flyToCelestialDirection } from './cesium/cameraDirector';
+
+interface UseSceneLayerCompositionArgs {
+  viewerRef: MutableRefObject<Viewer | null>;
+  /**
+   * Cleanup bag shared with the parent component's viewer-init effect.
+   * The composition hook drains and refills this on every re-run; the
+   * parent drains it once more on unmount, before destroying the viewer.
+   */
+  cleanupsRef: MutableRefObject<Array<() => void>>;
+  previousReadingRef: MutableRefObject<CelestialReading | null>;
+  activeReadingRef: MutableRefObject<CelestialReading | null>;
+  activeGmstRef: MutableRefObject<number>;
+
+  reading: CelestialReading | null;
+  /** "Live" reading derived from the current Date — used pre-JUMP. */
+  liveReading: CelestialReading;
+  showGuides: boolean;
+  showBodyLabels: boolean;
+  /** Dims the stars and skips the reference-line layer to keep the diagram clean. */
+  sideViewActive: boolean;
+}
+
+/**
+ * Mounts the stars / sun / moon / planets / reference-lines layers, and
+ * flies the camera to the sun on the first JUMP or whenever the natal date
+ * changes. Extracted from SpaceView to keep the viewer-init effect focused
+ * on lifecycle; the lifecycle ownership (viewer creation + final cleanup)
+ * stays in the parent.
+ */
+export function useSceneLayerComposition({
+  viewerRef,
+  cleanupsRef,
+  previousReadingRef,
+  activeReadingRef,
+  activeGmstRef,
+  reading,
+  liveReading,
+  showGuides,
+  showBodyLabels,
+  sideViewActive,
+}: UseSceneLayerCompositionArgs): void {
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    // Le reading actif est celui du JUMP natal s'il existe, sinon le live.
+    const active = reading ?? liveReading;
+    const previous = previousReadingRef.current;
+    const isFirstJump = reading != null && previous == null;
+    const isReadingChange =
+      reading != null &&
+      previous != null &&
+      reading.input.date.getTime() !== previous.input.date.getTime();
+
+    // On nettoie systématiquement les anciens layers : RA/Dec et GMST
+    // changent à chaque tick.
+    cleanupsRef.current.forEach((c) => c());
+    cleanupsRef.current = [];
+
+    viewer.clock.currentTime = JulianDate.fromDate(active.input.date);
+    const gmstRad = gmstRadians(active.input.date);
+    activeReadingRef.current = active;
+    activeGmstRef.current = gmstRad;
+
+    cleanupsRef.current.push(
+      mountStarsLayer(viewer, {
+        gmstRad,
+        highlight: reading?.trueConstellation ?? null,
+        showConstellationArt: showBodyLabels,
+        // Side View fades the rest of the sky to ~5 % so the timeline
+        // reads as a clean diagram rather than a starfield. The
+        // constellation pattern lines (drawn by the exploded layer with
+        // a glow material) still pop above this floor.
+        dimFactor: sideViewActive ? 0.05 : 1.0,
+      }),
+    );
+    cleanupsRef.current.push(
+      mountSunLayer(viewer, {
+        raHours: active.sunRA,
+        decDeg: active.sunDec,
+        gmstRad,
+        constellation: active.trueConstellation,
+        showLabels: showBodyLabels,
+      }),
+    );
+    cleanupsRef.current.push(
+      mountMoonLayer(viewer, {
+        raHours: active.moon.ra,
+        decDeg: active.moon.dec,
+        distanceKm: active.moon.distanceKm,
+        illumination: active.moon.illumination,
+        phaseName: active.moon.phaseName,
+        constellation: active.moon.constellation,
+        sunRaHours: active.sunRA,
+        sunDecDeg: active.sunDec,
+        gmstRad,
+        showLabels: showBodyLabels,
+      }),
+    );
+    cleanupsRef.current.push(
+      mountPlanetsLayer(viewer, {
+        bodies: active.bodies,
+        gmstRad,
+        showLabels: showBodyLabels,
+      }),
+    );
+
+    if (showGuides) {
+      cleanupsRef.current.push(
+        mountReferenceLines(viewer, {
+          gmstRad,
+          obliquityDeg: active.obliquity,
+        }),
+      );
+    }
+
+    // Animation caméra : seulement à l'arrivée d'un reading natal ou quand
+    // sa date change. Les ticks "live" minute par minute ne touchent pas la
+    // caméra, sinon elle saute toutes les minutes.
+    if (isFirstJump || isReadingChange) {
+      flyToCelestialDirection(viewer, {
+        raHours: active.sunRA,
+        decDeg: active.sunDec,
+        gmstRad,
+      });
+    }
+
+    previousReadingRef.current = reading;
+  }, [
+    viewerRef,
+    cleanupsRef,
+    previousReadingRef,
+    activeReadingRef,
+    activeGmstRef,
+    reading,
+    liveReading,
+    showGuides,
+    showBodyLabels,
+    sideViewActive,
+  ]);
+}

@@ -1,8 +1,12 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { CoordinatesForm } from '../CoordinatesForm';
 import type { CityResult } from '../CityAutocomplete';
 import type { CelestialReading } from '../../utils/astroEngine';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { fr } from '../../i18n/fr';
 
 interface MobileCoordinatesModalProps {
   open: boolean;
@@ -35,15 +39,27 @@ export function MobileCoordinatesModal({
   onJump,
 }: MobileCoordinatesModalProps) {
   const reduceMotion = useReducedMotion();
+  const dialogRef = useFocusTrap<HTMLDivElement>(open);
+  useBodyScrollLock(open);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
 
   return (
     <AnimatePresence>
       {open && (
         <motion.div
           key="mobile-coords-modal"
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Mes coordonnées de naissance"
+          aria-label={fr.mobile.coordinatesModal.ariaLabel}
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24 }}
@@ -59,7 +75,7 @@ export function MobileCoordinatesModal({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Fermer"
+              aria-label={fr.mobile.coordinatesModal.closeAriaLabel}
               className="cockpit-focus grid place-items-center
                          h-9 w-9 rounded
                          text-slate-300/85 hover:text-slate-100
@@ -69,10 +85,10 @@ export function MobileCoordinatesModal({
             </button>
             <div className="min-w-0">
               <div className="text-cockpit-xs tracking-cockpit-label uppercase text-accent-label/85">
-                Console
+                {fr.mobile.coordinatesModal.sectionLabel}
               </div>
               <h2 className="text-cockpit-md tracking-cockpit-tight text-accent-title uppercase truncate">
-                Mes coordonnées
+                {fr.mobile.coordinatesModal.title}
               </h2>
             </div>
           </header>

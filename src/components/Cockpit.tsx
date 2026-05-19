@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useGeolocation } from '../hooks/useGeolocation';
+import { ErrorBoundary } from './ErrorBoundary';
+import { CockpitFallback } from './CockpitFallback';
+import { fr } from '../i18n/fr';
 import {
   SpaceView,
   LIVE_TLE_VALIDITY_MS,
@@ -22,40 +24,12 @@ import { LegendPanel } from './LegendPanel';
 import { useMobileLayout } from '../hooks/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
-import {
-  downloadCanvasPng,
-  exportTargetedPng,
-  reportFilename,
-  viewFilename,
-} from '../utils/exportReport';
 import type { CelestialReading } from '../utils/astroEngine';
-import type { CityResult } from './CityAutocomplete';
-import { timezoneFromLatLon } from '../utils/timezone';
 import { useOrbitalPopulation } from '../hooks/useOrbitalPopulation';
-
-const DEFAULT_CITY: CityResult = {
-  label: 'Paris, France',
-  lat: 48.8566,
-  lon: 2.3522,
-  timezone: timezoneFromLatLon(48.8566, 2.3522),
-};
-
-// Reveal sequence timings (unchanged).
-const REVEAL_LABEL_HOLD_MS = 3000;
-const REVEAL_PANEL_DELAY_MS = 1500;
-
-function formatInputDate(now: Date): string {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function formatInputTime(now: Date): string {
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  return `${hh}:${mm}`;
-}
+import { useNatalForm } from '../hooks/useNatalForm';
+import { useRevealSequence } from '../hooks/useRevealSequence';
+import { useExportHandlers } from '../hooks/useExportHandlers';
+import { CockpitDisplayProvider } from '../context/CockpitDisplayContext';
 
 export function Cockpit() {
   const isMobile = useMobileLayout();
@@ -71,8 +45,6 @@ export function Cockpit() {
   const [analysisAttention, setAnalysisAttention] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const [exporting, setExporting] = useState(false);
-  const [exportingView, setExportingView] = useState(false);
   const [showGuides, setShowGuides] = useState(false);
   const [bodyLabelsEnabled, setBodyLabelsEnabled] = useState(false);
   const [satellitesEnabled, setSatellitesEnabled] = useState(false);
@@ -101,31 +73,14 @@ export function Cockpit() {
   // see the effective state at render time.
   const constellationOverlayActive = constellationOverlayEnabled && orbitalAvailable;
 
-  const [date, setDate] = useState(() => formatInputDate(new Date()));
-  const [time, setTime] = useState(() => formatInputTime(new Date()));
-  const [userCity, setUserCity] = useState<CityResult | null>(null);
-
-  const geolocation = useGeolocation();
-
-  const geoCity = useMemo<CityResult | null>(() => {
-    if (geolocation.status !== 'resolved') return null;
-    return {
-      label: 'Position actuelle',
-      lat: geolocation.lat,
-      lon: geolocation.lon,
-      timezone: timezoneFromLatLon(geolocation.lat, geolocation.lon),
-    };
-  }, [geolocation]);
-
-  const city = userCity ?? geoCity ?? DEFAULT_CITY;
+  const { date, time, city, setDate, setTime, setUserCity } = useNatalForm();
 
   const cockpitRef = useRef<HTMLDivElement>(null);
   const spaceViewRef = useRef<SpaceViewHandle>(null);
   const fullReportRef = useRef<HTMLDivElement>(null);
 
-  const revealLabelTimerRef = useRef<number | null>(null);
-  const revealPanelTimerRef = useRef<number | null>(null);
-  const labelsRestoreRef = useRef<boolean | null>(null);
+  const { exporting, exportingView, handleExport, handleExportView } =
+    useExportHandlers({ spaceViewRef, fullReportRef, reading });
 
   useEffect(() => {
     const onFs = () => setFullscreenActive(!!document.fullscreenElement);
@@ -134,91 +89,62 @@ export function Cockpit() {
     return () => document.removeEventListener('fullscreenchange', onFs);
   }, []);
 
-  useEffect(() => () => {
-    if (revealLabelTimerRef.current !== null) window.clearTimeout(revealLabelTimerRef.current);
-    if (revealPanelTimerRef.current !== null) window.clearTimeout(revealPanelTimerRef.current);
-  }, []);
-
-  const cancelPendingPanelOpen = () => {
-    if (revealPanelTimerRef.current !== null) {
-      window.clearTimeout(revealPanelTimerRef.current);
-      revealPanelTimerRef.current = null;
-    }
-  };
-
-  const togglePanel = (key: SidebarPanelKey) => {
-    cancelPendingPanelOpen();
-    setActivePanel((prev) => (prev === key ? null : key));
-  };
-
-  const openPanel = (key: SidebarPanelKey) => {
-    cancelPendingPanelOpen();
-    setActivePanel(key);
-  };
-
-  const closePanel = () => {
-    cancelPendingPanelOpen();
-    setActivePanel(null);
-  };
+  const { revealConstellation } = useRevealSequence({
+    spaceViewRef,
+    bodyLabelsEnabled,
+    setBodyLabelsEnabled,
+  });
 
   /** Open the analysis modal on a given tab (defaults to 'resume'). */
-  const openAnalysis = (tab: ReportPanelKey = 'resume') => {
-    cancelPendingPanelOpen();
+  const openAnalysis = useCallback((tab: ReportPanelKey = 'resume') => {
     setAnalysisTab(tab);
     setAnalysisOpen(true);
-  };
+  }, []);
 
-  const closeAnalysis = () => {
-    cancelPendingPanelOpen();
-    setAnalysisOpen(false);
-  };
+  const togglePanel = useCallback(
+    (key: SidebarPanelKey) =>
+      setActivePanel((prev) => (prev === key ? null : key)),
+    [],
+  );
+
+  const closePanel = useCallback(() => setActivePanel(null), []);
+
+  const closeAnalysis = useCallback(() => setAnalysisOpen(false), []);
 
   /** Body picker callback — wires to the SÉLECTION section. */
-  const handleBodySelect = (body: SelectedBody | null) => {
-    cancelPendingPanelOpen();
+  const handleBodySelect = useCallback((body: SelectedBody | null) => {
     setSelectedBody(body);
     setSideViewActive(false);
     if (body) {
-      openPanel('body');
+      setActivePanel('body');
       setMobileActiveTab('selection');
     } else {
       setActivePanel((prev) => (prev === 'body' ? null : prev));
       setMobileActiveTab((prev) => (prev === 'selection' ? null : prev));
     }
-  };
+  }, []);
 
-  /**
-   * Reveal sequence: aim the camera at the Sun (the user's true sign)
-   * and force body labels on so the constellation name is painted on
-   * the sphere. After the window, the labels value the user had before
-   * is restored.
-   */
-  const revealConstellation = (opts: { openPanelAfter: boolean }) => {
-    if (revealLabelTimerRef.current !== null) {
-      window.clearTimeout(revealLabelTimerRef.current);
-      revealLabelTimerRef.current = null;
-    }
-    if (revealPanelTimerRef.current !== null) {
-      window.clearTimeout(revealPanelTimerRef.current);
-      revealPanelTimerRef.current = null;
-    }
-    labelsRestoreRef.current = bodyLabelsEnabled;
-    setBodyLabelsEnabled(true);
-    spaceViewRef.current?.flyToSun();
-    revealLabelTimerRef.current = window.setTimeout(() => {
-      revealLabelTimerRef.current = null;
-      if (labelsRestoreRef.current !== null) {
-        setBodyLabelsEnabled(labelsRestoreRef.current);
-        labelsRestoreRef.current = null;
-      }
-    }, REVEAL_LABEL_HOLD_MS);
-    if (opts.openPanelAfter) {
-      revealPanelTimerRef.current = window.setTimeout(() => {
-        revealPanelTimerRef.current = null;
-        openAnalysis('resume');
-      }, REVEAL_PANEL_DELAY_MS);
-    }
-  };
+  const clearSelection = useCallback(
+    () => handleBodySelect(null),
+    [handleBodySelect],
+  );
+
+  const flyToSun = useCallback(() => spaceViewRef.current?.flyToSun(), []);
+  const flyToMoon = useCallback(() => spaceViewRef.current?.flyToMoon(), []);
+  const flyToEarth = useCallback(() => spaceViewRef.current?.flyToEarth(), []);
+  const openSummary = useCallback(() => openAnalysis('resume'), [openAnalysis]);
+  const handleOpenAnalysis = useCallback(
+    () => openAnalysis(),
+    [openAnalysis],
+  );
+  const handleRevealFromModal = useCallback(() => {
+    closeAnalysis();
+    revealConstellation();
+  }, [closeAnalysis, revealConstellation]);
+  const toggleSidebarCollapsed = useCallback(
+    () => setSidebarCollapsed((v) => !v),
+    [],
+  );
 
   const handleJump = (r: CelestialReading) => {
     const isFirstCalc = reading == null;
@@ -233,46 +159,7 @@ export function Cockpit() {
     setBodyLabelsEnabled(false);
     setSatellitesEnabled(false);
     setConstellationOverlayEnabled(false);
-    cancelPendingPanelOpen();
     setActivePanel(null);
-  };
-
-  const handleExport = async () => {
-    if (!reading) return;
-    const spaceCanvas = spaceViewRef.current?.captureCanvas();
-    const reportEl = fullReportRef.current;
-    if (!spaceCanvas || !reportEl) return;
-    setExporting(true);
-    try {
-      await exportTargetedPng(
-        spaceCanvas,
-        reportEl,
-        reportFilename(reading.input.date, reading.input.placeLabel),
-      );
-    } catch (err) {
-      console.error('Export error', err);
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const handleExportView = async () => {
-    const canvas = spaceViewRef.current?.captureCanvas();
-    if (!canvas) return;
-    setExportingView(true);
-    try {
-      await downloadCanvasPng(
-        canvas,
-        viewFilename(
-          reading?.input.date ?? null,
-          reading?.input.placeLabel,
-        ),
-      );
-    } catch (err) {
-      console.error('Export vue error', err);
-    } finally {
-      setExportingView(false);
-    }
   };
 
   const toggleFullscreen = () => {
@@ -287,82 +174,103 @@ export function Cockpit() {
   const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_PX : SIDEBAR_EXPANDED_PX;
   const canvasInsetStyle = { left: `${sidebarWidth}px` };
 
-  const orbitalToggleHandler = () => {
+  const toggleBodyLabels = useCallback(
+    () => setBodyLabelsEnabled((v) => !v),
+    [],
+  );
+  const toggleGuides = useCallback(() => setShowGuides((v) => !v), []);
+  const toggleSatellites = useCallback(
+    () => setSatellitesEnabled((v) => !v),
+    [],
+  );
+  const toggleSideView = useCallback(() => setSideViewActive((v) => !v), []);
+
+  const toggleConstellationOverlay = useCallback(() => {
     if (orbitalStatus === 'error') {
       retryOrbital();
-      if (!constellationOverlayEnabled) setConstellationOverlayEnabled(true);
+      setConstellationOverlayEnabled((v) => v || true);
       return;
     }
     setConstellationOverlayEnabled((v) => !v);
-  };
+  }, [orbitalStatus, retryOrbital]);
+
+  const hasSelectedStar = selectedBody?.kind === 'star';
 
   const spaceView = (
-    <SpaceView
-      ref={spaceViewRef}
-      reading={reading}
-      showGuides={showGuides}
-      showBodyLabels={bodyLabelsEnabled}
-      showSatellites={satellitesEnabled}
-      orbitalSatellites={constellationOverlayActive ? orbitalSatellites : []}
-      constellationMode="modern"
-      liveLatitude={city.lat}
-      liveLongitude={city.lon}
-      markerLatitude={reading?.input.latitude ?? city.lat}
-      markerLongitude={reading?.input.longitude ?? city.lon}
-      markerLabel={reading?.input.placeLabel ?? city.label}
-      selectedBody={selectedBody}
-      onBodySelect={handleBodySelect}
-      sideViewActive={sideViewActive}
-    />
+    <ErrorBoundary fallback={<CockpitFallback variant="inline" />}>
+      <SpaceView
+        ref={spaceViewRef}
+        reading={reading}
+        showGuides={showGuides}
+        showBodyLabels={bodyLabelsEnabled}
+        showSatellites={satellitesEnabled}
+        orbitalSatellites={constellationOverlayActive ? orbitalSatellites : []}
+        constellationMode="modern"
+        liveLatitude={city.lat}
+        liveLongitude={city.lon}
+        markerLatitude={reading?.input.latitude ?? city.lat}
+        markerLongitude={reading?.input.longitude ?? city.lon}
+        markerLabel={reading?.input.placeLabel ?? city.label}
+        selectedBody={selectedBody}
+        onBodySelect={handleBodySelect}
+        sideViewActive={sideViewActive}
+      />
+    </ErrorBoundary>
   );
+
+  const displayValue = {
+    bodyLabelsEnabled,
+    toggleBodyLabels,
+    guidesEnabled: showGuides,
+    toggleGuides,
+    satellitesEnabled,
+    toggleSatellites,
+    constellationOverlayEnabled,
+    toggleConstellationOverlay,
+    orbitalAvailable,
+    orbitalStatus,
+    sideViewActive,
+    toggleSideView,
+    hasSelectedStar,
+  };
 
   if (isMobile) {
     return (
-      <MobileCockpit
-        date={date}
-        time={time}
-        city={city}
-        onDateChange={setDate}
-        onTimeChange={setTime}
-        onCityChange={setUserCity}
-        onJump={handleJump}
-        reading={reading}
-        selectedBody={selectedBody}
-        onCloseSelection={() => handleBodySelect(null)}
-        hasSelectedStar={selectedBody?.kind === 'star'}
-        bodyLabelsEnabled={bodyLabelsEnabled}
-        onToggleBodyLabels={() => setBodyLabelsEnabled((v) => !v)}
-        guidesEnabled={showGuides}
-        onToggleGuides={() => setShowGuides((v) => !v)}
-        satellitesEnabled={satellitesEnabled}
-        onToggleSatellites={() => setSatellitesEnabled((v) => !v)}
-        constellationOverlayEnabled={constellationOverlayEnabled}
-        onToggleConstellationOverlay={orbitalToggleHandler}
-        orbitalAvailable={orbitalAvailable}
-        orbitalStatus={orbitalStatus}
-        sideViewActive={sideViewActive}
-        onToggleSideView={() => setSideViewActive((v) => !v)}
-        onFlySun={() => spaceViewRef.current?.flyToSun()}
-        onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
-        onFlyEarth={() => spaceViewRef.current?.flyToEarth()}
-        onRevealConstellation={() => revealConstellation({ openPanelAfter: false })}
-        activeTab={mobileActiveTab}
-        onActiveTabChange={setMobileActiveTab}
-        analysisAttention={analysisAttention}
-        fullscreenActive={fullscreenActive}
-        onToggleFullscreen={toggleFullscreen}
-        onExportView={handleExportView}
-        exportingView={exportingView}
-        onExportReport={handleExport}
-        exportingReport={exporting}
-        canExportReport={!!reading}
-      >
-        {spaceView}
-      </MobileCockpit>
+      <CockpitDisplayProvider {...displayValue}>
+        <MobileCockpit
+          date={date}
+          time={time}
+          city={city}
+          onDateChange={setDate}
+          onTimeChange={setTime}
+          onCityChange={setUserCity}
+          onJump={handleJump}
+          reading={reading}
+          selectedBody={selectedBody}
+          onCloseSelection={clearSelection}
+          onFlySun={flyToSun}
+          onFlyMoon={flyToMoon}
+          onFlyEarth={flyToEarth}
+          onRevealConstellation={revealConstellation}
+          activeTab={mobileActiveTab}
+          onActiveTabChange={setMobileActiveTab}
+          analysisAttention={analysisAttention}
+          fullscreenActive={fullscreenActive}
+          onToggleFullscreen={toggleFullscreen}
+          onExportView={handleExportView}
+          exportingView={exportingView}
+          onExportReport={handleExport}
+          exportingReport={exporting}
+          canExportReport={!!reading}
+        >
+          {spaceView}
+        </MobileCockpit>
+      </CockpitDisplayProvider>
     );
   }
 
   return (
+    <CockpitDisplayProvider {...displayValue}>
     <div
       ref={cockpitRef}
       id="cockpit-main"
@@ -370,7 +278,7 @@ export function Cockpit() {
       className="fixed inset-0 overflow-hidden bg-background"
     >
       <a href="#cockpit-main" className="skip-to-main">
-        Aller au contenu principal
+        {fr.cockpit.skipToMain}
       </a>
 
       {/* === VUE 3D — sélection de texte désactivée (navigation globe / capture) === */}
@@ -395,22 +303,22 @@ export function Cockpit() {
           reading={reading}
           observerLat={city.lat}
           observerLon={city.lon}
-          onOpenSummary={() => openAnalysis('resume')}
-          onFlySun={() => spaceViewRef.current?.flyToSun()}
-          onFlyMoon={() => spaceViewRef.current?.flyToMoon()}
-          onFlyEarth={() => spaceViewRef.current?.flyToEarth()}
+          onOpenSummary={openSummary}
+          onFlySun={flyToSun}
+          onFlyMoon={flyToMoon}
+          onFlyEarth={flyToEarth}
         />
       </div>
 
       {/* === SIDEBAR — colonne unifiée (formulaire, analyse, calques, système) === */}
       <Sidebar
         collapsed={sidebarCollapsed}
-        onToggleCollapsed={() => setSidebarCollapsed((v) => !v)}
+        onToggleCollapsed={toggleSidebarCollapsed}
         activePanel={activePanel}
         onTogglePanel={togglePanel}
         analysisOpen={analysisOpen}
         analysisAttention={analysisAttention}
-        onOpenAnalysis={() => openAnalysis()}
+        onOpenAnalysis={handleOpenAnalysis}
         date={date}
         time={time}
         city={city}
@@ -419,19 +327,6 @@ export function Cockpit() {
         onCityChange={setUserCity}
         onJump={handleJump}
         hasReading={!!reading}
-        guidesEnabled={showGuides}
-        onToggleGuides={() => setShowGuides((v) => !v)}
-        bodyLabelsEnabled={bodyLabelsEnabled}
-        onToggleBodyLabels={() => setBodyLabelsEnabled((v) => !v)}
-        satellitesEnabled={satellitesEnabled}
-        onToggleSatellites={() => setSatellitesEnabled((v) => !v)}
-        constellationOverlayEnabled={constellationOverlayEnabled}
-        onToggleConstellationOverlay={orbitalToggleHandler}
-        orbitalAvailable={orbitalAvailable}
-        orbitalStatus={orbitalStatus}
-        hasSelectedStar={selectedBody?.kind === 'star'}
-        sideViewActive={sideViewActive}
-        onToggleSideView={() => setSideViewActive((v) => !v)}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={toggleFullscreen}
         onExportView={handleExportView}
@@ -449,11 +344,8 @@ export function Cockpit() {
         onClose={closeAnalysis}
         reading={reading}
         labelsEnabled={bodyLabelsEnabled}
-        onToggleLabels={() => setBodyLabelsEnabled((v) => !v)}
-        onRevealConstellation={() => {
-          closeAnalysis();
-          revealConstellation({ openPanelAfter: false });
-        }}
+        onToggleLabels={toggleBodyLabels}
+        onRevealConstellation={handleRevealFromModal}
         satellitesEnabled={satellitesEnabled}
       />
 
@@ -465,8 +357,8 @@ export function Cockpit() {
             selected={selectedBody}
             sidebarWidth={sidebarWidth}
             sideViewActive={sideViewActive}
-            onToggleSideView={() => setSideViewActive((v) => !v)}
-            onClose={() => handleBodySelect(null)}
+            onToggleSideView={toggleSideView}
+            onClose={clearSelection}
           />
         )}
         {activePanel === 'legend' && (
@@ -474,15 +366,6 @@ export function Cockpit() {
             key="legend"
             sidebarWidth={sidebarWidth}
             onClose={closePanel}
-            bodyLabelsEnabled={bodyLabelsEnabled}
-            onToggleBodyLabels={() => setBodyLabelsEnabled((v) => !v)}
-            guidesEnabled={showGuides}
-            onToggleGuides={() => setShowGuides((v) => !v)}
-            satellitesEnabled={satellitesEnabled}
-            onToggleSatellites={() => setSatellitesEnabled((v) => !v)}
-            constellationOverlayEnabled={constellationOverlayEnabled}
-            onToggleConstellationOverlay={orbitalToggleHandler}
-            orbitalAvailable={orbitalAvailable}
           />
         )}
       </AnimatePresence>
@@ -499,6 +382,7 @@ export function Cockpit() {
         </div>
       )}
     </div>
+    </CockpitDisplayProvider>
   );
 }
 

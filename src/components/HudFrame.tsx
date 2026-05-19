@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import {
   formatLST,
   liveTelemetry,
@@ -43,7 +43,7 @@ interface HudFrameProps {
  * the sidebar header so this bar carries no logo or right-side spacer;
  * the entire band is reserved for the centered status block.
  */
-export function HudFrame({
+export const HudFrame = memo(function HudFrame({
   reading,
   observerLat,
   observerLon,
@@ -188,4 +188,4 @@ export function HudFrame({
       </div>
     </header>
   );
-}
+});

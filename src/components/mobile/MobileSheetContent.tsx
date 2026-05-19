@@ -13,8 +13,8 @@ import type { ReactNode } from 'react';
 import { BodyInfoHud } from '../BodyInfoHud';
 import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '../space/SpaceView';
-import type { OrbitalStatus } from '../../hooks/useOrbitalPopulation';
 import { MenuRow } from '../ui';
+import { useCockpitDisplay } from '../../context/useCockpitDisplay';
 import type { MobileTabKey } from './MobileTabBar';
 
 interface MobileSheetContentProps {
@@ -23,21 +23,6 @@ interface MobileSheetContentProps {
   hasReading: boolean;
   onOpenCoords: () => void;
   onSelectAnalysisPanel: (panel: ReportPanelKey) => void;
-
-  // Display toggles
-  bodyLabelsEnabled: boolean;
-  onToggleBodyLabels: () => void;
-  guidesEnabled: boolean;
-  onToggleGuides: () => void;
-  satellitesEnabled: boolean;
-  onToggleSatellites: () => void;
-  constellationOverlayEnabled: boolean;
-  onToggleConstellationOverlay: () => void;
-  orbitalAvailable: boolean;
-  orbitalStatus: OrbitalStatus;
-  hasSelectedStar: boolean;
-  sideViewActive: boolean;
-  onToggleSideView: () => void;
 
   // Navigation
   onFlySun: () => void;
@@ -59,7 +44,7 @@ export function MobileSheetContent(props: MobileSheetContentProps) {
   const { activeTab } = props;
 
   if (activeTab === 'selection') return <SelectionContent {...props} />;
-  if (activeTab === 'display') return <DisplayContent {...props} />;
+  if (activeTab === 'display') return <DisplayContent />;
   if (activeTab === 'navigation') return <NavigationContent {...props} />;
   if (activeTab === 'analysis') return <AnalysisContent {...props} />;
   return <HomeContent {...props} />;
@@ -100,10 +85,9 @@ function HomeContent({
 
 function SelectionContent({
   selectedBody,
-  sideViewActive,
-  onToggleSideView,
   onCloseSelection,
 }: MobileSheetContentProps) {
+  const { sideViewActive, toggleSideView } = useCockpitDisplay();
   if (!selectedBody) {
     return (
       <SheetSection>
@@ -119,7 +103,7 @@ function SelectionContent({
       variant="inline"
       selected={selectedBody}
       sideViewActive={sideViewActive}
-      onToggleSideView={onToggleSideView}
+      onToggleSideView={toggleSideView}
       onClose={onCloseSelection}
     />
   );
@@ -127,21 +111,22 @@ function SelectionContent({
 
 /* ── Display ─────────────────────────────────────────────────────────────── */
 
-function DisplayContent({
-  bodyLabelsEnabled,
-  onToggleBodyLabels,
-  guidesEnabled,
-  onToggleGuides,
-  satellitesEnabled,
-  onToggleSatellites,
-  constellationOverlayEnabled,
-  onToggleConstellationOverlay,
-  orbitalAvailable,
-  orbitalStatus,
-  hasSelectedStar,
-  sideViewActive,
-  onToggleSideView,
-}: MobileSheetContentProps) {
+function DisplayContent() {
+  const {
+    bodyLabelsEnabled,
+    toggleBodyLabels,
+    guidesEnabled,
+    toggleGuides,
+    satellitesEnabled,
+    toggleSatellites,
+    constellationOverlayEnabled,
+    toggleConstellationOverlay,
+    orbitalAvailable,
+    orbitalStatus,
+    hasSelectedStar,
+    sideViewActive,
+    toggleSideView,
+  } = useCockpitDisplay();
   const orbitalSublabel = !orbitalAvailable
     ? 'Indisponible loin du jour J'
     : orbitalStatus === 'loading'
@@ -161,7 +146,7 @@ function DisplayContent({
         sublabel="Astres · constellations"
         icon={<Tag className="size-4" strokeWidth={1.35} aria-hidden />}
         active={bodyLabelsEnabled}
-        onClick={onToggleBodyLabels}
+        onClick={toggleBodyLabels}
       />
       <MenuRow
         kind="toggle"
@@ -170,7 +155,7 @@ function DisplayContent({
         sublabel="Axe · équateur · écliptique"
         icon={<Globe2 className="size-4" strokeWidth={1.35} aria-hidden />}
         active={guidesEnabled}
-        onClick={onToggleGuides}
+        onClick={toggleGuides}
       />
       <MenuRow
         kind="toggle"
@@ -181,7 +166,7 @@ function DisplayContent({
         active={constellationOverlayEnabled}
         locked={!orbitalAvailable}
         disabled={!orbitalAvailable}
-        onClick={orbitalAvailable ? onToggleConstellationOverlay : undefined}
+        onClick={orbitalAvailable ? toggleConstellationOverlay : undefined}
       />
       <MenuRow
         kind="toggle"
@@ -190,7 +175,7 @@ function DisplayContent({
         sublabel="Satellites historiques"
         icon={<Satellite className="size-4" strokeWidth={1.4} aria-hidden />}
         active={satellitesEnabled}
-        onClick={onToggleSatellites}
+        onClick={toggleSatellites}
       />
 
       <Divider />
@@ -208,7 +193,7 @@ function DisplayContent({
         active={sideViewActive}
         locked={!hasSelectedStar}
         disabled={!hasSelectedStar}
-        onClick={hasSelectedStar ? onToggleSideView : undefined}
+        onClick={hasSelectedStar ? toggleSideView : undefined}
       />
     </SheetSection>
   );

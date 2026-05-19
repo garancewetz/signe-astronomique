@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   Download,
@@ -9,6 +10,9 @@ import {
 } from 'lucide-react';
 import { InfoCircleIcon } from '../ExploreSpacePopover';
 import { cn, MenuRow, surfaceClasses } from '../ui';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { fr } from '../../i18n/fr';
 
 interface MobileSystemDrawerProps {
   open: boolean;
@@ -48,6 +52,17 @@ export function MobileSystemDrawer({
   canExportReport,
 }: MobileSystemDrawerProps) {
   const reduceMotion = useReducedMotion();
+  const drawerRef = useFocusTrap<HTMLDivElement>(open);
+  useBodyScrollLock(open);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
 
   return (
     <AnimatePresence>
@@ -56,7 +71,7 @@ export function MobileSystemDrawer({
           <motion.button
             key="system-drawer-backdrop"
             type="button"
-            aria-label="Fermer le menu système"
+            aria-label={fr.mobile.systemDrawer.backdropAriaLabel}
             className="fixed inset-0 z-40 bg-overlay/40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -66,9 +81,10 @@ export function MobileSystemDrawer({
           />
           <motion.div
             key="system-drawer-panel"
+            ref={drawerRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Menu système"
+            aria-label={fr.mobile.systemDrawer.ariaLabel}
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}

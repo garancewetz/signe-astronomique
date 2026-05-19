@@ -7,19 +7,13 @@ import {
   type ReportPanelKey,
 } from '../RightPanel';
 import type { CelestialReading } from '../../utils/astroEngine';
+import { useCockpitDisplay } from '../../context/useCockpitDisplay';
 
 interface MobileAnalysisStackProps {
   panel: ReportPanelKey | null;
   onClose: () => void;
   reading: CelestialReading | null;
-
-  // Resume panel
-  labelsEnabled: boolean;
-  onToggleLabels: () => void;
   onRevealConstellation: () => void;
-
-  // Lecture panel
-  satellitesEnabled: boolean;
 }
 
 /**
@@ -32,12 +26,11 @@ export function MobileAnalysisStack({
   panel,
   onClose,
   reading,
-  labelsEnabled,
-  onToggleLabels,
   onRevealConstellation,
-  satellitesEnabled,
 }: MobileAnalysisStackProps) {
   const reduceMotion = useReducedMotion();
+  const { bodyLabelsEnabled, toggleBodyLabels, satellitesEnabled } =
+    useCockpitDisplay();
 
   return (
     <AnimatePresence>
@@ -58,8 +51,8 @@ export function MobileAnalysisStack({
             {panel === 'resume' && (
               <ResumePanel
                 reading={reading}
-                labelsEnabled={labelsEnabled}
-                onToggleLabels={onToggleLabels}
+                labelsEnabled={bodyLabelsEnabled}
+                onToggleLabels={toggleBodyLabels}
                 onRevealConstellation={() => {
                   onClose();
                   onRevealConstellation();

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Clock } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { Field, Input, cn } from './ui';
 import { computeReading, type CelestialReading } from '../utils/astroEngine';
 import { localBirthToUtc } from '../utils/timezone';
+import { fr } from '../i18n/fr';
 
 const DEFAULT_FORM_CLASS =
   'shrink-0 px-3 py-2.5 space-y-2 border-b border-border-hud-faint';
@@ -48,6 +49,9 @@ export function CoordinatesForm({
 }: CoordinatesFormProps) {
   const reduceMotion = useReducedMotion();
   const [computing, setComputing] = useState(false);
+  const dateId = useId();
+  const timeId = useId();
+  const cityId = useId();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,13 +88,13 @@ export function CoordinatesForm({
     <form
       onSubmit={handleSubmit}
       className={cn(className ?? DEFAULT_FORM_CLASS)}
-      aria-label="Coordonnées de naissance"
+      aria-label={fr.natalForm.ariaLabel}
     >
       <div className="flex justify-end pb-0.5">
         <button
           type="button"
           onClick={handleJumpToNow}
-          aria-label="Aujourd’hui — calcule le ciel actuel"
+          aria-label={fr.natalForm.todayAriaLabel}
           className="cockpit-focus group inline-flex items-center gap-1
                      px-1.5 py-1 rounded
                      text-cockpit-xs tracking-cockpit-label uppercase
@@ -103,13 +107,14 @@ export function CoordinatesForm({
             strokeWidth={1.5}
             aria-hidden
           />
-          Aujourd’hui
+          {fr.natalForm.todayLabel}
         </button>
       </div>
 
       <div className="grid grid-cols-2 gap-2 items-end">
-        <Field label="DATE">
+        <Field label={fr.natalForm.dateLabel} htmlFor={dateId}>
           <Input
+            id={dateId}
             type="date"
             value={date}
             onChange={(e) => onDateChange(e.target.value)}
@@ -117,8 +122,9 @@ export function CoordinatesForm({
           />
         </Field>
 
-        <Field label="HEURE">
+        <Field label={fr.natalForm.timeLabel} htmlFor={timeId}>
           <Input
+            id={timeId}
             type="time"
             value={time}
             onChange={(e) => onTimeChange(e.target.value)}
@@ -127,8 +133,8 @@ export function CoordinatesForm({
         </Field>
       </div>
 
-      <Field label="LIEU DE NAISSANCE">
-        <CityAutocomplete value={city} onSelect={onCityChange} />
+      <Field label={fr.natalForm.placeLabel} htmlFor={cityId}>
+        <CityAutocomplete value={city} onSelect={onCityChange} inputId={cityId} />
       </Field>
 
       <div className="cockpit-input w-full text-cockpit-md flex items-center justify-between gap-1">
@@ -151,7 +157,7 @@ export function CoordinatesForm({
       >
         <span aria-hidden className="relative z-10 text-violet-200/90 leading-none">✦</span>
         <span className="relative z-10">
-          {computing ? 'Calcul du ciel…' : 'CALCULER MON SIGNE'}
+          {computing ? fr.natalForm.submitBusy : fr.natalForm.submitIdle}
         </span>
       </motion.button>
     </form>

@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import {
-  Cartesian3,
   ClockRange,
   Color,
   Credit,
   ImageryLayer,
   Ion,
-  JulianDate,
   PerspectiveFrustum,
   SceneMode,
   ScreenSpaceEventType,
@@ -14,7 +12,7 @@ import {
   Viewer,
   WebMercatorTilingScheme,
 } from 'cesium';
-import { AU_KM } from '../../utils/skyCoordinates';
+import { AU_KM, gmstRadians } from '../../utils/skyCoordinates';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 import {
@@ -23,13 +21,7 @@ import {
   type IauConstellation,
 } from '../../utils/astroEngine';
 import type { PlanetId } from '../../utils/planetEngine';
-import { gmstRadians } from '../../utils/skyCoordinates';
 
-import { mountStarsLayer } from './cesium/mountStarsLayer';
-import { mountSunLayer } from './cesium/mountSunLayer';
-import { mountMoonLayer } from './cesium/mountMoonLayer';
-import { mountPlanetsLayer } from './cesium/mountPlanetsLayer';
-import { mountReferenceLines } from './cesium/mountReferenceLines';
 import { mountSatellitesLayer } from './cesium/mountSatellitesLayer';
 import { mountOrbitalLayer } from './cesium/mountOrbitalLayer';
 import { mountDistanceRuler } from './cesium/mountDistanceRuler';
@@ -47,6 +39,8 @@ import {
   flyToOrbital,
   flyToCelestialDirection,
 } from './cesium/cameraDirector';
+import { attachKeyboardNav } from './cesium/viewerKeyboard';
+import { useSceneLayerComposition } from './useSceneLayerComposition';
 import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
 import type { OrbitalSat } from '../../hooks/useOrbitalPopulation';
 
@@ -430,111 +424,13 @@ export function SpaceView({
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
 
-    // Navigation clavier — façon carte de jeu vidéo (AZERTY).
-    //   ←/→ : orbite est/ouest    ↑/↓ : orbite nord/sud
-    //   A/E : tourne la caméra (heading) en place
-    //   Z/S (ou +/-) : zoom / dézoom
-    // On applique les déplacements à chaque frame Cesium en fonction de
-    // l'ensemble des touches enfoncées, pour un mouvement continu fluide.
-    const pressedKeys = new Set<string>();
-    const NAV_KEYS = new Set([
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-      'a', 'A', 'e', 'E', 'z', 'Z', 's', 'S',
-      '+', '=', '-', '_',
-      'PageUp', 'PageDown',
-    ]);
-    const isTypingTarget = (el: EventTarget | null) => {
-      if (!(el instanceof HTMLElement)) return false;
-      const tag = el.tagName;
-      return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
-      if (!NAV_KEYS.has(e.key)) return;
-      pressedKeys.add(e.key);
-      e.preventDefault();
-    };
-    const onKeyUp = (e: KeyboardEvent) => { pressedKeys.delete(e.key); };
-    const onBlur = () => { pressedKeys.clear(); };
-
-    const MIN_DIST = 200_000;            // 200 km, rasance Terre
-    const MAX_DIST = 150_000_000;        // 150 000 km, dans la sphère céleste
-    const tickCamera = () => {
-      if (pressedKeys.size === 0) return;
-      const camera = viewer.camera;
-      const dist = Cartesian3.magnitude(camera.position);
-
-      // Side View has the camera parked far from Earth, looking sideways
-      // along a constellation timeline. Earth-centric orbit/zoom (below)
-      // would swing the camera in a huge arc and lurch on zoom — useless
-      // for inspecting a diagram. Switch to camera-local pan + view-axis
-      // zoom, both scaled to current distance so steps stay perceptible.
-      if (sideViewActiveRef.current) {
-        const panStep = dist * 0.015;
-        const zoomStep = dist * 0.02;
-        if (pressedKeys.has('ArrowLeft'))  camera.moveLeft(panStep);
-        if (pressedKeys.has('ArrowRight')) camera.moveRight(panStep);
-        if (pressedKeys.has('ArrowUp'))    camera.moveUp(panStep);
-        if (pressedKeys.has('ArrowDown'))  camera.moveDown(panStep);
-        // A/E heading rotation is intentionally skipped here: spinning
-        // the camera around its own up vector would tilt the timeline
-        // off horizontal and break the diagram framing.
-        if (pressedKeys.has('+') || pressedKeys.has('=') ||
-            pressedKeys.has('z') || pressedKeys.has('Z') ||
-            pressedKeys.has('PageUp')) {
-          camera.zoomIn(zoomStep);
-        }
-        if (pressedKeys.has('-') || pressedKeys.has('_') ||
-            pressedKeys.has('s') || pressedKeys.has('S') ||
-            pressedKeys.has('PageDown')) {
-          camera.zoomOut(zoomStep);
-        }
-        return;
-      }
-
-      // Vitesses calibrées pour un mouvement perceptible sans être brutal,
-      // proportionnelles au pas (~16 ms à 60 fps mais on s'en moque, Cesium
-      // tourne à fréquence variable — les valeurs sont par frame).
-      const orbitStep = 0.012;           // rad/frame  ≈ 0.7°
-      const lookStep = 0.015;            // rad/frame  ≈ 0.85°
-      const zoomFactor = 0.97;           // 3% par frame
-      // Orbite autour de la Terre (rotateLeft/Right/Up/Down tournent
-      // autour du « target » du frustum, par défaut le centre Terre).
-      if (pressedKeys.has('ArrowLeft'))  camera.rotateRight(orbitStep);
-      if (pressedKeys.has('ArrowRight')) camera.rotateLeft(orbitStep);
-      if (pressedKeys.has('ArrowUp'))    camera.rotateDown(orbitStep);
-      if (pressedKeys.has('ArrowDown'))  camera.rotateUp(orbitStep);
-      // Heading en place (rotation de la caméra sans changer sa position).
-      if (pressedKeys.has('a') || pressedKeys.has('A')) camera.lookLeft(lookStep);
-      if (pressedKeys.has('e') || pressedKeys.has('E')) camera.lookRight(lookStep);
-      // Zoom : on rapproche/éloigne en bornant la distance au centre Terre.
-      if (pressedKeys.has('+') || pressedKeys.has('=') ||
-          pressedKeys.has('z') || pressedKeys.has('Z') ||
-          pressedKeys.has('PageUp')) {
-        const target = Math.max(MIN_DIST, dist * zoomFactor);
-        if (target < dist) camera.zoomIn(dist - target);
-      }
-      if (pressedKeys.has('-') || pressedKeys.has('_') ||
-          pressedKeys.has('s') || pressedKeys.has('S') ||
-          pressedKeys.has('PageDown')) {
-        const target = Math.min(MAX_DIST, dist / zoomFactor);
-        if (target > dist) camera.zoomOut(target - dist);
-      }
-    };
-    const removePreRender =
-      viewer.scene.preRender.addEventListener(tickCamera);
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-    window.addEventListener('blur', onBlur);
+    const detachKeyboard = attachKeyboardNav(viewer, { sideViewActiveRef });
 
     // Vue par défaut avant tout JUMP : orbitale, regard Terre.
     flyToOrbital(viewer, 0);
 
     return () => {
-      removePreRender();
-      window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('blur', onBlur);
+      detachKeyboard();
       cleanupsRef.current.forEach((c) => c());
       cleanupsRef.current = [];
       viewer.destroy();
@@ -543,100 +439,18 @@ export function SpaceView({
   }, []);
 
   // 2. Remontage des layers + animation caméra
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
-
-    // Le reading actif est celui du JUMP natal s'il existe, sinon le live.
-    const active = reading ?? liveReading;
-    const previous = previousReadingRef.current;
-    const isFirstJump = reading != null && previous == null;
-    const isReadingChange =
-      reading != null &&
-      previous != null &&
-      reading.input.date.getTime() !== previous.input.date.getTime();
-
-    // On nettoie systématiquement les anciens layers : RA/Dec et GMST
-    // changent à chaque tick.
-    cleanupsRef.current.forEach((c) => c());
-    cleanupsRef.current = [];
-
-    viewer.clock.currentTime = JulianDate.fromDate(active.input.date);
-    const gmstRad = gmstRadians(active.input.date);
-    activeReadingRef.current = active;
-    activeGmstRef.current = gmstRad;
-
-    cleanupsRef.current.push(
-      mountStarsLayer(viewer, {
-        gmstRad,
-        highlight: reading?.trueConstellation ?? null,
-        showConstellationArt: showBodyLabels,
-        // Side View fades the rest of the sky to ~5 % so the timeline
-        // reads as a clean diagram rather than a starfield. The
-        // constellation pattern lines (drawn by the exploded layer with
-        // a glow material) still pop above this floor.
-        dimFactor: sideViewActive ? 0.05 : 1.0,
-      }),
-    );
-    cleanupsRef.current.push(
-      mountSunLayer(viewer, {
-        raHours: active.sunRA,
-        decDeg: active.sunDec,
-        gmstRad,
-        constellation: active.trueConstellation,
-        showLabels: showBodyLabels,
-      }),
-    );
-    cleanupsRef.current.push(
-      mountMoonLayer(viewer, {
-        raHours: active.moon.ra,
-        decDeg: active.moon.dec,
-        distanceKm: active.moon.distanceKm,
-        illumination: active.moon.illumination,
-        phaseName: active.moon.phaseName,
-        constellation: active.moon.constellation,
-        sunRaHours: active.sunRA,
-        sunDecDeg: active.sunDec,
-        gmstRad,
-        showLabels: showBodyLabels,
-      }),
-    );
-    cleanupsRef.current.push(
-      mountPlanetsLayer(viewer, {
-        bodies: active.bodies,
-        gmstRad,
-        showLabels: showBodyLabels,
-      }),
-    );
-
-    if (showGuides) {
-      cleanupsRef.current.push(
-        mountReferenceLines(viewer, {
-          gmstRad,
-          obliquityDeg: active.obliquity,
-        }),
-      );
-    }
-
-    // Animation caméra : seulement à l'arrivée d'un reading natal ou quand
-    // sa date change. Les ticks "live" minute par minute ne touchent pas la
-    // caméra, sinon elle saute toutes les minutes.
-    if (isFirstJump || isReadingChange) {
-      flyToCelestialDirection(viewer, {
-        raHours: active.sunRA,
-        decDeg: active.sunDec,
-        gmstRad,
-      });
-    }
-
-    previousReadingRef.current = reading;
-  }, [
+  useSceneLayerComposition({
+    viewerRef,
+    cleanupsRef,
+    previousReadingRef,
+    activeReadingRef,
+    activeGmstRef,
     reading,
     liveReading,
     showGuides,
     showBodyLabels,
     sideViewActive,
-  ]);
+  });
 
   // Relics layer: kept on its own effect so it doesn't re-mount on every
   // live tick (which would reset the pulse phase and the layer-internal

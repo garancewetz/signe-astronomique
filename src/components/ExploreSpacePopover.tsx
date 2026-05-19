@@ -16,6 +16,7 @@ function GithubMark(props: SVGProps<SVGSVGElement>) {
   );
 }
 import { usePortalTarget } from '../hooks/usePortalTarget';
+import { fr } from '../i18n/fr';
 import { cn, surfaceClasses } from './ui';
 
 const CONTACT_EMAIL = 'garance.wetzel@gmail.com';
@@ -153,7 +154,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
     >
       <button
         type="button"
-        aria-label="Fermer la fenêtre En savoir plus"
+        aria-label={fr.panels.explore.closeAriaLabel}
         className="fixed inset-0 z-0 bg-overlay/75 backdrop-blur-[2px]"
         onClick={onClose}
       />

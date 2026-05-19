@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import {
+  AlertTriangle,
   Axis3d,
   Globe2,
   Network,
+  RefreshCcw,
   Satellite,
   Sparkles,
   Tag,
@@ -14,7 +16,8 @@ import { cn, IconButton, surfaceClasses } from '../ui';
 import { TooltipWrap } from '../Tooltip';
 import { CoordinatesForm } from '../CoordinatesForm';
 import { type CelestialReading } from '../../utils/astroEngine';
-import type { OrbitalStatus } from '../../hooks/useOrbitalPopulation';
+import { useCockpitDisplay } from '../../context/useCockpitDisplay';
+import { fr } from '../../i18n/fr';
 import { SidebarHeader } from './SidebarHeader';
 import { SystemDock } from './SystemDock';
 import type { SidebarPanelKey } from './types';
@@ -46,25 +49,6 @@ interface SidebarProps {
   onJump: (reading: CelestialReading) => void;
 
   hasReading: boolean;
-
-  // Sphere annotations
-  guidesEnabled: boolean;
-  onToggleGuides: () => void;
-  bodyLabelsEnabled: boolean;
-  onToggleBodyLabels: () => void;
-
-  // Live data layers
-  satellitesEnabled: boolean;
-  onToggleSatellites: () => void;
-  constellationOverlayEnabled: boolean;
-  onToggleConstellationOverlay: () => void;
-  orbitalAvailable: boolean;
-  orbitalStatus: OrbitalStatus;
-
-  // Star-only display modes
-  hasSelectedStar: boolean;
-  sideViewActive: boolean;
-  onToggleSideView: () => void;
 
   // System
   fullscreenActive: boolean;
@@ -101,19 +85,6 @@ export function Sidebar(props: SidebarProps) {
     onCityChange,
     onJump,
     hasReading,
-    guidesEnabled,
-    onToggleGuides,
-    bodyLabelsEnabled,
-    onToggleBodyLabels,
-    satellitesEnabled,
-    onToggleSatellites,
-    constellationOverlayEnabled,
-    onToggleConstellationOverlay,
-    orbitalAvailable,
-    orbitalStatus,
-    hasSelectedStar,
-    sideViewActive,
-    onToggleSideView,
     fullscreenActive,
     onToggleFullscreen,
     onExportView,
@@ -122,6 +93,22 @@ export function Sidebar(props: SidebarProps) {
     exportingReport,
     canExportReport,
   } = props;
+
+  const {
+    bodyLabelsEnabled,
+    toggleBodyLabels,
+    guidesEnabled,
+    toggleGuides,
+    satellitesEnabled,
+    toggleSatellites,
+    constellationOverlayEnabled,
+    toggleConstellationOverlay,
+    orbitalAvailable,
+    orbitalStatus,
+    sideViewActive,
+    toggleSideView,
+    hasSelectedStar,
+  } = useCockpitDisplay();
 
   // Pulse the Analyse CTA every time a new reading is computed — both for the
   // initial unlock and for subsequent recomputes (so the user notices fresh
@@ -162,14 +149,14 @@ export function Sidebar(props: SidebarProps) {
       label: 'Noms',
       icon: <Tag className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: bodyLabelsEnabled,
-      onClick: onToggleBodyLabels,
+      onClick: toggleBodyLabels,
     },
     {
       key: 'guides',
       label: 'Repères',
       icon: <Globe2 className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: guidesEnabled,
-      onClick: onToggleGuides,
+      onClick: toggleGuides,
     },
     {
       key: 'orbital',
@@ -178,7 +165,7 @@ export function Sidebar(props: SidebarProps) {
       active: constellationOverlayEnabled,
       disabled: !orbitalAvailable,
       ariaLabel: orbitalAriaLabel,
-      onClick: onToggleConstellationOverlay,
+      onClick: toggleConstellationOverlay,
       status: orbitalStatusDot,
     },
     {
@@ -186,7 +173,7 @@ export function Sidebar(props: SidebarProps) {
       label: 'Reliques',
       icon: <Satellite className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: satellitesEnabled,
-      onClick: onToggleSatellites,
+      onClick: toggleSatellites,
     },
     {
       key: 'side-view',
@@ -194,14 +181,14 @@ export function Sidebar(props: SidebarProps) {
       icon: <Axis3d className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: sideViewActive,
       disabled: !hasSelectedStar,
-      onClick: onToggleSideView,
+      onClick: toggleSideView,
       fullWidth: true,
     },
   ];
 
   return (
     <motion.aside
-      aria-label="Console de pilotage"
+      aria-label={fr.cockpit.sidebarLabel}
       initial={false}
       animate={{ width: collapsed ? COLLAPSED_PX : EXPANDED_PX }}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
@@ -244,6 +231,9 @@ export function Sidebar(props: SidebarProps) {
         ) : (
           <ExpandedLayerGrid layers={layers} />
         )}
+        {!collapsed && orbitalStatus === 'error' && (
+          <OrbitalErrorRibbon onRetry={toggleConstellationOverlay} />
+        )}
       </div>
 
       <SystemDock
@@ -280,8 +270,8 @@ function AnalysisCTA({
   onClick,
 }: AnalysisCTAProps) {
   const ariaLabel = locked
-    ? 'Analyse — verrouillé · saisis tes coordonnées'
-    : 'Ouvrir l’analyse';
+    ? fr.analysisCta.lockedAriaLabel
+    : fr.analysisCta.openAriaLabel;
 
   // "Ready" = a reading exists and the modal is closed. That's the state we
   // want to advertise visually so the user notices fresh data without us
@@ -291,7 +281,10 @@ function AnalysisCTA({
   if (collapsed) {
     return (
       <div className="flex flex-col items-center py-2">
-        <TooltipWrap text={locked ? 'Analyse · verrouillé' : 'Analyse'} placement="right">
+        <TooltipWrap
+          text={locked ? fr.analysisCta.tooltipLocked : fr.analysisCta.tooltipReady}
+          placement="right"
+        >
           <IconButton
             size="xl"
             onClick={onClick}
@@ -349,7 +342,7 @@ function AnalysisCTA({
         >
           <Sparkles className="size-4" strokeWidth={1.4} />
         </span>
-        <span className="flex-1 min-w-0 truncate text-left">Analyse</span>
+        <span className="flex-1 min-w-0 truncate text-left">{fr.analysisCta.label}</span>
         <span
           aria-hidden="true"
           className={cn(
@@ -461,6 +454,47 @@ function LayerChip({
         />
       )}
     </button>
+  );
+}
+
+/* ── Orbital error ribbon — visible when Celestrak fetch fails ──────────── */
+
+interface OrbitalErrorRibbonProps {
+  onRetry: () => void;
+}
+
+function OrbitalErrorRibbon({ onRetry }: OrbitalErrorRibbonProps) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="mx-3 mt-2 mb-1 px-2.5 py-2 flex items-start gap-2
+                 rounded-md border border-rose-400/30 bg-rose-500/8
+                 text-cockpit-xs tracking-cockpit-tight text-rose-100"
+    >
+      <AlertTriangle
+        className="shrink-0 size-3.5 mt-px text-rose-300"
+        strokeWidth={1.6}
+        aria-hidden
+      />
+      <div className="flex-1 min-w-0 space-y-1">
+        <p className="leading-snug">{fr.orbital.errorBody}</p>
+        <button
+          type="button"
+          onClick={onRetry}
+          aria-label={fr.orbital.retryAriaLabel}
+          className="cockpit-focus inline-flex items-center gap-1
+                     px-1.5 py-0.5 rounded
+                     text-cockpit-xs tracking-cockpit-label uppercase
+                     text-rose-100 hover:text-white
+                     border border-rose-400/40 hover:bg-rose-500/10
+                     transition-colors"
+        >
+          <RefreshCcw className="size-3" strokeWidth={1.6} aria-hidden />
+          {fr.orbital.retryLabel}
+        </button>
+      </div>
+    </div>
   );
 }
 

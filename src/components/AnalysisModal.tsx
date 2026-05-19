@@ -11,6 +11,9 @@ import {
 } from './RightPanel';
 import { Button, cn, surfaceClasses } from './ui';
 import type { CelestialReading } from '../utils/astroEngine';
+import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
+import { fr } from '../i18n/fr';
 
 interface TabDef {
   key: ReportPanelKey;
@@ -20,10 +23,10 @@ interface TabDef {
 }
 
 const TABS: readonly TabDef[] = [
-  { key: 'resume', label: 'Mon signe', sublabel: 'Ton ciel de naissance', Icon: Sparkles },
-  { key: 'carte', label: 'Carte', sublabel: 'Roue des constellations', Icon: Map },
-  { key: 'lecture', label: 'Lecture', sublabel: 'Comprendre ta carte', Icon: BookOpen },
-  { key: 'donnees', label: 'Données', sublabel: 'Astronomie brute', Icon: Atom },
+  { key: 'resume', ...fr.analysis.tabs.resume, Icon: Sparkles },
+  { key: 'carte', ...fr.analysis.tabs.carte, Icon: Map },
+  { key: 'lecture', ...fr.analysis.tabs.lecture, Icon: BookOpen },
+  { key: 'donnees', ...fr.analysis.tabs.donnees, Icon: Atom },
 ];
 
 interface AnalysisModalProps {
@@ -60,6 +63,8 @@ export function AnalysisModal({
 }: AnalysisModalProps) {
   const reduceMotion = useReducedMotion();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useFocusTrap<HTMLDivElement>(open);
+  useBodyScrollLock(open);
 
   useEffect(() => {
     if (!open) return;
@@ -101,6 +106,7 @@ export function AnalysisModal({
           role="presentation"
         >
           <motion.div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="analysis-modal-title"
@@ -130,13 +136,13 @@ export function AnalysisModal({
                   className="text-cockpit-sm tracking-cockpit-label
                              text-accent-label mb-0.5"
                 >
-                  RAPPORT
+                  {fr.analysis.sectionLabel}
                 </div>
                 <h2
                   id="analysis-modal-title"
                   className="text-cockpit-lg tracking-cockpit-tight text-accent-title"
                 >
-                  ANALYSE
+                  {fr.analysis.title}
                 </h2>
               </div>
               <Button
@@ -145,7 +151,7 @@ export function AnalysisModal({
                 variant="outline"
                 size="sm"
                 className="shrink-0 h-8 w-8 p-0"
-                aria-label="Fermer l’analyse"
+                aria-label={fr.analysis.closeAriaLabel}
               >
                 <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />
               </Button>
@@ -153,7 +159,7 @@ export function AnalysisModal({
 
             <nav
               role="tablist"
-              aria-label="Sections de l’analyse"
+              aria-label={fr.analysis.tablistAriaLabel}
               className="flex border-b border-border-hud overflow-x-auto
                          [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
             >
@@ -171,7 +177,7 @@ export function AnalysisModal({
                     onClick={() => onActiveTabChange(key)}
                     onKeyDown={handleTabKey}
                     className={cn(
-                      'cockpit-focus relative flex-1 min-w-[8rem]',
+                      'cockpit-focus relative flex-1 min-w-32',
                       'flex items-center justify-center gap-2',
                       'px-3 py-2.5',
                       'text-cockpit-sm tracking-cockpit-caps font-medium',

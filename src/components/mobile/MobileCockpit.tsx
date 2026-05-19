@@ -5,7 +5,6 @@ import type { CityResult } from '../CityAutocomplete';
 import type { CelestialReading } from '../../utils/astroEngine';
 import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '../space/SpaceView';
-import type { OrbitalStatus } from '../../hooks/useOrbitalPopulation';
 import { ExploreSpacePopover } from '../ExploreSpacePopover';
 import { LegendPanel } from '../LegendPanel';
 import { BottomSheet, type SheetSnap } from './BottomSheet';
@@ -14,6 +13,7 @@ import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
 import { MobileSheetContent } from './MobileSheetContent';
 import { MobileAnalysisStack } from './MobileAnalysisStack';
 import { MobileSystemDrawer } from './MobileSystemDrawer';
+import { fr } from '../../i18n/fr';
 
 const TOP_CHIP_PX = 44;
 const TAB_BAR_PX = 60; // h-12 button + py-1.5 (top + bottom flat case)
@@ -41,21 +41,6 @@ interface MobileCockpitProps {
   reading: CelestialReading | null;
   selectedBody: SelectedBody | null;
   onCloseSelection: () => void;
-  hasSelectedStar: boolean;
-
-  // Display toggles
-  bodyLabelsEnabled: boolean;
-  onToggleBodyLabels: () => void;
-  guidesEnabled: boolean;
-  onToggleGuides: () => void;
-  satellitesEnabled: boolean;
-  onToggleSatellites: () => void;
-  constellationOverlayEnabled: boolean;
-  onToggleConstellationOverlay: () => void;
-  orbitalAvailable: boolean;
-  orbitalStatus: OrbitalStatus;
-  sideViewActive: boolean;
-  onToggleSideView: () => void;
 
   // Camera fly-to
   onFlySun: () => void;
@@ -152,7 +137,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
       className="fixed inset-0 overflow-hidden bg-background flex flex-col"
     >
       <a href="#cockpit-main" className="skip-to-main">
-        Aller au contenu principal
+        {fr.cockpit.skipToMain}
       </a>
 
       <header
@@ -165,7 +150,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         <button
           type="button"
           onClick={() => setCoordsOpen(true)}
-          aria-label="Modifier mes coordonnées de naissance"
+          aria-label={fr.mobile.coordinatesModal.editAriaLabel}
           aria-haspopup="dialog"
           aria-expanded={coordsOpen}
           className="cockpit-focus flex-1 min-w-0
@@ -193,7 +178,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         <button
           type="button"
           onClick={() => setDrawerOpen((v) => !v)}
-          aria-label="Ouvrir le menu système"
+          aria-label={fr.mobile.systemDrawer.openAriaLabel}
           aria-haspopup="dialog"
           aria-expanded={drawerOpen}
           className="cockpit-focus shrink-0 grid place-items-center
@@ -225,19 +210,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
             hasReading={hasReading}
             onOpenCoords={() => setCoordsOpen(true)}
             onSelectAnalysisPanel={(p) => setAnalysisPanel(p)}
-            bodyLabelsEnabled={props.bodyLabelsEnabled}
-            onToggleBodyLabels={props.onToggleBodyLabels}
-            guidesEnabled={props.guidesEnabled}
-            onToggleGuides={props.onToggleGuides}
-            satellitesEnabled={props.satellitesEnabled}
-            onToggleSatellites={props.onToggleSatellites}
-            constellationOverlayEnabled={props.constellationOverlayEnabled}
-            onToggleConstellationOverlay={props.onToggleConstellationOverlay}
-            orbitalAvailable={props.orbitalAvailable}
-            orbitalStatus={props.orbitalStatus}
-            hasSelectedStar={props.hasSelectedStar}
-            sideViewActive={props.sideViewActive}
-            onToggleSideView={props.onToggleSideView}
             onFlySun={props.onFlySun}
             onFlyMoon={props.onFlyMoon}
             onFlyEarth={props.onFlyEarth}
@@ -274,10 +246,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         panel={analysisPanel}
         onClose={() => setAnalysisPanel(null)}
         reading={reading}
-        labelsEnabled={props.bodyLabelsEnabled}
-        onToggleLabels={props.onToggleBodyLabels}
         onRevealConstellation={props.onRevealConstellation}
-        satellitesEnabled={props.satellitesEnabled}
       />
 
       <MobileSystemDrawer
@@ -312,15 +281,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
               <LegendPanel
                 variant="inline"
                 onClose={() => setLegendOpen(false)}
-                bodyLabelsEnabled={props.bodyLabelsEnabled}
-                onToggleBodyLabels={props.onToggleBodyLabels}
-                guidesEnabled={props.guidesEnabled}
-                onToggleGuides={props.onToggleGuides}
-                satellitesEnabled={props.satellitesEnabled}
-                onToggleSatellites={props.onToggleSatellites}
-                constellationOverlayEnabled={props.constellationOverlayEnabled}
-                onToggleConstellationOverlay={props.onToggleConstellationOverlay}
-                orbitalAvailable={props.orbitalAvailable}
               />
             </div>
           </motion.div>

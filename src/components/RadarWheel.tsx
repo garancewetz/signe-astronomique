@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { memo, useId, useMemo } from 'react';
 import {
   getIauBoundaries,
   type CelestialReading,
   type IauConstellation,
 } from '../utils/astroEngine';
 import { CONSTELLATION_LORE } from '../utils/constellationLore';
+import { fr } from '../i18n/fr';
 
 interface Props {
   reading: CelestialReading | null;
@@ -28,14 +29,21 @@ const R_LABEL     = 160;
  * Convention : longitude écliptique 0° (point vernal) à droite, 90° en haut,
  * progression mathématique anti-horaire.
  */
-export function RadarWheel({ reading }: Props) {
+export const RadarWheel = memo(function RadarWheel({ reading }: Props) {
   const segments = useMemo(() => buildSegments(), []);
+  const titleId = useId();
+  const descId = useId();
+  const { title, description } = useMemo(() => buildA11yText(reading), [reading]);
 
   return (
     <svg
       viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
+      role="img"
+      aria-labelledby={`${titleId} ${descId}`}
       className="block mx-auto w-full h-auto max-w-[min(100%,60vh)]"
     >
+      <title id={titleId}>{title}</title>
+      <desc id={descId}>{description}</desc>
       {/* — Disque de fond — */}
       <circle cx={CX} cy={CY} r={R_OUTER} fill="rgba(2,6,23,0.6)" />
       <circle cx={CX} cy={CY} r={R_OUTER}   fill="none" stroke="rgba(56,189,248,0.4)" strokeWidth={0.6} />
@@ -164,6 +172,37 @@ export function RadarWheel({ reading }: Props) {
       {reading && <CenterInfo reading={reading} />}
     </svg>
   );
+});
+
+// ─── A11y text ──────────────────────────────────────────────────────────────
+
+function buildA11yText(reading: CelestialReading | null): {
+  title: string;
+  description: string;
+} {
+  if (!reading) {
+    return {
+      title: fr.radarWheel.emptyTitle,
+      description: fr.radarWheel.emptyDescription,
+    };
+  }
+  const sunName = CONSTELLATION_LORE[reading.trueConstellation].fr;
+  const tz = reading.input.timezone ?? 'UTC';
+  const dateLabel = new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: tz,
+  }).format(reading.input.date);
+  return {
+    title: fr.radarWheel.title(sunName),
+    description: fr.radarWheel.description({
+      dateLabel,
+      place: reading.input.placeLabel ?? '',
+      sunName,
+      ascendantDeg: reading.ascendantLongitude,
+    }),
+  };
 }
 
 // ─── Helpers géométriques ───────────────────────────────────────────────────

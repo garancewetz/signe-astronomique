@@ -2,23 +2,13 @@ import { PLANETS_META } from '../utils/astroEngine';
 import { SATELLITE_RELICS } from '../data/satellitesDB';
 import { ORBITAL_CATEGORIES } from '../data/orbitalCategories';
 import { cn, HudCard, type HudCardVariant } from './ui';
+import { fr } from '../i18n/fr';
+import { useCockpitDisplay } from '../context/useCockpitDisplay';
 
 interface LegendPanelProps {
   onClose: () => void;
   variant?: HudCardVariant;
   sidebarWidth?: number;
-  // Layer toggles — clicking the switch on a section header flips the
-  // corresponding display layer in the sky. Mirrors the AFFICHAGE
-  // section of the sidebar.
-  bodyLabelsEnabled: boolean;
-  onToggleBodyLabels: () => void;
-  guidesEnabled: boolean;
-  onToggleGuides: () => void;
-  satellitesEnabled: boolean;
-  onToggleSatellites: () => void;
-  constellationOverlayEnabled: boolean;
-  onToggleConstellationOverlay: () => void;
-  orbitalAvailable: boolean;
 }
 
 /**
@@ -32,16 +22,18 @@ export function LegendPanel({
   onClose,
   variant = 'floating',
   sidebarWidth = 0,
-  bodyLabelsEnabled,
-  onToggleBodyLabels,
-  guidesEnabled,
-  onToggleGuides,
-  satellitesEnabled,
-  onToggleSatellites,
-  constellationOverlayEnabled,
-  onToggleConstellationOverlay,
-  orbitalAvailable,
 }: LegendPanelProps) {
+  const {
+    bodyLabelsEnabled,
+    toggleBodyLabels,
+    guidesEnabled,
+    toggleGuides,
+    satellitesEnabled,
+    toggleSatellites,
+    constellationOverlayEnabled,
+    toggleConstellationOverlay,
+    orbitalAvailable,
+  } = useCockpitDisplay();
   const planetEntries = Object.values(PLANETS_META);
   return (
     <HudCard
@@ -50,13 +42,13 @@ export function LegendPanel({
       title="LÉGENDE"
       subtitle="SYMBOLES · COULEURS · CALQUES"
       onClose={onClose}
-      closeAriaLabel="Fermer la légende"
+      closeAriaLabel={fr.panels.legend.closeAriaLabel}
     >
       <div className="space-y-4 text-cockpit-sm text-slate-200">
         <Section
           title="ASTRES"
           active={bodyLabelsEnabled}
-          onToggle={onToggleBodyLabels}
+          onToggle={toggleBodyLabels}
         >
           <Row glyph="☀" color="#fcd34d" name="Soleil" />
           <Row glyph="☾" color="#e2e8f0" name="Lune" />
@@ -68,7 +60,7 @@ export function LegendPanel({
         <Section
           title="REPÈRES DU CIEL"
           active={guidesEnabled}
-          onToggle={onToggleGuides}
+          onToggle={toggleGuides}
         >
           <LineRow color="#fde68a" label="Axe terrestre (rotation)" />
           <LineRow color="#60a5fa" label="Équateur céleste" />
@@ -78,7 +70,7 @@ export function LegendPanel({
         <Section
           title="RELIQUES ORBITALES"
           active={satellitesEnabled}
-          onToggle={onToggleSatellites}
+          onToggle={toggleSatellites}
         >
           {SATELLITE_RELICS.map((r) => (
             <DotRow
@@ -93,7 +85,7 @@ export function LegendPanel({
         <Section
           title="POPULATION ORBITALE"
           active={constellationOverlayEnabled}
-          onToggle={onToggleConstellationOverlay}
+          onToggle={toggleConstellationOverlay}
           disabled={!orbitalAvailable}
         >
           {Object.values(ORBITAL_CATEGORIES).map((cat) => (

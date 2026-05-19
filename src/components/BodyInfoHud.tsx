@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react';
+import { memo, useMemo, type ReactNode } from 'react';
 import {
   CONSTELLATION_CATALOG,
   abbrToZodiacal,
@@ -16,6 +16,7 @@ import type {
   SelectedSun,
 } from './space/SpaceView';
 import { Button, HudCard, type HudCardVariant, cn } from './ui';
+import { fr } from '../i18n/fr';
 
 interface Props {
   selected: SelectedBody | null;
@@ -44,7 +45,7 @@ interface InfoRow {
  * floats above the sky map instead of pushing the canvas. Dispatches
  * on the body's `kind` to surface the relevant facts.
  */
-export function BodyInfoHud({
+export const BodyInfoHud = memo(function BodyInfoHud({
   selected,
   sidebarWidth = 0,
   sideViewActive,
@@ -77,7 +78,7 @@ export function BodyInfoHud({
         <SatelliteCard selected={selected} onClose={onClose} {...shellProps} />
       );
   }
-}
+});
 
 // ─── Star ────────────────────────────────────────────────────────────────────
 
@@ -135,7 +136,7 @@ function StarCard({
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel="Fermer le panneau étoile"
+      closeAriaLabel={fr.panels.body.closeStar}
       subtitle={
         <>ÉTOILE · {constellation.abbreviation.toUpperCase()} · {localizedName}</>
       }
@@ -188,7 +189,7 @@ function SunCard({
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel="Fermer le panneau Soleil"
+      closeAriaLabel={fr.panels.body.closeSun}
       subtitle={<>ÉTOILE HÔTE</>}
       title={
         <>
@@ -238,7 +239,7 @@ function MoonCard({
       variant={variant}
       sidebarWidth={sidebarWidth}
       onClose={onClose}
-      closeAriaLabel="Fermer le panneau Lune"
+      closeAriaLabel={fr.panels.body.closeMoon}
       subtitle={<>SATELLITE NATUREL</>}
       title={
         <>
