@@ -4,10 +4,9 @@
 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white) ![CesiumJS](https://img.shields.io/badge/CesiumJS-1.140-4caf50) ![Tailwind](https://img.shields.io/badge/Tailwind-4-06b6d4?logo=tailwindcss&logoColor=white) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-<!-- TODO: hero screenshot or short GIF — drop the file at docs/hero.png and uncomment -->
-<!-- ![Screenshot](docs/hero.png) -->
+![Signe astronomique — cockpit](public/og-image.png)
 
-**Live demo:** <!-- TODO: replace with deployed URL --> *coming soon*
+**Live demo:** <https://signe-astronomique.netlify.app/>
 
 ---
 

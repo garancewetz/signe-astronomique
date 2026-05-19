@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://signe-astronomique.netlify.app/sitemap.xml
