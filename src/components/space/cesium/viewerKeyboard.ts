@@ -93,10 +93,13 @@ export function attachKeyboardNav(
     const lookStep = 0.015;      // rad/frame  ≈ 0.85°
     const zoomFactor = 0.97;     // 3% par frame
 
-    // Orbite autour de la Terre (rotateLeft/Right/Up/Down tournent autour
-    // du target du frustum, par défaut le centre Terre).
-    if (pressedKeys.has('ArrowLeft'))  camera.rotateRight(orbitStep);
-    if (pressedKeys.has('ArrowRight')) camera.rotateLeft(orbitStep);
+    // Orbit around Earth. Convention: arrow points the direction the
+    // camera moves around the target — pressing ArrowLeft orbits the
+    // camera to the left (so the scene appears to swing right), matching
+    // the FPS "look in this direction" mental model rather than Cesium's
+    // default mouse-drag "grab the globe and pull" convention.
+    if (pressedKeys.has('ArrowLeft'))  camera.rotateLeft(orbitStep);
+    if (pressedKeys.has('ArrowRight')) camera.rotateRight(orbitStep);
     if (pressedKeys.has('ArrowUp'))    camera.rotateDown(orbitStep);
     if (pressedKeys.has('ArrowDown'))  camera.rotateUp(orbitStep);
     // Heading en place (rotation de la caméra sans changer sa position).
