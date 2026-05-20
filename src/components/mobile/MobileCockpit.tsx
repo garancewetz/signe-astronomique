@@ -152,7 +152,8 @@ export function MobileCockpit(props: MobileCockpitProps) {
 
       <header
         className="shrink-0 z-10
-                   h-11
+                   min-h-[calc(2.75rem+env(safe-area-inset-top,0))]
+                   pt-[env(safe-area-inset-top,0)]
                    bg-surface-console/55 backdrop-blur-xl
                    border-b border-border-hud-subtle
                    flex items-stretch"
