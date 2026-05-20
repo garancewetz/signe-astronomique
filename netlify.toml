@@ -1,0 +1,65 @@
+# Netlify deployment config.
+#
+# Headers below complement the per-build CSP that vite.config.ts already
+# injects as a <meta> tag in index.html. The meta CSP holds the script-src
+# SHA-256 hashes for inline JSON-LD; this file adds the directives that the
+# spec ignores when delivered via <meta> (frame-ancestors, HSTS, etc.) plus
+# the standard hardening headers.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# ─── Default headers for every response ──────────────────────────────────────
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Force HTTPS for two years, include subdomains, allow preload list.
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+
+    # Clickjacking protection. Both X-Frame-Options (legacy) and a CSP
+    # carrying only frame-ancestors are sent: the meta CSP cannot enforce
+    # frame-ancestors, so this HTTP header is the actual control.
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+
+    # MIME sniffing off.
+    X-Content-Type-Options = "nosniff"
+
+    # Strip the referrer for cross-origin nav, keep origin-only on https.
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Disable browser features we never use. Geolocation stays at the default
+    # (self) because useGeolocation.ts requests it for the natal form.
+    Permissions-Policy = "camera=(), microphone=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=(), interest-cohort=()"
+
+    # Process isolation. Cross-Origin-Embedder-Policy is intentionally left
+    # off because NASA GIBS tiles and Google Fonts do not advertise CORP,
+    # which would break under require-corp.
+    Cross-Origin-Opener-Policy = "same-origin"
+
+# ─── Long-lived caching for hashed assets ────────────────────────────────────
+# Vite emits filenames with content hashes under /assets/, so they're safe to
+# cache forever. The HTML shell stays uncached so updated bundles ship fast.
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/cesium/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    # Service worker must revalidate so PWA updates aren't stuck behind cache.
+    Cache-Control = "no-cache"
