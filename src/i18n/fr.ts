@@ -307,7 +307,7 @@ export const fr = {
       footer:
         'Bascule sur l’axe pour voir le dessin se disloquer : depuis la Terre, les étoiles semblent alignées ; vues de côté, elles sont séparées par des centaines d’années-lumière.',
       rows: { distance: 'DISTANCE', magnitude: 'MAGNITUDE', depth: 'PROFONDEUR' },
-      modeToggleLabel: 'PERSPECTIVE_AXIALE',
+      modeToggleLabel: 'PERSPECTIVE AXIALE',
       closestSelf: 'étoile la plus proche du dessin',
       ratioFarther: (ratio: string, closest: string, distance: string): string =>
         `${ratio}× plus loin que ${closest} (${distance})`,

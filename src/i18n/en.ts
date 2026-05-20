@@ -301,7 +301,7 @@ export const en: Copy = {
       footer:
         'Switch to the axial view to see the figure come apart: from Earth, the stars look aligned; seen from the side, they’re separated by hundreds of light-years.',
       rows: { distance: 'DISTANCE', magnitude: 'MAGNITUDE', depth: 'DEPTH' },
-      modeToggleLabel: 'AXIAL_PERSPECTIVE',
+      modeToggleLabel: 'AXIAL PERSPECTIVE',
       closestSelf: 'closest star in this pattern',
       ratioFarther: (ratio: string, closest: string, distance: string): string =>
         `${ratio}× farther than ${closest} (${distance})`,

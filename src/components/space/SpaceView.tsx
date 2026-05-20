@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import {
+  CameraEventType,
   ClockRange,
   Color,
   Credit,
   ImageryLayer,
   Ion,
+  KeyboardEventModifier,
   PerspectiveFrustum,
   SceneMode,
   ScreenSpaceEventType,
@@ -655,6 +657,32 @@ export function SpaceView({
       earthCameraSnapshotRef.current = null;
     }
   }, [sideViewActive, selectedStar, reading, liveReading]);
+
+  // Cesium maps the 2-finger pinch gesture to BOTH zoom and tilt by
+  // default. In side view that's lethal: tilt rotates the camera off the
+  // perpendicular and silently eats most of the spread, making pinch-out
+  // (zoom out) feel broken on mobile. Strip PINCH from the tilt bindings
+  // while side view is active so the gesture becomes pure zoom; restore
+  // the defaults on exit.
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    const controller = viewer.scene.screenSpaceCameraController;
+    if (sideViewActive) {
+      controller.tiltEventTypes = [
+        CameraEventType.MIDDLE_DRAG,
+        { eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.CTRL },
+        { eventType: CameraEventType.RIGHT_DRAG, modifier: KeyboardEventModifier.CTRL },
+      ];
+    } else {
+      controller.tiltEventTypes = [
+        CameraEventType.MIDDLE_DRAG,
+        CameraEventType.PINCH,
+        { eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.CTRL },
+        { eventType: CameraEventType.RIGHT_DRAG, modifier: KeyboardEventModifier.CTRL },
+      ];
+    }
+  }, [sideViewActive]);
 
   return (
     <div className="absolute inset-0" aria-label="Vue 3D du ciel natal">

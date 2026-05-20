@@ -58,7 +58,17 @@ function readStorage(): SearchHistoryEntry[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isValidEntry).slice(0, MAX_ENTRIES);
+    // Dedup by date (entries are stored newest-first, so the first hit
+    // wins) to clean up histories saved under the old per-instant dedup.
+    const seen = new Set<string>();
+    const deduped: SearchHistoryEntry[] = [];
+    for (const e of parsed) {
+      if (!isValidEntry(e)) continue;
+      if (seen.has(e.date)) continue;
+      seen.add(e.date);
+      deduped.push(e);
+    }
+    return deduped.slice(0, MAX_ENTRIES);
   } catch {
     return [];
   }
@@ -77,9 +87,10 @@ function writeStorage(entries: SearchHistoryEntry[]): void {
 
 /**
  * Persists the user's recent natal searches (date + time + city) to
- * localStorage. Dedup by (date, time, city) signature so re-searching
- * the same instant bubbles the entry to the top instead of accumulating
- * duplicates. Capped at MAX_ENTRIES; oldest entries fall off the tail.
+ * localStorage. Dedup by date: re-searching the same calendar day (even
+ * with a different time or city) bubbles the latest entry to the top and
+ * evicts the older one — the list shows each date at most once. Capped
+ * at MAX_ENTRIES; oldest entries fall off the tail.
  */
 export function useSearchHistory(): SearchHistoryState {
   const [entries, setEntries] = useState<SearchHistoryEntry[]>(() => readStorage());
@@ -89,9 +100,8 @@ export function useSearchHistory(): SearchHistoryState {
   }, [entries]);
 
   const record = useCallback((entry: Omit<SearchHistoryEntry, 'savedAt'>) => {
-    const sig = signatureOf(entry);
     setEntries((prev) => {
-      const filtered = prev.filter((e) => signatureOf(e) !== sig);
+      const filtered = prev.filter((e) => e.date !== entry.date);
       const next: SearchHistoryEntry = { ...entry, savedAt: Date.now() };
       return [next, ...filtered].slice(0, MAX_ENTRIES);
     });
