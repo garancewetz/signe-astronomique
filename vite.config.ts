@@ -36,7 +36,18 @@ function cspMetaTag(): Plugin {
         scriptHashes.push(`'sha256-${hash}'`);
       }
 
-      const scriptSrc = ["'self'", ...scriptHashes].join(' ');
+      // Cesium uses `new Function(...)` and WebAssembly internally, so we
+      // need 'unsafe-eval' + 'wasm-unsafe-eval'. There is no workaround
+      // short of forking Cesium.
+      const scriptSrc = [
+        "'self'",
+        "'unsafe-eval'",
+        "'wasm-unsafe-eval'",
+        ...scriptHashes,
+      ].join(' ');
+      // Note: `frame-ancestors` is only enforced when served as an HTTP
+      // header, not via <meta>. If clickjacking protection becomes a
+      // requirement, add it to a Netlify _headers / netlify.toml file.
       const csp = [
         "default-src 'self'",
         "connect-src 'self' https://celestrak.org https://*.celestrak.org https://nominatim.openstreetmap.org https://gibs.earthdata.nasa.gov https://*.earthdata.nasa.gov",
@@ -47,7 +58,6 @@ function cspMetaTag(): Plugin {
         "worker-src 'self' blob:",
         "base-uri 'self'",
         "form-action 'none'",
-        "frame-ancestors 'none'",
       ].join('; ');
 
       const tag = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
