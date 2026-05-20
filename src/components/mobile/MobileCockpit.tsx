@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, MoreVertical } from 'lucide-react';
 import type { CityResult } from '../CityAutocomplete';
 import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
@@ -16,10 +16,14 @@ import { MobileAnalysisStack } from './MobileAnalysisStack';
 import { MobileSystemDrawer } from './MobileSystemDrawer';
 import { useT } from '../../context/useLocale';
 
-const TOP_CHIP_PX = 44;
+const TOP_CHIP_PX = 44; // header content min-height, excl. safe-area
 const TAB_BAR_PX = 60; // h-12 button + py-1.5 (top + bottom flat case)
 const SHEET_PEEK_PX = 144; // handle + eyebrow + CTA button
 const SHEET_MID_RATIO = 0.55;
+// Visible gap kept above the sheet at its tallest snap. Without this, on
+// iOS PWA the sheet's top edge ends up under the dynamic island and the
+// drag handle becomes unreachable.
+const SHEET_TOP_RESERVE_PX = 24;
 // Match the tab bar's `pt-1.5 + h-12 + pb-[max(6px, env(...))]` math, so the
 // sheet's lower edge always sits exactly on the tab bar's top edge.
 const SHEET_BOTTOM_OFFSET =
@@ -118,7 +122,19 @@ export function MobileCockpit(props: MobileCockpitProps) {
   const vh = useViewportHeight();
   const reduceMotion = useReducedMotion();
 
-  const fullPx = Math.max(240, vh - TOP_CHIP_PX - TAB_BAR_PX - 12);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerPx, setHeaderPx] = useState(TOP_CHIP_PX);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderPx(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const fullPx = Math.max(240, vh - headerPx - TAB_BAR_PX - SHEET_TOP_RESERVE_PX);
   const midPx = Math.max(SHEET_PEEK_PX + 64, Math.round(vh * SHEET_MID_RATIO));
   const peekPx = SHEET_PEEK_PX;
 
@@ -151,6 +167,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
       </a>
 
       <header
+        ref={headerRef}
         className="shrink-0 z-10
                    min-h-[calc(2.75rem+env(safe-area-inset-top,0))]
                    pt-[env(safe-area-inset-top,0)]

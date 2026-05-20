@@ -5,11 +5,29 @@ import {
   useMotionValue,
   useReducedMotion,
 } from 'framer-motion';
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { cn } from '../ui';
 import { useT } from '../../context/useLocale';
 
 export type SheetSnap = 'peek' | 'mid' | 'full';
+
+// Initial estimate for the drag handle's rendered height (pt-2 + h-1 +
+// pb-1.5 ≈ 18, rounded up to absorb the button's flex centering). Used
+// only for the first frame — ResizeObserver replaces it once mounted.
+const HANDLE_FALLBACK_PX = 28;
+
+function nextSnapForTap(
+  snap: SheetSnap,
+  targets: Record<SheetSnap, number>,
+): SheetSnap {
+  // When content fits inside mid, the mid target collapses onto peek or
+  // full; skipping it keeps every tap visibly moving.
+  const midEqualsPeek = targets.mid === targets.peek;
+  const midEqualsFull = targets.mid === targets.full;
+  if (snap === 'peek') return midEqualsPeek || midEqualsFull ? 'full' : 'mid';
+  if (snap === 'mid') return midEqualsFull ? 'peek' : 'full';
+  return 'peek';
+}
 
 interface BottomSheetProps {
   snap: SheetSnap;
@@ -56,15 +74,46 @@ export function BottomSheet({
   const reduceMotion = useReducedMotion();
   const dragControls = useDragControls();
 
+  const handleRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [naturalContentPx, setNaturalContentPx] = useState<number | null>(null);
+  const [handlePx, setHandlePx] = useState(HANDLE_FALLBACK_PX);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) return;
+    const measure = () => {
+      setNaturalContentPx(content.offsetHeight);
+      if (handleRef.current) setHandlePx(handleRef.current.offsetHeight);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(content);
+    if (handleRef.current) ro.observe(handleRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Cap full/mid to the content's natural height so an expanded sheet
+  // doesn't leave a big empty band when the active tab's content is short.
+  const effectiveFullPx = useMemo(() => {
+    if (naturalContentPx == null) return fullPx;
+    return Math.min(fullPx, Math.max(peekPx, naturalContentPx + handlePx));
+  }, [fullPx, naturalContentPx, handlePx, peekPx]);
+
+  const effectiveMidPx = useMemo(
+    () => Math.min(midPx, effectiveFullPx),
+    [midPx, effectiveFullPx],
+  );
+
   // translateY values for each snap. y=0 means fully open; positive y
   // pushes the top of the sheet down, exposing less content.
   const targets = useMemo(
     () => ({
       full: 0,
-      mid: Math.max(0, fullPx - midPx),
-      peek: Math.max(0, fullPx - peekPx),
+      mid: Math.max(0, effectiveFullPx - effectiveMidPx),
+      peek: Math.max(0, effectiveFullPx - peekPx),
     }),
-    [fullPx, midPx, peekPx],
+    [effectiveFullPx, effectiveMidPx, peekPx],
   );
 
   // Match the initial snap on mount so the sheet doesn't flash fully open
@@ -114,7 +163,7 @@ export function BottomSheet({
         }
         onSnapChange(nearest);
       }}
-      style={{ y, height: fullPx, bottom: bottomOffset }}
+      style={{ y, height: effectiveFullPx, bottom: bottomOffset }}
       className={cn(
         'fixed left-0 right-0 z-30',
         'bg-surface-console/95 backdrop-blur-2xl',
@@ -125,14 +174,10 @@ export function BottomSheet({
       )}
     >
       <button
+        ref={handleRef}
         type="button"
         onPointerDown={(e) => dragControls.start(e)}
-        onClick={() => {
-          // Tap on handle cycles peek → mid → full → peek
-          const next: SheetSnap =
-            snap === 'peek' ? 'mid' : snap === 'mid' ? 'full' : 'peek';
-          onSnapChange(next);
-        }}
+        onClick={() => onSnapChange(nextSnapForTap(snap, targets))}
         aria-label={
           snap === 'full'
             ? t.mobile.bottomSheet.collapseAriaLabel
@@ -159,7 +204,7 @@ export function BottomSheet({
             : 'overflow-y-auto overscroll-contain',
         )}
       >
-        {children}
+        <div ref={contentRef}>{children}</div>
       </div>
     </motion.aside>
   );
