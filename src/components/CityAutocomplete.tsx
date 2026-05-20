@@ -25,6 +25,16 @@ interface NominatimResult {
   place_id: number;
 }
 
+function isNominatimResult(x: unknown): x is NominatimResult {
+  if (!x || typeof x !== 'object') return false;
+  const r = x as Record<string, unknown>;
+  return (
+    typeof r.display_name === 'string' &&
+    typeof r.lat === 'string' &&
+    typeof r.lon === 'string'
+  );
+}
+
 interface Props {
   value: CityResult;
   onSelect: (city: CityResult) => void;
@@ -119,16 +129,23 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
           );
           return;
         }
-        const data = (await res.json()) as NominatimResult[];
-        const cities = data.map<CityResult>(r => {
+        const raw: unknown = await res.json();
+        // Nominatim is a public, untyped endpoint — validate every record
+        // and drop entries with non-finite coordinates so the rest of the
+        // pipeline (Intl, Cesium, tz-lookup) never receives NaN.
+        const data: NominatimResult[] = Array.isArray(raw)
+          ? raw.filter(isNominatimResult)
+          : [];
+        const cities = data.flatMap<CityResult>(r => {
           const lat = parseFloat(r.lat);
           const lon = parseFloat(r.lon);
-          return {
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
+          return [{
             label: shorten(r.display_name),
             lat,
             lon,
             timezone: timezoneFromLatLon(lat, lon),
-          };
+          }];
         });
         setResults(cities);
         setHighlighted(0);
