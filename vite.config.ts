@@ -78,7 +78,13 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
-      includeAssets: ['favicon.svg', 'logo.svg', 'robots.txt'],
+      includeAssets: [
+        'favicon.svg',
+        'logo.svg',
+        'pwa-192.png',
+        'pwa-512.png',
+        'robots.txt',
+      ],
       manifest: {
         name: 'True Cosmic Sign',
         short_name: 'Cosmic Sign',
@@ -93,18 +99,21 @@ export default defineConfig({
         background_color: '#060210',
         theme_color: '#060210',
         categories: ['education', 'science', 'utilities'],
+        // PNG icons are required for reliable Android home-screen install —
+        // SVG manifest icons are accepted inconsistently and Android falls
+        // back to a generated first-letter avatar when it gives up.
         icons: [
           {
-            src: '/favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/pwa-192.png',
+            sizes: '192x192',
+            type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/logo.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'maskable',
+            src: '/pwa-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
           },
         ],
       },
