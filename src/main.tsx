@@ -13,7 +13,7 @@ registerSW({ immediate: true })
 // Not a leftover debug statement; the project lint convention bans console.log
 // elsewhere, but this single greeting is by design.
 console.log(
-  '%ctrue cosmic sign%c\n' +
+  '%csigne astronomique%c\n' +
     'Conçu et développé par Garance Wetzel.\n\n' +
     '%cStack%c\n' +
     '· React 19 + TypeScript\n' +
