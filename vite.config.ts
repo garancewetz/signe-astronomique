@@ -86,8 +86,9 @@ export default defineConfig({
         'robots.txt',
       ],
       manifest: {
-        name: 'True Cosmic Sign',
-        short_name: 'Cosmic Sign',
+        id: '/',
+        name: 'Signe astronomique',
+        short_name: 'Signe astro',
         description:
           'Cockpit astronomique : ta vraie constellation solaire de naissance, calculée selon les frontières IAU 1930 (avec Ophiuchus).',
         lang: 'fr',
