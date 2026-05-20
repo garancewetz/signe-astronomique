@@ -37,10 +37,13 @@ function cspMetaTag(): Plugin {
       }
 
       // Cesium uses `new Function(...)` and WebAssembly internally, so we
-      // need 'unsafe-eval' + 'wasm-unsafe-eval'. There is no workaround
-      // short of forking Cesium.
+      // need 'unsafe-eval' + 'wasm-unsafe-eval'. Cesium also bootstraps
+      // its workers via blob: URLs and they then `importScripts(blob:...)`,
+      // which is governed by script-src inside the worker context — hence
+      // `blob:`. There is no workaround short of forking Cesium.
       const scriptSrc = [
         "'self'",
+        "blob:",
         "'unsafe-eval'",
         "'wasm-unsafe-eval'",
         ...scriptHashes,
