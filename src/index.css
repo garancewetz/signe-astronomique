@@ -133,6 +133,20 @@ body {
   box-shadow: 0 0 0 2px var(--color-input-focus-visible-glow);
 }
 
+/*
+ * Touch devices — iOS Safari auto-zooms on any <input> whose font-size is
+ * < 16px when focused, which jolts the layout the first time the user taps
+ * the natal form. Bump to 16px exactly on coarse pointers and grow the
+ * tap target to ~44px (Apple HIG). Desktop keeps the dense cockpit look.
+ */
+@media (pointer: coarse) {
+  .cockpit-input {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
 .cockpit-focus:focus {
   outline: none;
 }

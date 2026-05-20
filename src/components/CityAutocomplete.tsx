@@ -236,7 +236,11 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
         onBlur={onBlur}
         className="cockpit-input w-full"
         autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="words"
         spellCheck={false}
+        inputMode="search"
+        enterKeyHint="search"
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={open && results.length > 0}
