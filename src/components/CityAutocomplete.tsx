@@ -1,4 +1,13 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import {
+  FloatingPortal,
+  autoUpdate,
+  flip,
+  offset,
+  shift,
+  size,
+  useFloating,
+} from '@floating-ui/react';
 import { timezoneFromLatLon } from '../utils/timezone';
 import { useT } from '../context/useLocale';
 
@@ -44,6 +53,32 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
   const reqIdRef = useRef(0);
   const listboxId = useId();
   const statusId = useId();
+
+  // Floating dropdown that flips up/down depending on available space and
+  // shrinks to fit the viewport — replaces the hard-coded `bottom-full`
+  // placement that ran off-screen when the input sat near the viewport top.
+  const {
+    refs: { setReference, setFloating },
+    floatingStyles,
+  } = useFloating({
+    open,
+    placement: 'bottom-start',
+    middleware: [
+      offset(4),
+      flip({ padding: 8 }),
+      shift({ padding: 8 }),
+      size({
+        padding: 8,
+        apply({ availableHeight, rects, elements }) {
+          Object.assign(elements.floating.style, {
+            maxHeight: `${Math.min(availableHeight, 224)}px`,
+            width: `${rects.reference.width}px`,
+          });
+        },
+      }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
 
   // React docs "Adjusting state on prop change" pattern — render-time setState,
   // bounded by the lastValueLabel guard so it can't loop. Replaces a
@@ -156,7 +191,7 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
   };
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={(el) => { wrapRef.current = el; setReference(el); }} className="relative">
       <input
         ref={inputRef}
         id={inputId}
@@ -214,31 +249,34 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
         {errorMsg ?? ''}
       </div>
       {open && results.length > 0 && (
-        <ul
-          id={listboxId}
-          role="listbox"
-          className="absolute z-50 left-0 right-0 bottom-full mb-1
-                     max-h-56 overflow-y-auto rounded-sm
-                     border border-border-control bg-surface/95
-                     backdrop-blur-sm text-cockpit-md text-slate-200
-                     shadow-cockpit-lift"
-        >
-          {results.map((r, i) => (
-            <li
-              key={`${r.lat},${r.lon},${i}`}
-              role="option"
-              aria-selected={i === highlighted}
-              onMouseDown={e => { e.preventDefault(); select(r); }}
-              onMouseEnter={() => setHighlighted(i)}
-              className={`px-3 py-2.5 cursor-pointer truncate transition-colors min-h-11 flex items-center
-                ${i === highlighted
-                  ? 'bg-violet-600/25 text-violet-100'
-                  : 'hover:bg-violet-600/15'}`}
-            >
-              {r.label}
-            </li>
-          ))}
-        </ul>
+        <FloatingPortal>
+          <ul
+            ref={setFloating}
+            id={listboxId}
+            role="listbox"
+            style={floatingStyles}
+            className="z-50 overflow-y-auto rounded-sm
+                       border border-border-control bg-surface/95
+                       backdrop-blur-sm text-cockpit-md text-slate-200
+                       shadow-cockpit-lift"
+          >
+            {results.map((r, i) => (
+              <li
+                key={`${r.lat},${r.lon},${i}`}
+                role="option"
+                aria-selected={i === highlighted}
+                onMouseDown={e => { e.preventDefault(); select(r); }}
+                onMouseEnter={() => setHighlighted(i)}
+                className={`px-3 py-2.5 cursor-pointer truncate transition-colors min-h-11 flex items-center
+                  ${i === highlighted
+                    ? 'bg-violet-600/25 text-violet-100'
+                    : 'hover:bg-violet-600/15'}`}
+              >
+                {r.label}
+              </li>
+            ))}
+          </ul>
+        </FloatingPortal>
       )}
     </div>
   );

@@ -93,7 +93,7 @@ export function MobileSystemDrawer({
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
             className={cn(
-              'fixed top-12 right-2 z-50',
+              'fixed top-[calc(3rem+env(safe-area-inset-top,0))] right-2 z-50',
               'w-[min(18rem,calc(100vw-1rem))]',
               'rounded-panel overflow-hidden',
               surfaceClasses('panel'),

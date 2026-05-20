@@ -47,6 +47,7 @@ export function MobileAnalysisStack({
                      bg-surface-raised/95 backdrop-blur-2xl"
         >
           <div className="h-full min-h-0 overflow-hidden flex flex-col
+                          pt-[env(safe-area-inset-top,0)]
                           pb-[env(safe-area-inset-bottom,0)]">
             {panel === 'resume' && (
               <ResumePanel

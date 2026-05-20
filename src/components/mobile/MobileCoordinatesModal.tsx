@@ -78,7 +78,9 @@ export function MobileCoordinatesModal({
                      flex flex-col"
         >
           <header
-            className="shrink-0 h-12 px-2 flex items-center gap-2
+            className="shrink-0 px-2 flex items-center gap-2
+                       min-h-[calc(3rem+env(safe-area-inset-top,0))]
+                       pt-[env(safe-area-inset-top,0)]
                        border-b border-border-hud-subtle"
           >
             <button

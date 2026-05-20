@@ -100,7 +100,9 @@ export function AnalysisModal({
           exit={{ opacity: 0 }}
           transition={{ duration: reduceMotion ? 0 : 0.18 }}
           className="fixed inset-0 z-50 flex items-center justify-center
-                     px-4 py-6 sm:px-8 sm:py-10
+                     px-4 sm:px-8 sm:py-10
+                     pt-[max(1.5rem,env(safe-area-inset-top,0))]
+                     pb-[max(1.5rem,env(safe-area-inset-bottom,0))]
                      bg-background/55 backdrop-blur-sm"
           onClick={onClose}
           role="presentation"
