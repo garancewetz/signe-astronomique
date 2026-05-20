@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import {
-  CameraEventType,
   ClockRange,
   Color,
   Credit,
   ImageryLayer,
   Ion,
-  KeyboardEventModifier,
   PerspectiveFrustum,
   SceneMode,
   ScreenSpaceEventType,
@@ -36,6 +34,7 @@ import {
   flyToSideView,
   type CameraSnapshot,
 } from './cesium/sideView';
+import { attachSideViewTouch } from './cesium/sideViewTouch';
 import { useBodyHover, useBodyPicker, type HoveredBody } from './cesium/useBodyPicker';
 import {
   flyToOrbital,
@@ -245,7 +244,7 @@ export function SpaceView({
         // Cesium met le canvas à jour de manière asynchrone ; on force un
         // render pour garantir que le buffer correspond à la frame courante.
         viewer.render();
-        return viewer.scene.canvas as HTMLCanvasElement;
+        return viewer.scene.canvas;
       },
       flyToSun: () => {
         const viewer = viewerRef.current;
@@ -658,30 +657,21 @@ export function SpaceView({
     }
   }, [sideViewActive, selectedStar, reading, liveReading]);
 
-  // Cesium maps the 2-finger pinch gesture to BOTH zoom and tilt by
-  // default. In side view that's lethal: tilt rotates the camera off the
-  // perpendicular and silently eats most of the spread, making pinch-out
-  // (zoom out) feel broken on mobile. Strip PINCH from the tilt bindings
-  // while side view is active so the gesture becomes pure zoom; restore
-  // the defaults on exit.
+  // Mobile touch handling in side view. Cesium's default screen-space
+  // camera controller is Earth-centric in SCENE3D: at 500 AU from Earth,
+  // pinch-zoom picks the globe (a tiny dot) as its pivot and the math
+  // degenerates, so pinch and pan feel dead. On touch devices we swap in
+  // a camera-local handler that mirrors the keyboard-nav side-view model
+  // (pan along camera right/up, zoom along view direction). Desktops keep
+  // Cesium's controller because mouse wheel + drag already work correctly.
   useEffect(() => {
     const viewer = viewerRef.current;
-    if (!viewer) return;
-    const controller = viewer.scene.screenSpaceCameraController;
-    if (sideViewActive) {
-      controller.tiltEventTypes = [
-        CameraEventType.MIDDLE_DRAG,
-        { eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.CTRL },
-        { eventType: CameraEventType.RIGHT_DRAG, modifier: KeyboardEventModifier.CTRL },
-      ];
-    } else {
-      controller.tiltEventTypes = [
-        CameraEventType.MIDDLE_DRAG,
-        CameraEventType.PINCH,
-        { eventType: CameraEventType.LEFT_DRAG, modifier: KeyboardEventModifier.CTRL },
-        { eventType: CameraEventType.RIGHT_DRAG, modifier: KeyboardEventModifier.CTRL },
-      ];
+    if (!viewer || !sideViewActive) return;
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
     }
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
+    return attachSideViewTouch(viewer);
   }, [sideViewActive]);
 
   return (
