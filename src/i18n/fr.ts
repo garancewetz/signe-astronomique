@@ -114,8 +114,6 @@ export const fr = {
       ariaLabel: 'Menu système',
       backdropAriaLabel: 'Fermer le menu système',
       openAriaLabel: 'Ouvrir le menu système',
-      fullscreenEnter: 'Plein écran',
-      fullscreenExit: 'Quitter le plein écran',
       legend: { label: 'Légende', sublabel: 'Symboles · couleurs · calques' },
       explore: { label: 'Liens utiles', sublabel: 'Cartes du ciel · éphémérides' },
       exportView: { label: 'Exporter la vue', sublabel: 'PNG du ciel 3D' },

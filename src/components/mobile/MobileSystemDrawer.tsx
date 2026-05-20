@@ -5,8 +5,6 @@ import {
   FileDown,
   List,
   Loader2,
-  Maximize2,
-  Minimize2,
 } from 'lucide-react';
 import { InfoCircleIcon } from '../ExploreSpacePopover';
 import { cn, MenuRow, surfaceClasses } from '../ui';
@@ -18,9 +16,6 @@ import { LOCALES, type Locale } from '../../i18n';
 interface MobileSystemDrawerProps {
   open: boolean;
   onClose: () => void;
-
-  fullscreenActive: boolean;
-  onToggleFullscreen: () => void;
 
   onOpenLegend: () => void;
   onOpenExploreSpace: () => void;
@@ -35,15 +30,13 @@ interface MobileSystemDrawerProps {
 /**
  * Pop-down system menu anchored under the top chip's "⋮" button. Hosts
  * the rarely-used controls that don't deserve a dedicated tab on mobile:
- * fullscreen · legend · external links · two PNG exports.
+ * legend · external links · two PNG exports.
  *
  * A backdrop swallows outside clicks so the drawer dismisses naturally.
  */
 export function MobileSystemDrawer({
   open,
   onClose,
-  fullscreenActive,
-  onToggleFullscreen,
   onOpenLegend,
   onOpenExploreSpace,
   onExportView,
@@ -101,23 +94,6 @@ export function MobileSystemDrawer({
             style={{ transformOrigin: 'top right' }}
           >
             <ul role="list" className="p-1">
-              <li>
-                <MenuRow
-                  kind="toggle"
-                  size="md"
-                  label={fullscreenActive ? t.mobile.systemDrawer.fullscreenExit : t.mobile.systemDrawer.fullscreenEnter}
-                  icon={
-                    fullscreenActive ? (
-                      <Minimize2 className="size-4" strokeWidth={1.4} aria-hidden />
-                    ) : (
-                      <Maximize2 className="size-4" strokeWidth={1.4} aria-hidden />
-                    )
-                  }
-                  active={fullscreenActive}
-                  onClick={onToggleFullscreen}
-                />
-              </li>
-              <DrawerDivider />
               <li>
                 <div className="px-2 py-1.5 flex items-center justify-between gap-2">
                   <div className="min-w-0 flex flex-col leading-tight">

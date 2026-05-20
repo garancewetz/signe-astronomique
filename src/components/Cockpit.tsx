@@ -272,8 +272,6 @@ export function Cockpit() {
           activeTab={mobileActiveTab}
           onActiveTabChange={setMobileActiveTab}
           analysisAttention={analysisAttention}
-          fullscreenActive={fullscreenActive}
-          onToggleFullscreen={toggleFullscreen}
           onExportView={handleExportView}
           exportingView={exportingView}
           onExportPdf={handleExportPdf}

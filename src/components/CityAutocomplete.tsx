@@ -228,8 +228,12 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
             setLoading(true);
           }
         }}
-        onFocus={() => {
+        onFocus={(e) => {
           setIsFocused(true);
+          // Select-all on focus so the user can start typing immediately
+          // instead of having to clear the geolocation "Position actuelle"
+          // (or any previous city) by hand — especially fiddly on mobile.
+          e.currentTarget.select();
           if (results.length > 0) setOpen(true);
         }}
         onKeyDown={onKeyDown}

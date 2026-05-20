@@ -108,8 +108,6 @@ export const en: Copy = {
       ariaLabel: 'System menu',
       backdropAriaLabel: 'Close the system menu',
       openAriaLabel: 'Open the system menu',
-      fullscreenEnter: 'Fullscreen',
-      fullscreenExit: 'Exit fullscreen',
       legend: { label: 'Legend', sublabel: 'Symbols · colors · layers' },
       explore: { label: 'Useful links', sublabel: 'Sky maps · ephemerides' },
       exportView: { label: 'Export view', sublabel: '3D sky PNG' },

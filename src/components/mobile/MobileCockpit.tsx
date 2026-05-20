@@ -68,8 +68,6 @@ interface MobileCockpitProps {
   analysisAttention: number;
 
   // System (drawer + overlays)
-  fullscreenActive: boolean;
-  onToggleFullscreen: () => void;
   onExportView: () => void;
   exportingView: boolean;
   onExportPdf: () => void;
@@ -153,6 +151,11 @@ export function MobileCockpit(props: MobileCockpitProps) {
     onActiveTabChange(next);
     if (next !== null && snap === 'peek') {
       setSnap('mid');
+    } else if (next === null) {
+      // Tapping the active tab is the user's "close the sheet" gesture —
+      // without this the sheet stays stuck at mid/full showing the home
+      // placeholder, which feels unclosable.
+      setSnap('peek');
     }
   };
 
@@ -283,8 +286,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
       <MobileSystemDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        fullscreenActive={props.fullscreenActive}
-        onToggleFullscreen={props.onToggleFullscreen}
         onOpenLegend={() => setLegendOpen(true)}
         onOpenExploreSpace={() => setExploreOpen(true)}
         onExportView={props.onExportView}
