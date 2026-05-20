@@ -57,6 +57,10 @@
       "src/types/tz-lookup.d.ts"
     ]
   },
+  "overrides": {
+    "brace-expansion": "5.0.6",
+    "protobufjs": "8.4.0"
+  },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@tailwindcss/vite": "4.2.4",
