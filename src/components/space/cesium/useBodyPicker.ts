@@ -6,8 +6,8 @@ import {
   ScreenSpaceEventType,
   type Viewer,
 } from 'cesium';
-import type { IauConstellation } from '../../../utils/astroEngine';
-import type { PlanetId } from '../../../utils/planetEngine';
+import type { IauConstellation } from '@/features/astronomy';
+import type { PlanetId } from '@/features/astronomy';
 import type { SelectedBody } from '../SpaceView';
 
 /** Body identification under the cursor — used to drive hover affordance. */

@@ -13,7 +13,7 @@ import {
   TwoMotionsCard,
 } from './MissionLog';
 import { PanelShell } from './ui';
-import type { CelestialReading } from '../utils/astroEngine';
+import type { CelestialReading } from '@/features/astronomy';
 import {
   SPACE_AGE_START_YEAR,
   isSilentEra,

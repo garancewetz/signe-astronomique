@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { CoordinatesForm } from '../CoordinatesForm';
 import type { CityResult } from '../CityAutocomplete';
 import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
-import type { CelestialReading } from '../../utils/astroEngine';
+import type { CelestialReading } from '@/features/astronomy';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { useT } from '../../context/useLocale';

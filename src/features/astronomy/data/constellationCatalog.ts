@@ -1,4 +1,4 @@
-import type { IauConstellation } from '../utils/astroEngine';
+import type { IauConstellation } from '../astroEngine';
 import rawCatalog from './constellations.json';
 
 export interface CatalogStar {

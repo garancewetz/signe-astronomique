@@ -13,9 +13,9 @@ import {
   abbrToZodiacal,
   findConstellation,
   type CatalogStar,
-} from '../../../data/constellationCatalog';
+} from '@/features/astronomy';
 import { loreName } from '../../../utils/constellationLore';
-import { starShellRadiusMExpanded } from '../../../utils/skyCoordinates';
+import { starShellRadiusMExpanded } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
 import type { Locale } from '../../../i18n';
 

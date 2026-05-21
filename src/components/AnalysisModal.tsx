@@ -10,7 +10,7 @@ import {
   type ReportPanelKey,
 } from './RightPanel';
 import { Button, cn, surfaceClasses } from './ui';
-import type { CelestialReading } from '../utils/astroEngine';
+import type { CelestialReading } from '@/features/astronomy';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { useT } from '../context/useLocale';

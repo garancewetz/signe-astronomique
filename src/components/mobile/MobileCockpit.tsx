@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, MoreVertical } from 'lucide-react';
 import type { CityResult } from '../CityAutocomplete';
 import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
-import type { CelestialReading } from '../../utils/astroEngine';
+import type { CelestialReading } from '@/features/astronomy';
 import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '../space/SpaceView';
 import { ExploreSpacePopover } from '../ExploreSpacePopover';

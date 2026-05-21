@@ -1,4 +1,4 @@
-import { PLANETS_META } from '../utils/astroEngine';
+import { PLANETS_META } from '@/features/astronomy';
 import { SATELLITE_RELICS, satelliteName } from '../data/satellitesDB';
 import { ORBITAL_CATEGORIES, orbitalCategoryLabel } from '../data/orbitalCategories';
 import { cn, HudCard, type HudCardVariant } from './ui';

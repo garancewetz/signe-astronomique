@@ -4,10 +4,10 @@ import {
   abbrToZodiacal,
   type CatalogConstellation,
   type CatalogStar,
-} from '../data/constellationCatalog';
+} from '@/features/astronomy';
 import { loreName } from '../utils/constellationLore';
-import { PLANETS_META } from '../utils/planetEngine';
-import { AU_KM } from '../utils/skyCoordinates';
+import { PLANETS_META } from '@/features/astronomy';
+import { AU_KM } from '@/features/astronomy';
 import { formatDistanceKmOrAU } from '../utils/formatDistance';
 import type {
   SelectedBody,
@@ -21,7 +21,7 @@ import { Button, HudCard, type HudCardVariant, cn } from './ui';
 import { useLocale, useT } from '../context/useLocale';
 import type { Copy } from '../i18n/fr';
 import type { Locale } from '../i18n';
-import type { MoonPhaseKey } from '../utils/astroEngine';
+import type { MoonPhaseKey } from '@/features/astronomy';
 
 interface Props {
   selected: SelectedBody | null;

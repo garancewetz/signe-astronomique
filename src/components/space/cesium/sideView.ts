@@ -6,8 +6,8 @@ import {
 import {
   findConstellation,
   type CatalogConstellation,
-} from '../../../data/constellationCatalog';
-import { starShellRadiusMExpanded } from '../../../utils/skyCoordinates';
+} from '@/features/astronomy';
+import { starShellRadiusMExpanded } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
 
 const SIDE_VIEW_DURATION_S = 2.5;

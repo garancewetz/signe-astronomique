@@ -6,7 +6,7 @@ import {
   ResumePanel,
   type ReportPanelKey,
 } from '../RightPanel';
-import type { CelestialReading } from '../../utils/astroEngine';
+import type { CelestialReading } from '@/features/astronomy';
 import { useCockpitDisplay } from '../../context/useCockpitDisplay';
 
 interface MobileAnalysisStackProps {

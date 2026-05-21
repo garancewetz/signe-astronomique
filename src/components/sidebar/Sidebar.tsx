@@ -16,7 +16,7 @@ import { cn, IconButton, surfaceClasses } from '../ui';
 import { TooltipWrap } from '../Tooltip';
 import { CoordinatesForm } from '../CoordinatesForm';
 import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
-import { type CelestialReading } from '../../utils/astroEngine';
+import { type CelestialReading } from '@/features/astronomy';
 import { useCockpitDisplay } from '../../context/useCockpitDisplay';
 import { useT } from '../../context/useLocale';
 import { SidebarHeader } from './SidebarHeader';

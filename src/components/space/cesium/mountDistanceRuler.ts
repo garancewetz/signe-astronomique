@@ -10,8 +10,8 @@ import {
   type Entity,
   type Viewer,
 } from 'cesium';
-import { findConstellation } from '../../../data/constellationCatalog';
-import { starShellRadiusMExpanded } from '../../../utils/skyCoordinates';
+import { findConstellation } from '@/features/astronomy';
+import { starShellRadiusMExpanded } from '@/features/astronomy';
 import { constellationAxis, sideViewBasis } from './sideView';
 
 interface MountOptions {
