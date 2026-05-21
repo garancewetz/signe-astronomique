@@ -4,7 +4,7 @@
 
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white) ![CesiumJS](https://img.shields.io/badge/CesiumJS-1.140-4caf50) ![Tailwind](https://img.shields.io/badge/Tailwind-4-06b6d4?logo=tailwindcss&logoColor=white) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-![Signe astronomique — cockpit](public/og-image.png)
+![Cockpit en vue normale : Terre centrée, Lune et Jupiter visibles, constellations du Cancer, Lion et Gémeaux dessinées sur la sphère céleste](public/screenshot.jpg)
 
 **Live demo:** <https://signe-astronomique.netlify.app/>
 
