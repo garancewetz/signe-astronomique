@@ -1,5 +1,5 @@
-import type { IauConstellation } from '@/features/astronomy';
-import type { Locale } from '../i18n';
+import type { IauConstellation } from './astroEngine';
+import type { Locale } from '@/i18n';
 
 interface ConstellationLore {
   /** French display name. */

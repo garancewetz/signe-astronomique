@@ -42,3 +42,14 @@ export {
   type CatalogStar,
   type CatalogConstellation,
 } from './data/constellationCatalog';
+
+export {
+  CONSTELLATION_LORE,
+  loreName,
+  lorePoetic,
+} from './constellationLore';
+
+export {
+  EARTH_RADIUS_M,
+  formatDistanceKmOrAU,
+} from './formatDistance';

@@ -1,5 +1,5 @@
-import type { Locale } from '../i18n';
-import { AU_KM } from '@/features/astronomy';
+import type { Locale } from '@/i18n';
+import { AU_KM } from './skyCoordinates';
 
 /**
  * Mean Earth radius (meters). Used wherever we need to turn a geocentric

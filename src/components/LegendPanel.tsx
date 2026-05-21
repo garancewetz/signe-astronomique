@@ -1,6 +1,10 @@
 import { PLANETS_META } from '@/features/astronomy';
-import { SATELLITE_RELICS, satelliteName } from '../data/satellitesDB';
-import { ORBITAL_CATEGORIES, orbitalCategoryLabel } from '../data/orbitalCategories';
+import {
+  ORBITAL_CATEGORIES,
+  SATELLITE_RELICS,
+  orbitalCategoryLabel,
+  satelliteName,
+} from '@/features/space-viewport';
 import { cn, HudCard, type HudCardVariant } from './ui';
 import { useLocale, useT } from '../context/useLocale';
 import { useCockpitDisplay } from '../context/useCockpitDisplay';

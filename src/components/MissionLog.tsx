@@ -1,12 +1,15 @@
 import {
+  CONSTELLATION_LORE,
+  PLANETS_META,
   formatRA,
   getIauBoundaries,
+  loreName,
+  lorePoetic,
   precessionOffset,
   type CelestialBody,
   type CelestialReading,
+  type PlanetId,
 } from '@/features/astronomy';
-import { CONSTELLATION_LORE, loreName, lorePoetic } from '../utils/constellationLore';
-import { PLANETS_META, type PlanetId } from '@/features/astronomy';
 import { useLocale, useT } from '../context/useLocale';
 import { cn } from './ui/cn';
 

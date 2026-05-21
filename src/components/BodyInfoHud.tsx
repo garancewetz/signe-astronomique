@@ -1,14 +1,15 @@
 import { memo, useMemo, type ReactNode } from 'react';
 import {
+  AU_KM,
   CONSTELLATION_CATALOG,
+  PLANETS_META,
   abbrToZodiacal,
+  formatDistanceKmOrAU,
+  loreName,
   type CatalogConstellation,
   type CatalogStar,
+  type MoonPhaseKey,
 } from '@/features/astronomy';
-import { loreName } from '../utils/constellationLore';
-import { PLANETS_META } from '@/features/astronomy';
-import { AU_KM } from '@/features/astronomy';
-import { formatDistanceKmOrAU } from '../utils/formatDistance';
 import type {
   SelectedBody,
   SelectedMoon,
@@ -16,12 +17,11 @@ import type {
   SelectedSatellite,
   SelectedStar,
   SelectedSun,
-} from './space/SpaceView';
+} from '@/features/space-viewport';
 import { Button, HudCard, type HudCardVariant, cn } from './ui';
 import { useLocale, useT } from '../context/useLocale';
 import type { Copy } from '../i18n/fr';
 import type { Locale } from '../i18n';
-import type { MoonPhaseKey } from '@/features/astronomy';
 
 interface Props {
   selected: SelectedBody | null;

@@ -1,10 +1,10 @@
 import { memo, useId, useMemo } from 'react';
 import {
   getIauBoundaries,
+  loreName,
   type CelestialReading,
   type IauConstellation,
 } from '@/features/astronomy';
-import { loreName } from '../utils/constellationLore';
 import { useLocale, useT } from '../context/useLocale';
 import type { Copy } from '../i18n/fr';
 import type { Locale } from '../i18n';

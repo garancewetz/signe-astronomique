@@ -8,7 +8,7 @@ import {
 } from '@/features/natal-input';
 import type { CelestialReading } from '@/features/astronomy';
 import type { ReportPanelKey } from '../RightPanel';
-import type { SelectedBody } from '../space/SpaceView';
+import type { SelectedBody } from '@/features/space-viewport';
 import { ExploreSpacePopover } from '../ExploreSpacePopover';
 import { LegendPanel } from '../LegendPanel';
 import { BottomSheet, type SheetSnap } from './BottomSheet';

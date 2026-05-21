@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { OrbitalStatus } from '../hooks/useOrbitalPopulation';
+import type { OrbitalStatus } from '@/features/space-viewport';
 
 export interface CockpitDisplayValue {
   bodyLabelsEnabled: boolean;

@@ -1,5 +1,5 @@
-import type { OrbitalCategory } from '../hooks/useOrbitalPopulation';
-import type { Locale } from '../i18n';
+import type { OrbitalCategory } from '../useOrbitalPopulation';
+import type { Locale } from '@/i18n';
 
 /**
  * Single source of truth for the orbital overlay palette.

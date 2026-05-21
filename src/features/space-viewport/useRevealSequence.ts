@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
-import type { SpaceViewHandle } from '../components/space/SpaceView';
+import type { SpaceViewHandle } from './SpaceView';
 
 const REVEAL_LABEL_HOLD_MS = 3000;
 

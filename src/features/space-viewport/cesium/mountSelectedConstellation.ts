@@ -9,12 +9,12 @@ import {
   type Viewer,
 } from 'cesium';
 import {
+  CONSTELLATION_LORE,
   abbrToZodiacal,
   findConstellation,
+  starShellRadiusM,
   type CatalogStar,
 } from '@/features/astronomy';
-import { CONSTELLATION_LORE } from '../../../utils/constellationLore';
-import { starShellRadiusM } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
 
 const MAGNITUDE_LIMIT = 6.0;

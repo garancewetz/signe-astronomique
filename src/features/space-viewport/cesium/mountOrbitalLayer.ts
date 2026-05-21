@@ -1,7 +1,7 @@
 import { Cartesian3, Color, PointPrimitiveCollection, type Viewer } from 'cesium';
 import { gstime, propagate } from 'satellite.js';
-import type { OrbitalCategory, OrbitalSat } from '../../../hooks/useOrbitalPopulation';
-import { ORBITAL_CATEGORIES } from '../../../data/orbitalCategories';
+import type { OrbitalCategory, OrbitalSat } from '../useOrbitalPopulation';
+import { ORBITAL_CATEGORIES } from '../data/orbitalCategories';
 
 // Cesium Color objects are derived from the shared palette so the legend
 // dots and the rendered points cannot drift apart.
