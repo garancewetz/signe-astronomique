@@ -5,7 +5,7 @@
  * La Terre n'apparaît pas ici : c'est l'ellipsoïde WGS84 du globe Cesium
  * (R ≈ 6 378 km), qui sert de référence pour la perception des proportions.
  */
-import type { PlanetId } from '../../../../utils/planetEngine';
+import type { PlanetId } from '@/features/astronomy';
 
 const SUN_RADIUS_KM = 695_700;
 const MOON_RADIUS_KM = 1_737.4;

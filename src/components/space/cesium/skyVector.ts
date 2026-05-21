@@ -1,5 +1,5 @@
 import { Cartesian3 } from 'cesium';
-import { raDecToEcefXYZ } from '../../../utils/skyCoordinates';
+import { raDecToEcefXYZ } from '@/features/astronomy';
 
 /**
  * Cesium-typed wrapper around the pure ICRS → ECEF transform in

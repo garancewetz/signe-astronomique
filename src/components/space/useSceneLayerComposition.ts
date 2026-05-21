@@ -1,8 +1,8 @@
 import { useEffect, type MutableRefObject } from 'react';
 import { JulianDate, type Viewer } from 'cesium';
-import type { CelestialReading } from '../../utils/astroEngine';
-import type { PlanetId } from '../../utils/planetEngine';
-import { gmstRadians } from '../../utils/skyCoordinates';
+import type { CelestialReading } from '@/features/astronomy';
+import type { PlanetId } from '@/features/astronomy';
+import { gmstRadians } from '@/features/astronomy';
 import { mountStarsLayer } from './cesium/mountStarsLayer';
 import { mountSunLayer } from './cesium/mountSunLayer';
 import { mountMoonLayer } from './cesium/mountMoonLayer';

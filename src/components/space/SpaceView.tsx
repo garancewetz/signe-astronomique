@@ -12,7 +12,7 @@ import {
   Viewer,
   WebMercatorTilingScheme,
 } from 'cesium';
-import { AU_KM, gmstRadians } from '../../utils/skyCoordinates';
+import { AU_KM, gmstRadians } from '@/features/astronomy';
 import { attachCameraDistanceListener } from './cesium/cameraDistance';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
@@ -20,8 +20,8 @@ import {
   computeReading,
   type CelestialReading,
   type IauConstellation,
-} from '../../utils/astroEngine';
-import type { PlanetId } from '../../utils/planetEngine';
+} from '@/features/astronomy';
+import type { PlanetId } from '@/features/astronomy';
 
 import { mountSatellitesLayer } from './cesium/mountSatellitesLayer';
 import { mountOrbitalLayer } from './cesium/mountOrbitalLayer';
@@ -47,7 +47,7 @@ import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
 import type { OrbitalSat } from '../../hooks/useOrbitalPopulation';
 import { useLocale, useT } from '../../context/useLocale';
 import type { Locale } from '../../i18n';
-import { PLANETS_META } from '../../utils/planetEngine';
+import { PLANETS_META } from '@/features/astronomy';
 
 export interface SpaceViewHandle {
   /**

@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Clock, X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { Field, Input, cn } from './ui';
-import { computeReading, type CelestialReading } from '../utils/astroEngine';
+import { computeReading, type CelestialReading } from '@/features/astronomy';
 import { localBirthToUtc } from '../utils/timezone';
 import {
   signatureOf,

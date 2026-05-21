@@ -4,7 +4,7 @@ import {
   PerspectiveFrustum,
   type Viewer,
 } from 'cesium';
-import { raHoursToDegrees } from '../../../utils/skyCoordinates';
+import { raHoursToDegrees } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
 
 // 100 000 km — Terre fait ~7° apparent (taille d'une bille à bout de bras),

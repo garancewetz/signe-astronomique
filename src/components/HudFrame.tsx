@@ -3,7 +3,7 @@ import {
   formatLST,
   liveTelemetry,
   type CelestialReading,
-} from '../utils/astroEngine';
+} from '@/features/astronomy';
 import { useT } from '../context/useLocale';
 
 /** Birth-time formatter pinned to the birth location's timezone. Falls

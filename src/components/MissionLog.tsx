@@ -4,9 +4,9 @@ import {
   precessionOffset,
   type CelestialBody,
   type CelestialReading,
-} from '../utils/astroEngine';
+} from '@/features/astronomy';
 import { CONSTELLATION_LORE, loreName, lorePoetic } from '../utils/constellationLore';
-import { PLANETS_META, type PlanetId } from '../utils/planetEngine';
+import { PLANETS_META, type PlanetId } from '@/features/astronomy';
 import { useLocale, useT } from '../context/useLocale';
 import { cn } from './ui/cn';
 

@@ -9,7 +9,7 @@ import {
   type Entity,
   type Viewer,
 } from 'cesium';
-import { CELESTIAL_SPHERE_KM } from '../../../utils/skyCoordinates';
+import { CELESTIAL_SPHERE_KM } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
 
 const SPHERE_RADIUS_M = CELESTIAL_SPHERE_KM * 1000;

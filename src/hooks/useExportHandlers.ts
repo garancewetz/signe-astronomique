@@ -1,5 +1,5 @@
 import { useCallback, useState, type RefObject } from 'react';
-import type { CelestialReading } from '../utils/astroEngine';
+import type { CelestialReading } from '@/features/astronomy';
 import type { SpaceViewHandle } from '../components/space/SpaceView';
 import {
   downloadCanvasPng,

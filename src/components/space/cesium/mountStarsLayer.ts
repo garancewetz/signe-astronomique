@@ -13,11 +13,11 @@ import {
   isZodiacal,
   abbrToZodiacal,
   type CatalogStar,
-} from '../../../data/constellationCatalog';
+} from '@/features/astronomy';
 import { CONSTELLATION_LORE } from '../../../utils/constellationLore';
-import { starShellRadiusM } from '../../../utils/skyCoordinates';
+import { starShellRadiusM } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
-import type { IauConstellation } from '../../../utils/astroEngine';
+import type { IauConstellation } from '@/features/astronomy';
 
 const MAGNITUDE_LIMIT = 6.0;
 

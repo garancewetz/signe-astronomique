@@ -10,9 +10,9 @@ import {
 import {
   AU_KM,
   raHoursToDegrees,
-} from '../../../utils/skyCoordinates';
+} from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
-import type { IauConstellation } from '../../../utils/astroEngine';
+import type { IauConstellation } from '@/features/astronomy';
 
 interface MountOptions {
   /** Sun right-ascension in hours (astroEngine convention). */

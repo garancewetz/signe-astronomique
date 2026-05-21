@@ -3,7 +3,7 @@ import {
   getIauBoundaries,
   type CelestialReading,
   type IauConstellation,
-} from '../utils/astroEngine';
+} from '@/features/astronomy';
 import { loreName } from '../utils/constellationLore';
 import { useLocale, useT } from '../context/useLocale';
 import type { Copy } from '../i18n/fr';

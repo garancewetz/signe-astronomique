@@ -11,10 +11,10 @@ import {
 import {
   AU_KM,
   raHoursToDegrees,
-} from '../../../utils/skyCoordinates';
+} from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
-import type { CelestialBody } from '../../../utils/astroEngine';
-import type { PlanetId } from '../../../utils/planetEngine';
+import type { CelestialBody } from '@/features/astronomy';
+import type { PlanetId } from '@/features/astronomy';
 import { visualEllipsoidRadiusMeters } from './bodies';
 
 interface MountOptions {

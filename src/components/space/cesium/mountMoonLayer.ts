@@ -20,10 +20,10 @@ import {
 import {
   AU_KM,
   raHoursToDegrees,
-} from '../../../utils/skyCoordinates';
+} from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
 import { visualEllipsoidRadiusMeters } from './bodies';
-import type { IauConstellation, MoonPhaseKey } from '../../../utils/astroEngine';
+import type { IauConstellation, MoonPhaseKey } from '@/features/astronomy';
 
 const MOON_TEXTURE_URI = buildModuleUrl('Assets/Textures/moonSmall.jpg');
 
