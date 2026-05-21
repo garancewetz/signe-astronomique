@@ -301,7 +301,7 @@ export function Cockpit() {
         {t.cockpit.skipToMain}
       </a>
 
-      {/* === VUE 3D — sélection de texte désactivée (navigation globe / capture) === */}
+      {/* === 3D VIEW — text selection disabled (globe navigation / capture) === */}
       <div
         className="absolute top-0 bottom-0 right-0 z-0 select-none touch-manipulation
                    transition-[left] duration-300 ease-out"
@@ -310,19 +310,19 @@ export function Cockpit() {
         {spaceView}
       </div>
 
-      {/* === VIGNETTE BOULE DE CRISTAL === */}
+      {/* === CRYSTAL-BALL VIGNETTE === */}
       <div className="absolute inset-0 z-1 pointer-events-none crystal-vignette" />
 
-      {/* === HINT CLAVIER — découverte de la navigation 3D au clavier === */}
+      {/* === KEYBOARD HINT — surfaces the 3D keyboard navigation === */}
       <KeyboardHintChip
         onOpen={openLegend}
         hidden={activePanel === 'legend'}
       />
 
-      {/* === DISTANCE CAMÉRA — altitude live, refresh par le listener Cesium === */}
+      {/* === CAMERA DISTANCE — live altitude, refreshed by the Cesium listener === */}
       <DistanceChip label={distanceLabel} />
 
-      {/* === CADRE HUD (slim — état seul, branding déplacé en sidebar) === */}
+      {/* === HUD FRAME (slim — status only; branding lives in the sidebar) === */}
       <div
         className="absolute top-0 z-10 pointer-events-none
                    transition-[left] duration-300 ease-out"
@@ -336,7 +336,7 @@ export function Cockpit() {
         />
       </div>
 
-      {/* === SIDEBAR — colonne unifiée (formulaire, analyse, caméra, calques, système) === */}
+      {/* === SIDEBAR — unified column (form, analysis, camera, layers, system) === */}
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebarCollapsed}

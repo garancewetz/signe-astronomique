@@ -93,7 +93,7 @@ export async function exportTargetedPdf(
   pdf.save(filename);
 }
 
-/** Génère un nom de fichier daté basé sur l'input (sans extension). */
+/** Build a dated filename slug from the input (no extension). */
 function reportFileSlug(date: Date, place?: string): string {
   const iso = date.toISOString().slice(0, 10);
   const slug = place
@@ -121,7 +121,7 @@ export function viewFilename(dateForFile: Date | null, place?: string): string {
 }
 
 /**
- * Télécharge le canvas WebGL tel quel (PNG), après `viewer.render()` côté appelant.
+ * Download the WebGL canvas as a PNG after the caller has run `viewer.render()`.
  */
 export function downloadCanvasPng(
   canvas: HTMLCanvasElement,

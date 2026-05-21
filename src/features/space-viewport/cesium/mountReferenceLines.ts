@@ -19,9 +19,9 @@ const DEG = Math.PI / 180;
 const EARTH_POLAR_RADIUS_M = 6_356_752 * 1.002;
 
 interface MountOptions {
-  /** GMST en radians de la date courante. */
+  /** GMST in radians at the current date. */
   gmstRad: number;
-  /** Obliquité de l'écliptique en degrés (~23.44°). */
+  /** Obliquity of the ecliptic in degrees (~23.44°). */
   obliquityDeg: number;
 }
 
@@ -50,12 +50,12 @@ export function mountReferenceLines(
   const created: Entity[] = [];
   const { gmstRad, obliquityDeg } = opts;
 
-  // ─── 1. Axe de rotation terrestre ────────────────────────────────────────
-  // En ECEF, l'axe est strictement Z. On le rend en deux segments — pôle Sud
-  // céleste → surface Sud, et surface Nord → pôle Nord céleste — pour que la
-  // Terre occulte naturellement la portion intérieure. Une polyligne unique
-  // qui traverse le globe « phase » à travers la texture (depth-test mou des
-  // polylines Cesium contre le terrain).
+  // ─── 1. Earth rotation axis ──────────────────────────────────────────────
+  // In ECEF the axis is strictly Z. We render it as two segments — south
+  // celestial pole → south surface, and north surface → north celestial pole
+  // — so Earth naturally occludes the inner portion. A single polyline that
+  // crosses the globe would "phase" through the texture (Cesium polylines
+  // have a loose depth test against the terrain).
   const axisColor = Color.fromCssColorString('#fde68a').withAlpha(0.55);
   const axisSegments: [Cartesian3, Cartesian3][] = [
     [
@@ -80,7 +80,7 @@ export function mountReferenceLines(
       }),
     );
   }
-  // Label "Polaris" au pôle Nord céleste
+  // "Polaris" label at the north celestial pole.
   created.push(
     viewer.entities.add({
       position: new Cartesian3(0, 0, SPHERE_RADIUS_M * 0.98),
@@ -112,7 +112,7 @@ export function mountReferenceLines(
     }),
   );
 
-  // ─── 2. Équateur céleste (Dec = 0) ───────────────────────────────────────
+  // ─── 2. Celestial equator (Dec = 0) ──────────────────────────────────────
   const equatorColor = Color.fromCssColorString('#60a5fa').withAlpha(0.45);
   const equatorPositions: Cartesian3[] = [];
   for (let raDeg = 0; raDeg <= 360; raDeg += 2) {
@@ -131,7 +131,7 @@ export function mountReferenceLines(
       properties: { kind: 'guide', name: 'Équateur céleste' },
     }),
   );
-  // Label sur l'équateur, à RA = 90° (loin du label écliptique pour ne pas se chevaucher)
+  // Equator label at RA = 90° — far from the ecliptic label to avoid overlap.
   created.push(
     viewer.entities.add({
       position: raDecToEcef(90, 0, gmstRad, SPHERE_RADIUS_M),
@@ -148,9 +148,9 @@ export function mountReferenceLines(
     }),
   );
 
-  // ─── 3. Écliptique (chemin apparent du Soleil) ───────────────────────────
-  // Paramétrage : pour chaque longitude écliptique λ, on convertit (λ, β=0)
-  // vers (RA, Dec) avec l'obliquité ε :
+  // ─── 3. Ecliptic (apparent path of the Sun) ──────────────────────────────
+  // Parameterized by ecliptic longitude λ: for each λ we convert (λ, β=0) to
+  // (RA, Dec) using the obliquity ε:
   //   sin Dec = sin β cos ε + cos β sin ε sin λ  (β=0 → sin ε sin λ)
   //   tan RA  = (sin λ cos ε - tan β sin ε) / cos λ  (β=0 → cos ε tan λ)
   const eps = obliquityDeg * DEG;
@@ -181,8 +181,8 @@ export function mountReferenceLines(
       properties: { kind: 'guide', name: 'Écliptique' },
     }),
   );
-  // Label sur l'écliptique au solstice d'été : λ = 90°, point d'altitude
-  // maximale par rapport à l'équateur céleste — éloigné du label équateur.
+  // Ecliptic label at the summer solstice: λ = 90°, the point of maximum
+  // altitude relative to the celestial equator — well away from the equator label.
   const summerSolstice = (() => {
     const lon = 90 * DEG;
     const sinDec = Math.sin(eps) * Math.sin(lon);

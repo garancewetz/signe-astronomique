@@ -93,12 +93,12 @@ export function attachKeyboardNav(
       return;
     }
 
-    // Vitesses calibrées pour un mouvement perceptible sans être brutal,
-    // proportionnelles au pas (~16 ms à 60 fps mais on s'en moque, Cesium
-    // tourne à fréquence variable — les valeurs sont par frame).
+    // Speeds calibrated for perceptible-but-not-jarring motion; expressed
+    // per frame because Cesium renders at variable rate and we don't want
+    // to bind ourselves to 60 fps assumptions.
     const orbitStep = 0.012;     // rad/frame  ≈ 0.7°
     const lookStep = 0.015;      // rad/frame  ≈ 0.85°
-    const zoomFactor = 0.97;     // 3% par frame
+    const zoomFactor = 0.97;     // 3% per frame
 
     // Orbit around Earth. Convention: arrow points the direction the
     // camera moves around the target — pressing ArrowLeft orbits the
@@ -109,10 +109,10 @@ export function attachKeyboardNav(
     if (pressedKeys.has('ArrowRight')) camera.rotateRight(orbitStep);
     if (pressedKeys.has('ArrowUp'))    camera.rotateDown(orbitStep);
     if (pressedKeys.has('ArrowDown'))  camera.rotateUp(orbitStep);
-    // Heading en place (rotation de la caméra sans changer sa position).
+    // In-place heading (rotate the camera around its own up vector).
     if (pressedKeys.has('a') || pressedKeys.has('A')) camera.lookLeft(lookStep);
     if (pressedKeys.has('e') || pressedKeys.has('E')) camera.lookRight(lookStep);
-    // Zoom : on rapproche/éloigne en bornant la distance au centre Terre.
+    // Zoom: move along the view axis while clamping the geocentric distance.
     if (pressedKeys.has('+') || pressedKeys.has('=') ||
         pressedKeys.has('z') || pressedKeys.has('Z') ||
         pressedKeys.has('PageUp')) {

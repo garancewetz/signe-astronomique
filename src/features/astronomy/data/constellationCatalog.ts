@@ -4,13 +4,13 @@ import rawCatalog from './constellations.json';
 export interface CatalogStar {
   name: string;
   bayer: string;
-  /** Ascension droite, degrés [0..360) — frame ICRS J2000 */
+  /** Right ascension, degrees [0..360) — ICRS J2000 frame. */
   ra: number;
-  /** Déclinaison, degrés [-90..+90] */
+  /** Declination, degrees [-90..+90]. */
   dec: number;
-  /** Magnitude apparente V-band */
+  /** Apparent V-band magnitude. */
   mag: number;
-  /** Distance à la Terre en années-lumière (Hipparcos, approximative) */
+  /** Distance to Earth in light-years (Hipparcos, approximate). */
   distance_ly: number;
 }
 
@@ -32,9 +32,9 @@ export function findConstellation(
   );
 }
 
-// ─── Mapping abbréviation IAU 3-lettres → IauConstellation ──────────────────
-// Seules les 13 zodiacales sont surlignées (lignes brillantes + label).
-// Les autres ne reçoivent que des points d'étoiles, sans pattern.
+// ─── IAU 3-letter abbreviation → IauConstellation ──────────────────────────
+// Only the 13 zodiacal constellations are highlighted (bright lines + label).
+// The others get plain star points without any pattern overlay.
 
 const ZODIACAL_BY_ABBR: Record<string, IauConstellation> = {
   Ari: 'Aries',
