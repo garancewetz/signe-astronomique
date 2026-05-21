@@ -19,7 +19,7 @@ Every body is pickable. Selecting one opens a HUD panel and unlocks two compleme
 - **Side view** — camera perpendicular to the Earth → constellation axis, with a graduated distance ruler in light-years.
 - **Depth view** — the constellation "exploded" so each star sits at its real distance, making the depth disparity legible at a glance.
 
-A natal report is rendered alongside the 3D view: ascendant constellation, planetary positions, and the 360° ecliptic radar with IAU angular sizes. A "share this sky" button copies a self-contained URL that opens directly on the recipient's recomputed chart.
+A natal report is rendered alongside the 3D view: ascendant constellation, planetary positions, and the 360° ecliptic radar with IAU angular sizes. A "share this sky" button hands the recipient a self-contained URL — opened via the native Web Share sheet on mobile/Safari, falling back to a clipboard copy elsewhere — and a [Netlify Edge function](netlify/edge-functions/og-share.ts) rewrites the index `<meta og:*>` tags on the fly so the link previews show the actual `Le ciel de {city} — {date}` card in WhatsApp / iMessage / mail. On mobile the cockpit installs as a PWA and the app surfaces a one-tap install hint after the first paint.
 
 ## Why it matters
 
@@ -110,6 +110,7 @@ src/
 │   │   │   ├── useBodyPicker.ts                  click → typed payload, never-exhaustive
 │   │   │   ├── cameraDirector.ts                 flyTo helpers
 │   │   │   ├── cameraDistance.ts                 live camera-altitude HUD (preRender tick)
+│   │   │   ├── cameraLimits.ts                   shared min/max camera-distance clamps
 │   │   │   └── viewerKeyboard.ts                 AZERTY-friendly nav, side-view aware
 │   │   └── index.ts                      barrel
 │   ├── natal-report/             analytical views + export pipeline
@@ -132,7 +133,15 @@ src/
 │       ├── LanguageSwitcher.tsx          FR | EN toggle
 │       ├── Tooltip.tsx                   portal tooltip (anti-clipping)
 │       ├── sidebar/                      unified left rail + dockable console
-│       ├── mobile/                       mobile cockpit shell (sheet, drawers, tab bar)
+│       ├── mobile/                       mobile cockpit shell
+│       │   ├── MobileCockpit.tsx                 top-level mobile layout (header + canvas + sheet + tab bar)
+│       │   ├── MobileHeader.tsx                  top chip showing the active natal coords
+│       │   ├── BottomSheet.tsx                   draggable 3-snap sheet, `visible`-via-translate
+│       │   ├── MobileTabBar.tsx                  bottom navigation (display / navigation / analysis)
+│       │   ├── MobileSheetContent.tsx            tab-specific bodies inside the sheet
+│       │   ├── MobileSystemDrawer.tsx            right-hand drawer (export, share, language, …)
+│       │   ├── MobileAnalysisStack.tsx           full-screen analysis panel stack
+│       │   └── InstallPwaPrompt.tsx              one-shot install hint (Android prompt + iOS instructions)
 │       └── index.ts                      barrel — exports Cockpit + ErrorBoundary + Fallback
 ├── ui/                           shared primitives + cross-cutting UI hooks
 │   ├── Button.tsx / IconButton.tsx / Input.tsx / Field.tsx
@@ -194,6 +203,16 @@ On a network error the button flips to `[RETRY]`; one click re-runs the fetch vi
 ## Export
 
 The camera button captures the WebGL canvas to PNG (hence `preserveDrawingBuffer: true` on the Viewer). The report button generates a PDF summary via [`exportReport.ts`](src/features/natal-report/exportReport.ts).
+
+## Share + link previews
+
+The `Share this sky` button calls `navigator.share` when available — so on mobile + Safari the OS sheet surfaces WhatsApp / SMS / Mail / etc. directly — and otherwise falls back to a clipboard copy with a `window.prompt` ultimate fallback. The URL embeds the natal payload (date, time, lat/lon clamped to 4 decimals, city label); [`shareLink.ts`](src/features/natal-input/shareLink.ts) handles encode/decode + range validation, and [`useShareLink`](src/features/natal-input/useShareLink.ts) auto-hydrates the recipient's reading once on mount, then strips the params from the address bar.
+
+A Netlify Edge function at [`netlify/edge-functions/og-share.ts`](netlify/edge-functions/og-share.ts) intercepts requests to `/` carrying those params, fetches the static `index.html`, and swaps the `og:title` / `og:description` / `twitter:*` tags with a `Le ciel de {city} — {date}` line before streaming the response. Cold homepage hits (no params) fall through to the cached HTML untouched. The label is HTML-escaped and lat/lon are validated symmetrically with the SPA, so a malformed link never reaches a social cache.
+
+## PWA install
+
+The cockpit is installable as a PWA. [`InstallPwaPrompt`](src/features/cockpit-shell/mobile/InstallPwaPrompt.tsx) captures Chrome's `beforeinstallprompt` event on Android and surfaces a native install CTA after an 8 s reveal delay; on iOS Safari (no install API) it shows a brief `Share → Add to Home Screen` hint. Dismissals are persisted in `localStorage` so the prompt never nags twice.
 
 ## Conventions
 
