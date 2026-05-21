@@ -73,6 +73,9 @@ interface MobileCockpitProps {
   onExportPdf: () => void;
   exportingPdf: boolean;
   canExportReport: boolean;
+
+  /** Camera-to-Earth distance label, refreshed live from SpaceView. */
+  distanceLabel: string | null;
 }
 
 /**
@@ -109,6 +112,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
     selectedBody,
     activeTab,
     onActiveTabChange,
+    distanceLabel,
   } = props;
 
   const [snap, setSnap] = useState<SheetSnap>('peek');
@@ -224,6 +228,19 @@ export function MobileCockpit(props: MobileCockpitProps) {
 
       <div className="relative flex-1 min-h-0 select-none touch-manipulation">
         {children}
+        {distanceLabel && (
+          <div
+            aria-live="off"
+            className="pointer-events-none absolute top-3 right-3 z-20
+                       px-2 py-1 rounded-md
+                       border border-border-hud-subtle bg-surface-console/55
+                       backdrop-blur-sm
+                       text-cockpit-xs tracking-cockpit-label uppercase
+                       text-slate-200 tabular-nums"
+          >
+            {distanceLabel}
+          </div>
+        )}
       </div>
 
       <BottomSheet

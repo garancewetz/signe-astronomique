@@ -7,8 +7,11 @@ const NAV_KEYS = new Set([
   'PageUp', 'PageDown',
 ]);
 
-const MIN_DIST = 200_000;       // 200 km, rasance Terre
-const MAX_DIST = 150_000_000;   // 150 000 km, dans la sphère céleste
+// MIN_DIST est mesuré depuis le centre Terre (magnitude de la position
+// ECEF). 6 371 km = rayon moyen, +50 km de marge → la caméra reste juste
+// au-dessus de la surface en zoom maxi, sans pouvoir traverser le globe.
+const MIN_DIST = 6_421_000;          // ~50 km d'altitude au-dessus du sol
+const MAX_DIST = 950_000_000;
 
 function isTypingTarget(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false;

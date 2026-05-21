@@ -56,6 +56,7 @@ export function Cockpit() {
   const [selectedBody, setSelectedBody] = useState<SelectedBody | null>(null);
   const [sideViewActive, setSideViewActive] = useState(false);
   const [mobileActiveTab, setMobileActiveTab] = useState<MobileTabKey | null>(null);
+  const [distanceLabel, setDistanceLabel] = useState<string | null>(null);
 
   const {
     satellites: orbitalSatellites,
@@ -228,6 +229,7 @@ export function Cockpit() {
         selectedBody={selectedBody}
         onBodySelect={handleBodySelect}
         sideViewActive={sideViewActive}
+        onDistanceChange={setDistanceLabel}
       />
     </ErrorBoundary>
   );
@@ -277,6 +279,7 @@ export function Cockpit() {
           onExportPdf={handleExportPdf}
           exportingPdf={exportingPdf}
           canExportReport={!!reading}
+          distanceLabel={distanceLabel}
         >
           {spaceView}
         </MobileCockpit>
@@ -313,6 +316,21 @@ export function Cockpit() {
         onOpen={openLegend}
         hidden={activePanel === 'legend'}
       />
+
+      {/* === DISTANCE CAMÉRA — mise à jour live au zoom/orbite === */}
+      {distanceLabel && (
+        <div
+          aria-live="off"
+          className="pointer-events-none absolute top-3 right-3 z-20
+                     px-2 py-1 rounded-md
+                     border border-border-hud-subtle bg-surface-console/55
+                     backdrop-blur-sm
+                     text-cockpit-xs tracking-cockpit-label uppercase
+                     text-slate-200 tabular-nums"
+        >
+          {distanceLabel}
+        </div>
+      )}
 
       {/* === CADRE HUD (slim — état seul, branding déplacé en sidebar) === */}
       <div
