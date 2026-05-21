@@ -1,5 +1,5 @@
-import { Button, Surface } from './ui';
-import { useT } from '../context/useLocale';
+import { Button, Surface } from '@/ui';
+import { useT } from '@/context/useLocale';
 
 interface CockpitFallbackProps {
   /** When provided, replaces the default reload action with a soft retry. */

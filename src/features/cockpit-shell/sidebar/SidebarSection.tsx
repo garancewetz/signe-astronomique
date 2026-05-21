@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { TooltipWrap } from '../Tooltip';
-import { cn, IconButton } from '../ui';
+import { cn, IconButton } from '@/ui';
 
 interface SectionProps {
   title: string;

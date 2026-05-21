@@ -12,7 +12,7 @@ import {
   useInteractions,
   useRole,
 } from '@floating-ui/react';
-import { cn } from './ui';
+import { cn } from '@/ui';
 
 export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right';
 

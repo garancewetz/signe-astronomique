@@ -13,9 +13,9 @@ import type { ReactNode } from 'react';
 import { BodyInfoHud } from '../BodyInfoHud';
 import type { ReportPanelKey } from '@/features/natal-report';
 import type { SelectedBody } from '@/features/space-viewport';
-import { MenuRow } from '../ui';
-import { useCockpitDisplay } from '../../context/useCockpitDisplay';
-import { useT } from '../../context/useLocale';
+import { MenuRow } from '@/ui';
+import { useCockpitDisplay } from '@/context/useCockpitDisplay';
+import { useT } from '@/context/useLocale';
 import type { MobileTabKey } from './MobileTabBar';
 
 interface MobileSheetContentProps {

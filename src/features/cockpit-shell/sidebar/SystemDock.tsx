@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { TooltipWrap } from '../Tooltip';
 import { ExploreSpacePopover, InfoCircleIcon } from '@/features/natal-report';
-import { cn, IconButton, type IconButtonActiveTone } from '../ui';
-import { useT } from '../../context/useLocale';
+import { cn, IconButton, type IconButtonActiveTone } from '@/ui';
+import { useT } from '@/context/useLocale';
 
 interface SystemDockProps {
   collapsed: boolean;

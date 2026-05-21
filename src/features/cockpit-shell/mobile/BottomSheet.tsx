@@ -6,8 +6,8 @@ import {
   useReducedMotion,
 } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { cn } from '../ui';
-import { useT } from '../../context/useLocale';
+import { cn } from '@/ui';
+import { useT } from '@/context/useLocale';
 
 export type SheetSnap = 'peek' | 'mid' | 'full';
 

@@ -1,6 +1,6 @@
 import { Keyboard } from 'lucide-react';
-import { cn } from './ui/cn';
-import { useT } from '../context/useLocale';
+import { cn } from '@/ui/cn';
+import { useT } from '@/context/useLocale';
 
 interface KeyboardHintChipProps {
   /**

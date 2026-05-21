@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { cn, MenuRow } from '../ui';
+import { cn, MenuRow } from '@/ui';
 
 type ItemKind = 'action' | 'toggle' | 'panel';
 

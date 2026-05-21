@@ -7,11 +7,11 @@ import {
   Loader2,
 } from 'lucide-react';
 import { InfoCircleIcon } from '@/features/natal-report';
-import { cn, MenuRow, surfaceClasses } from '../ui';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
-import { useLocale, useT } from '../../context/useLocale';
-import { LOCALES, type Locale } from '../../i18n';
+import { cn, MenuRow, surfaceClasses } from '@/ui';
+import { useFocusTrap } from '@/ui/useFocusTrap';
+import { useBodyScrollLock } from '@/ui/useBodyScrollLock';
+import { useLocale, useT } from '@/context/useLocale';
+import { LOCALES, type Locale } from '@/i18n';
 
 interface MobileSystemDrawerProps {
   open: boolean;
