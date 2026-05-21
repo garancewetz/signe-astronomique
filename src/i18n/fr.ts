@@ -116,6 +116,12 @@ export const fr = {
       openAriaLabel: 'Ouvrir le menu système',
       legend: { label: 'Légende', sublabel: 'Symboles · couleurs · calques' },
       explore: { label: 'Liens utiles', sublabel: 'Cartes du ciel · éphémérides' },
+      share: {
+        label: 'Partager ce ciel',
+        sublabelReady: 'Copier le lien direct vers ce ciel',
+        sublabelCopied: 'Lien copié dans le presse-papier !',
+        sublabelLocked: 'Calcule d’abord ton ciel',
+      },
       exportView: { label: 'Exporter la vue', sublabel: 'PNG du ciel 3D' },
       exportReport: {
         label: 'Exporter le rapport',
@@ -288,6 +294,12 @@ export const fr = {
     fullscreen: {
       tooltipEnter: 'Passer en plein écran',
       tooltipExit: 'Quitter le plein écran',
+    },
+    share: {
+      tooltipReady: 'Copier le lien de ce ciel',
+      tooltipCopied: 'Lien copié !',
+      tooltipLocked: 'Calcule d’abord ton ciel pour le partager',
+      ariaLabel: 'Copier le lien pour partager ce ciel',
     },
     exportView: {
       tooltip: 'Enregistre la vue 3D actuelle dans un fichier image PNG',

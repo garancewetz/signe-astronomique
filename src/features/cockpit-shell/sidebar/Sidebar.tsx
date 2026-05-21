@@ -67,6 +67,11 @@ interface SidebarProps {
   fullscreenActive: boolean;
   onToggleFullscreen: () => void;
 
+  // Share link
+  onShareLink: () => void;
+  shareCopied: boolean;
+  canShareLink: boolean;
+
   // Exports
   onExportView: () => void;
   exportingView: boolean;
@@ -107,6 +112,9 @@ export function Sidebar(props: SidebarProps) {
     onFlyEarth,
     fullscreenActive,
     onToggleFullscreen,
+    onShareLink,
+    shareCopied,
+    canShareLink,
     onExportView,
     exportingView,
     onExportPdf,
@@ -278,6 +286,9 @@ export function Sidebar(props: SidebarProps) {
         onToggleLegend={() => onTogglePanel('legend')}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={onToggleFullscreen}
+        onShareLink={onShareLink}
+        shareCopied={shareCopied}
+        canShareLink={canShareLink}
         onExportView={onExportView}
         exportingView={exportingView}
         onExportPdf={onExportPdf}

@@ -4,7 +4,7 @@ import { Clock, X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { Field, Input, cn } from '@/ui';
 import { computeReading, type CelestialReading } from '@/features/astronomy';
-import { localBirthToUtc } from './timezone';
+import { computeReadingFromForm } from './computeReadingFromForm';
 import {
   signatureOf,
   type SearchHistoryEntry,
@@ -70,14 +70,7 @@ export function CoordinatesForm({
     if (computing) return;
     setComputing(true);
     await new Promise((r) => setTimeout(r, 350));
-    const reading = computeReading({
-      date: localBirthToUtc(date, time, city.timezone),
-      latitude: city.lat,
-      longitude: city.lon,
-      placeLabel: city.label,
-      timezone: city.timezone,
-    });
-    onJump(reading);
+    onJump(computeReadingFromForm({ date, time, city }));
     onRecordHistory?.({ date, time, city });
     setComputing(false);
   };
@@ -104,13 +97,7 @@ export function CoordinatesForm({
     onDateChange(entry.date);
     onTimeChange(entry.time);
     onCityChange(entry.city);
-    onJump(computeReading({
-      date: localBirthToUtc(entry.date, entry.time, entry.city.timezone),
-      latitude: entry.city.lat,
-      longitude: entry.city.lon,
-      placeLabel: entry.city.label,
-      timezone: entry.city.timezone,
-    }));
+    onJump(computeReadingFromForm(entry));
     // Re-record so the entry bubbles to the top — the user just re-confirmed
     // they care about this moment.
     onRecordHistory?.({ date: entry.date, time: entry.time, city: entry.city });

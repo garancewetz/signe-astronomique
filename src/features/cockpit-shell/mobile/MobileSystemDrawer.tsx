@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
+  Check,
   Download,
   FileDown,
+  Link2,
   List,
   Loader2,
 } from 'lucide-react';
@@ -19,6 +21,10 @@ interface MobileSystemDrawerProps {
 
   onOpenLegend: () => void;
   onOpenExploreSpace: () => void;
+
+  onShareLink: () => void;
+  shareCopied: boolean;
+  canShareLink: boolean;
 
   onExportView: () => void;
   exportingView: boolean;
@@ -39,6 +45,9 @@ export function MobileSystemDrawer({
   onClose,
   onOpenLegend,
   onOpenExploreSpace,
+  onShareLink,
+  shareCopied,
+  canShareLink,
   onExportView,
   exportingView,
   onExportPdf,
@@ -162,6 +171,28 @@ export function MobileSystemDrawer({
                 />
               </li>
               <DrawerDivider />
+              <li>
+                <MenuRow
+                  size="md"
+                  label={t.mobile.systemDrawer.share.label}
+                  sublabel={
+                    canShareLink
+                      ? shareCopied
+                        ? t.mobile.systemDrawer.share.sublabelCopied
+                        : t.mobile.systemDrawer.share.sublabelReady
+                      : t.mobile.systemDrawer.share.sublabelLocked
+                  }
+                  icon={
+                    shareCopied ? (
+                      <Check className="size-4" strokeWidth={1.6} aria-hidden />
+                    ) : (
+                      <Link2 className="size-4" strokeWidth={1.4} aria-hidden />
+                    )
+                  }
+                  disabled={!canShareLink}
+                  onClick={onShareLink}
+                />
+              </li>
               <li>
                 <MenuRow
                   size="md"

@@ -72,6 +72,11 @@ interface MobileCockpitProps {
   /** Bumps each time a new reading is computed — pulses the Analyse tab. */
   analysisAttention: number;
 
+  // Share link
+  onShareLink: () => void;
+  shareCopied: boolean;
+  canShareLink: boolean;
+
   // System (drawer + overlays)
   onExportView: () => void;
   exportingView: boolean;
@@ -298,6 +303,9 @@ export function MobileCockpit(props: MobileCockpitProps) {
         onClose={() => setDrawerOpen(false)}
         onOpenLegend={() => setLegendOpen(true)}
         onOpenExploreSpace={() => setExploreOpen(true)}
+        onShareLink={props.onShareLink}
+        shareCopied={props.shareCopied}
+        canShareLink={props.canShareLink}
         onExportView={props.onExportView}
         exportingView={props.exportingView}
         onExportPdf={props.onExportPdf}
