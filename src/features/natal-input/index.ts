@@ -33,6 +33,7 @@ export {
   clearNatalFromUrl,
   decodeNatalFromParams,
   encodeNatalToParams,
+  formatNatalShareText,
   readNatalFromCurrentUrl,
   type SharedNatal,
 } from './shareLink';

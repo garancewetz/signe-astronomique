@@ -67,6 +67,45 @@ export function readNatalFromCurrentUrl(): SharedNatal | null {
 }
 
 /**
+ * Pre-formatted body for the native share sheet — "{city} — {date}, {time}"
+ * in the active locale. The date/time strings are the raw form values
+ * (`YYYY-MM-DD` / `HH:MM`); parsing them as UTC and formatting with
+ * `timeZone: 'UTC'` echoes them back unchanged on the recipient's device,
+ * regardless of their runtime timezone. Returns `undefined` for an empty
+ * label and falls back to just the label if the date/time strings don't
+ * parse cleanly.
+ */
+export function formatNatalShareText(
+  date: string,
+  time: string,
+  cityLabel: string,
+  intlLocale: string,
+): string | undefined {
+  if (!cityLabel) return undefined;
+  const [y, mo, d] = date.split('-').map(Number);
+  const [hh, mm] = time.split(':').map(Number);
+  if (
+    !Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d) ||
+    !Number.isFinite(hh) || !Number.isFinite(mm)
+  ) {
+    return cityLabel;
+  }
+  const dt = new Date(Date.UTC(y, mo - 1, d, hh, mm));
+  const dateFmt = new Intl.DateTimeFormat(intlLocale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(dt);
+  const timeFmt = new Intl.DateTimeFormat(intlLocale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  }).format(dt);
+  return `${cityLabel} — ${dateFmt}, ${timeFmt}`;
+}
+
+/**
  * Strip natal params from the address bar after we've consumed them, so a
  * page reload doesn't re-trigger the auto-jump and the URL stays clean
  * while the user keeps editing.

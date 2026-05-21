@@ -112,7 +112,7 @@ export const en: Copy = {
       explore: { label: 'Useful links', sublabel: 'Sky maps · ephemerides' },
       share: {
         label: 'Share this sky',
-        sublabelReady: 'Copy a direct link to this sky',
+        sublabelReady: 'Direct link — SMS, WhatsApp, mail…',
         sublabelCopied: 'Link copied to clipboard!',
         sublabelLocked: 'Compute your sky first',
       },
@@ -130,7 +130,6 @@ export const en: Copy = {
     },
     legend: { ariaLabel: 'Legend' },
     tabs: {
-      selection: 'Selection',
       display: 'Display',
       navigation: 'Navigation',
       analysis: 'Analysis',
@@ -138,14 +137,9 @@ export const en: Copy = {
     sheet: {
       home: {
         eyebrow: 'Console',
-        ctaModifyCoords: 'EDIT MY COORDINATES',
         ctaCalculate: 'COMPUTE MY SIGN',
         hint:
           'Pick a section in the bottom bar — display, navigation, or analysis once your sky is computed.',
-      },
-      selection: {
-        eyebrow: 'Selection',
-        empty: 'Tap a body in the 3D view to see its information here.',
       },
       display: {
         eyebrow: 'Display',
@@ -184,6 +178,7 @@ export const en: Copy = {
       collapseAriaLabel: 'Collapse the console',
       expandAriaLabel: 'Expand the console',
       openAriaLabel: 'Open the console',
+      closeAriaLabel: 'Close the console',
     },
   },
 
@@ -290,10 +285,10 @@ export const en: Copy = {
       tooltipExit: 'Exit fullscreen',
     },
     share: {
-      tooltipReady: 'Copy a link to this sky',
+      tooltipReady: 'Share a link to this sky',
       tooltipCopied: 'Link copied!',
       tooltipLocked: 'Compute your sky first to share it',
-      ariaLabel: 'Copy the link to share this sky',
+      ariaLabel: 'Share a link to this sky',
     },
     exportView: {
       tooltip: 'Save the current 3D view as a PNG image file',
@@ -626,6 +621,20 @@ export const en: Copy = {
     tooltip: 'Language',
     options: { fr: 'Français', en: 'English' },
     shortOptions: { fr: 'FR', en: 'EN' },
+  },
+
+  installPwa: {
+    ariaLabel: 'Install the app',
+    dismissAriaLabel: 'Later',
+    android: {
+      title: 'Install the app',
+      body: 'Add Signe astronomique to your home screen for one-tap access.',
+      cta: 'Install',
+    },
+    ios: {
+      title: 'Add to Home Screen',
+      body: 'Tap Share ↑, then “Add to Home Screen” to install the app.',
+    },
   },
 
   bodies: {

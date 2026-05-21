@@ -1,22 +1,15 @@
-import {
-  Compass,
-  Eye,
-  LayoutDashboard,
-  Lock,
-  Telescope,
-} from 'lucide-react';
+import { Compass, Eye, LayoutDashboard, Lock } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { cn } from '@/ui';
 import { useT } from '@/context/useLocale';
 
-export type MobileTabKey = 'selection' | 'display' | 'navigation' | 'analysis';
+export type MobileTabKey = 'display' | 'navigation' | 'analysis';
 
 const UNLOCK_WINDOW_MS = 1200;
 
 interface MobileTabBarProps {
   activeTab: MobileTabKey | null;
   onTabChange: (tab: MobileTabKey | null) => void;
-  hasSelectedBody: boolean;
   hasReading: boolean;
   /** Bumps on each new reading — pulses the Analyse tab (parity with desktop CTA). */
   analysisAttention: number;
@@ -35,13 +28,12 @@ interface TabSpec {
  * Bottom tab bar — primary navigation on mobile. Tapping a tab opens the
  * sheet with that section's content; tapping the active tab closes it.
  *
- * The "Sélection" tab is disabled until the user picks a body in the 3D
- * scene; "Analyse" is locked behind a computed reading.
+ * Body selection is contextual (sheet shows it whenever something is
+ * picked in the 3D scene); "Analyse" is locked behind a computed reading.
  */
 export function MobileTabBar({
   activeTab,
   onTabChange,
-  hasSelectedBody,
   hasReading,
   analysisAttention,
 }: MobileTabBarProps) {
@@ -68,12 +60,6 @@ export function MobileTabBar({
 
   const tabs: TabSpec[] = [
     {
-      key: 'selection',
-      label: t.mobile.tabs.selection,
-      icon: <Telescope className="size-4" strokeWidth={1.4} aria-hidden />,
-      enabled: hasSelectedBody,
-    },
-    {
       key: 'display',
       label: t.mobile.tabs.display,
       icon: <Eye className="size-4" strokeWidth={1.4} aria-hidden />,
@@ -99,7 +85,7 @@ export function MobileTabBar({
       role="tablist"
       aria-label={t.mobile.cockpit.navAriaLabel}
       className="shrink-0 z-31
-                 grid grid-cols-4 gap-1 px-2 pt-1.5
+                 grid grid-cols-3 gap-1 px-2 pt-1.5
                  bg-surface-console/95 backdrop-blur-2xl
                  border-t border-border-hud-subtle
                  pb-[max(0.375rem,env(safe-area-inset-bottom,0))]"

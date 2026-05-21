@@ -117,8 +117,8 @@ export const fr = {
       legend: { label: 'Légende', sublabel: 'Symboles · couleurs · calques' },
       explore: { label: 'Liens utiles', sublabel: 'Cartes du ciel · éphémérides' },
       share: {
-        label: 'Partager ce ciel',
-        sublabelReady: 'Copier le lien direct vers ce ciel',
+        label: 'Offrir ce ciel',
+        sublabelReady: 'Lien direct — SMS, WhatsApp, mail…',
         sublabelCopied: 'Lien copié dans le presse-papier !',
         sublabelLocked: 'Calcule d’abord ton ciel',
       },
@@ -136,7 +136,6 @@ export const fr = {
     },
     legend: { ariaLabel: 'Légende' },
     tabs: {
-      selection: 'Sélection',
       display: 'Affichage',
       navigation: 'Navigation',
       analysis: 'Analyse',
@@ -144,14 +143,9 @@ export const fr = {
     sheet: {
       home: {
         eyebrow: 'Console',
-        ctaModifyCoords: 'MODIFIER MES COORDONNÉES',
         ctaCalculate: 'CALCULER MON SIGNE',
         hint:
           'Choisis une section dans la barre du bas — affichage, navigation, ou analyse une fois ton ciel calculé.',
-      },
-      selection: {
-        eyebrow: 'Sélection',
-        empty: 'Tape un astre dans la vue 3D pour voir ses informations ici.',
       },
       display: {
         eyebrow: 'Affichage',
@@ -190,6 +184,7 @@ export const fr = {
       collapseAriaLabel: 'Replier la console',
       expandAriaLabel: 'Étendre la console',
       openAriaLabel: 'Ouvrir la console',
+      closeAriaLabel: 'Fermer la console',
     },
   },
 
@@ -296,10 +291,10 @@ export const fr = {
       tooltipExit: 'Quitter le plein écran',
     },
     share: {
-      tooltipReady: 'Copier le lien de ce ciel',
+      tooltipReady: 'Offrir ce ciel — lien direct',
       tooltipCopied: 'Lien copié !',
-      tooltipLocked: 'Calcule d’abord ton ciel pour le partager',
-      ariaLabel: 'Copier le lien pour partager ce ciel',
+      tooltipLocked: 'Calcule d’abord ton ciel pour l’offrir',
+      ariaLabel: 'Offrir le lien vers ce ciel',
     },
     exportView: {
       tooltip: 'Enregistre la vue 3D actuelle dans un fichier image PNG',
@@ -632,6 +627,20 @@ export const fr = {
     tooltip: 'Langue',
     options: { fr: 'Français', en: 'English' },
     shortOptions: { fr: 'FR', en: 'EN' },
+  },
+
+  installPwa: {
+    ariaLabel: 'Installer l’application',
+    dismissAriaLabel: 'Plus tard',
+    android: {
+      title: 'Installer l’app',
+      body: 'Ajoute Signe astronomique à ton écran d’accueil pour un accès en un tap.',
+      cta: 'Installer',
+    },
+    ios: {
+      title: 'Ajouter à l’écran d’accueil',
+      body: 'Appuie sur Partager ↑ puis « Sur l’écran d’accueil » pour installer l’app.',
+    },
   },
 
   bodies: {

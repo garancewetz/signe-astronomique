@@ -10,6 +10,16 @@
   command = "npm run build"
   publish = "dist"
 
+# ─── Edge functions ──────────────────────────────────────────────────────────
+# `og-share` rewrites the static index.html to inject payload-aware Open
+# Graph + Twitter metadata when a request to "/" carries natal params, so
+# share links produce a "Le ciel de {city} — {date}" preview card in
+# WhatsApp / iMessage / mail clients. Cold homepage visits skip it.
+
+[[edge_functions]]
+  function = "og-share"
+  path = "/"
+
 # ─── Default headers for every response ──────────────────────────────────────
 
 [[headers]]

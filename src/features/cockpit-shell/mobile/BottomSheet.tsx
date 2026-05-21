@@ -6,7 +6,8 @@ import {
   useReducedMotion,
 } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { cn } from '@/ui';
+import { X } from 'lucide-react';
+import { IconButton, cn } from '@/ui';
 import { useT } from '@/context/useLocale';
 
 export type SheetSnap = 'peek' | 'mid' | 'full';
@@ -44,6 +45,21 @@ interface BottomSheetProps {
    */
   bottomOffset?: string;
 
+  /**
+   * Optional handler for an explicit close button shown next to the drag
+   * handle when the sheet is expanded past peek. Parents typically snap
+   * back to peek and clear any active tab / contextual content.
+   */
+  onClose?: () => void;
+
+  /**
+   * When false, the sheet stays mounted (preserving its measured layout)
+   * but slides fully below the viewport. This avoids the remount glitch
+   * where naturalContentPx is null on the first frame and the sheet
+   * snaps from an unbounded fullPx position to its real target.
+   */
+  visible?: boolean;
+
   ariaLabel?: string;
   children: ReactNode;
 }
@@ -58,6 +74,17 @@ interface BottomSheetProps {
  * The component is controlled — the parent owns `snap` and reacts to
  * `onSnapChange` (fired after drag-release / fling). External changes to
  * `snap` animate the sheet to the new target.
+ *
+ * Close affordances (two paradigms, on purpose):
+ *   - `onClose` + the visible X button — the canonical, discoverable close.
+ *     Rendered whenever `onClose` is provided, regardless of snap, so the
+ *     dismiss action stays reachable even at peek. The parent is expected
+ *     to omit `onClose` when there's nothing contextual to clear (e.g. the
+ *     first-arrival CTA home).
+ *   - Tapping the drag handle — a power-user shortcut that cycles snaps
+ *     (peek → mid → full → peek). Kept because it preserves the
+ *     bottom-sheet gesture vocabulary users already know. No-op when the
+ *     content fits in peek (`canExpand` is false).
  */
 export function BottomSheet({
   snap,
@@ -66,6 +93,8 @@ export function BottomSheet({
   midPx,
   fullPx,
   bottomOffset = '0px',
+  onClose,
+  visible = true,
   ariaLabel,
   children,
 }: BottomSheetProps) {
@@ -105,8 +134,17 @@ export function BottomSheet({
     [midPx, effectiveFullPx],
   );
 
+  // When the content fits inside the peek height, full/mid collapse onto
+  // peek and the sheet can't actually expand. Toggling snap state in that
+  // case would only flash the close-X on and off without moving the sheet
+  // — so we treat the handle as a no-op and hide the X entirely.
+  const canExpand = effectiveFullPx > peekPx;
+
   // translateY values for each snap. y=0 means fully open; positive y
-  // pushes the top of the sheet down, exposing less content.
+  // pushes the top of the sheet down, exposing less content. The off-screen
+  // value tucks the sheet entirely below the tab bar plus any safe-area
+  // inset so toggling `visible` slides it cleanly out of view.
+  const hiddenPx = effectiveFullPx + 80;
   const targets = useMemo(
     () => ({
       full: 0,
@@ -116,12 +154,12 @@ export function BottomSheet({
     [effectiveFullPx, effectiveMidPx, peekPx],
   );
 
-  // Match the initial snap on mount so the sheet doesn't flash fully open
+  // Match the initial visibility/snap on mount so the sheet doesn't flash
   // before the animation effect runs.
-  const y = useMotionValue(targets[snap]);
+  const y = useMotionValue(visible ? targets[snap] : hiddenPx);
 
   useEffect(() => {
-    const t = targets[snap];
+    const t = visible ? targets[snap] : hiddenPx;
     if (reduceMotion) {
       y.set(t);
       return;
@@ -133,13 +171,14 @@ export function BottomSheet({
       mass: 0.6,
     });
     return () => controls.stop();
-  }, [snap, targets, reduceMotion, y]);
+  }, [snap, targets, reduceMotion, y, visible, hiddenPx]);
 
   return (
     <motion.aside
       role="region"
       aria-label={resolvedAriaLabel}
-      drag="y"
+      aria-hidden={!visible}
+      drag={visible ? 'y' : false}
       dragControls={dragControls}
       dragListener={false}
       dragConstraints={{ top: targets.full, bottom: targets.peek }}
@@ -171,30 +210,49 @@ export function BottomSheet({
         'rounded-t-xl',
         'shadow-cockpit-panel',
         'flex flex-col',
+        !visible && 'pointer-events-none',
       )}
     >
-      <button
-        ref={handleRef}
-        type="button"
-        onPointerDown={(e) => dragControls.start(e)}
-        onClick={() => onSnapChange(nextSnapForTap(snap, targets))}
-        aria-label={
-          snap === 'full'
-            ? t.mobile.bottomSheet.collapseAriaLabel
-            : snap === 'mid'
-              ? t.mobile.bottomSheet.expandAriaLabel
-              : t.mobile.bottomSheet.openAriaLabel
-        }
-        aria-expanded={snap !== 'peek'}
-        className="cockpit-focus shrink-0 touch-none select-none
-                   cursor-grab active:cursor-grabbing
-                   flex items-center justify-center pt-2 pb-1.5"
-      >
-        <span
-          aria-hidden="true"
-          className="block w-10 h-1 rounded-full bg-slate-400/45"
-        />
-      </button>
+      <div className="relative shrink-0">
+        <button
+          ref={handleRef}
+          type="button"
+          onPointerDown={canExpand ? (e) => dragControls.start(e) : undefined}
+          onClick={
+            canExpand
+              ? () => onSnapChange(nextSnapForTap(snap, targets))
+              : undefined
+          }
+          aria-label={
+            snap === 'full'
+              ? t.mobile.bottomSheet.collapseAriaLabel
+              : snap === 'mid'
+                ? t.mobile.bottomSheet.expandAriaLabel
+                : t.mobile.bottomSheet.openAriaLabel
+          }
+          aria-expanded={snap !== 'peek'}
+          aria-disabled={!canExpand}
+          className={cn(
+            'cockpit-focus w-full touch-none select-none',
+            'flex items-center justify-center pt-2 pb-1.5',
+            canExpand ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className="block w-10 h-1 rounded-full bg-slate-400/45"
+          />
+        </button>
+        {onClose && (
+          <IconButton
+            onClick={onClose}
+            aria-label={t.mobile.bottomSheet.closeAriaLabel}
+            className="absolute top-1 right-1 active:bg-violet-500/15"
+          >
+            <X className="size-4" strokeWidth={1.5} aria-hidden />
+          </IconButton>
+        )}
+      </div>
 
       <div
         className={cn(

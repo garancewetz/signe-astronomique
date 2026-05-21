@@ -1,6 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ChevronDown, MoreVertical } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   MobileCoordinatesModal,
   type CityResult,
@@ -13,7 +12,9 @@ import {
   type ReportPanelKey,
 } from '@/features/natal-report';
 import { LegendPanel } from '../LegendPanel';
+import { InstallPwaPrompt } from './InstallPwaPrompt';
 import { BottomSheet, type SheetSnap } from './BottomSheet';
+import { MobileHeader } from './MobileHeader';
 import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
 import { MobileSheetContent } from './MobileSheetContent';
 import { MobileAnalysisStack } from './MobileAnalysisStack';
@@ -54,6 +55,13 @@ interface MobileCockpitProps {
 
   // Reading + selection state
   reading: CelestialReading | null;
+  /**
+   * True when the parent has a pending share-link payload that will
+   * hydrate a reading on its own. The auto-opening coordinates modal is
+   * suppressed in that case so we don't briefly show the form before the
+   * computed sky lands.
+   */
+  hasSharedFromUrl: boolean;
   selectedBody: SelectedBody | null;
   onCloseSelection: () => void;
 
@@ -65,8 +73,8 @@ interface MobileCockpitProps {
   // Reveal action (used by ResumePanel)
   onRevealConstellation: () => void;
 
-  // Active tab is controlled by the parent so a body-pick from the 3D
-  // scene can directly route into the Sélection tab without an effect.
+  // Active tab is controlled by the parent so shared shell state stays
+  // in one place across the desktop and mobile cockpits.
   activeTab: MobileTabKey | null;
   onActiveTabChange: (tab: MobileTabKey | null) => void;
   /** Bumps each time a new reading is computed — pulses the Analyse tab. */
@@ -100,9 +108,11 @@ interface MobileCockpitProps {
  *   - `coordsOpen`  — coordinates modal visibility
  *   - `analysisPanel` — full-screen analysis panel currently pushed (or null)
  *
- * Selecting a body in the 3D scene auto-opens the Sélection tab (via the
- * effect below). All other state lives in the parent Cockpit so that
- * desktop and mobile share the same source of truth.
+ * Selecting a body in the 3D scene pops the sheet from peek to mid via
+ * the snap-pop hook below — body info renders contextually in the sheet
+ * (no dedicated tab) whenever `selectedBody` is set. All other state
+ * lives in the parent Cockpit so desktop and mobile share the same
+ * source of truth.
  */
 export function MobileCockpit(props: MobileCockpitProps) {
   const t = useT();
@@ -119,14 +129,23 @@ export function MobileCockpit(props: MobileCockpitProps) {
     onRecordSearch,
     onRemoveSearch,
     reading,
+    hasSharedFromUrl,
     selectedBody,
+    onCloseSelection,
     activeTab,
     onActiveTabChange,
     distanceLabel,
   } = props;
 
   const [snap, setSnap] = useState<SheetSnap>('peek');
-  const [coordsOpen, setCoordsOpen] = useState(false);
+  // Auto-open the coordinates modal on first arrival when there's no
+  // reading to display and no share-link in flight — the calc form is the
+  // only meaningful first action, so we surface it directly instead of
+  // making the user hunt for the CTA. The initializer only runs once on
+  // mount, so dismissing the modal will not re-trigger this branch.
+  const [coordsOpen, setCoordsOpen] = useState(
+    () => !reading && !hasSharedFromUrl,
+  );
   const [analysisPanel, setAnalysisPanel] = useState<ReportPanelKey | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
@@ -152,11 +171,27 @@ export function MobileCockpit(props: MobileCockpitProps) {
 
   const hasReading = reading !== null;
   const hasSelectedBody = selectedBody !== null;
+  // Once a reading exists and nothing contextual is active, the home view
+  // has nothing useful to surface — the header chip already provides the
+  // edit entry point. Drop the whole sheet in that case to free the
+  // bottom of the screen.
+  const showSheet = !hasReading || activeTab !== null || hasSelectedBody;
 
   const [prevActiveTab, setPrevActiveTab] = useState<MobileTabKey | null>(activeTab);
   if (prevActiveTab !== activeTab) {
     setPrevActiveTab(activeTab);
     if (prevActiveTab === null && activeTab !== null && snap === 'peek') {
+      setSnap('mid');
+    }
+  }
+
+  // Mirror the snap-pop for body selection: picking a body in the 3D
+  // scene is what surfaces the contextual SelectionContent, so the sheet
+  // must rise from peek the same way a tab tap would.
+  const [prevHasSelectedBody, setPrevHasSelectedBody] = useState(hasSelectedBody);
+  if (prevHasSelectedBody !== hasSelectedBody) {
+    setPrevHasSelectedBody(hasSelectedBody);
+    if (!prevHasSelectedBody && hasSelectedBody && snap === 'peek') {
       setSnap('mid');
     }
   }
@@ -173,6 +208,16 @@ export function MobileCockpit(props: MobileCockpitProps) {
     }
   };
 
+  // The sheet's X button only makes sense when there's contextual state to
+  // dismiss. Without an active tab or body selection, the first-arrival
+  // CTA home has nothing to clear and the close affordance would mislead.
+  const sheetHasContext = activeTab !== null || hasSelectedBody;
+  const handleSheetClose = useCallback(() => {
+    setSnap('peek');
+    onActiveTabChange(null);
+    if (selectedBody) onCloseSelection();
+  }, [onActiveTabChange, selectedBody, onCloseSelection]);
+
   return (
     <div
       id="cockpit-main"
@@ -183,58 +228,15 @@ export function MobileCockpit(props: MobileCockpitProps) {
         {t.cockpit.skipToMain}
       </a>
 
-      <header
+      <MobileHeader
         ref={headerRef}
-        className="shrink-0 z-10
-                   min-h-[calc(2.75rem+env(safe-area-inset-top,0))]
-                   pt-[env(safe-area-inset-top,0)]
-                   bg-surface-console/55 backdrop-blur-xl
-                   border-b border-border-hud-subtle
-                   flex items-stretch"
-      >
-        <button
-          type="button"
-          onClick={() => setCoordsOpen(true)}
-          aria-label={t.mobile.coordinatesModal.editAriaLabel}
-          aria-haspopup="dialog"
-          aria-expanded={coordsOpen}
-          className="cockpit-focus flex-1 min-w-0
-                     flex items-center gap-2 px-3
-                     hover:bg-violet-500/10 active:bg-violet-500/15
-                     transition-colors text-left"
-        >
-          <span
-            aria-hidden="true"
-            className="inline-block size-1.5 rounded-full bg-cyan-300
-                       shadow-[0_0_8px_2px_rgba(103,232,249,0.55)]"
-          />
-          <span className="text-cockpit-sm tracking-cockpit-hud text-accent-title uppercase shrink-0">
-            {t.cockpit.brand}
-          </span>
-          <span className="text-cockpit-xs text-slate-400 truncate flex-1">
-            · {date} · {city.label}
-          </span>
-          <ChevronDown
-            className="size-3.5 shrink-0 text-violet-300/70"
-            strokeWidth={1.5}
-            aria-hidden
-          />
-        </button>
-        <button
-          type="button"
-          onClick={() => setDrawerOpen((v) => !v)}
-          aria-label={t.mobile.systemDrawer.openAriaLabel}
-          aria-haspopup="dialog"
-          aria-expanded={drawerOpen}
-          className="cockpit-focus shrink-0 grid place-items-center
-                     w-11
-                     border-l border-border-hud-faint
-                     text-slate-300/85 hover:text-slate-100
-                     hover:bg-violet-500/10 transition-colors"
-        >
-          <MoreVertical className="size-4" strokeWidth={1.5} aria-hidden />
-        </button>
-      </header>
+        date={date}
+        city={city}
+        coordsOpen={coordsOpen}
+        drawerOpen={drawerOpen}
+        onOpenCoords={() => setCoordsOpen(true)}
+        onToggleDrawer={() => setDrawerOpen((v) => !v)}
+      />
 
       <div className="relative flex-1 min-h-0 select-none touch-manipulation">
         {children}
@@ -248,6 +250,8 @@ export function MobileCockpit(props: MobileCockpitProps) {
         midPx={midPx}
         fullPx={fullPx}
         bottomOffset={SHEET_BOTTOM_OFFSET}
+        visible={showSheet}
+        onClose={sheetHasContext ? handleSheetClose : undefined}
         ariaLabel={t.mobile.cockpit.mainAriaLabel}
       >
         <div id="mobile-sheet" className="h-full">
@@ -271,7 +275,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
       <MobileTabBar
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        hasSelectedBody={hasSelectedBody}
         hasReading={hasReading}
         analysisAttention={props.analysisAttention}
       />
@@ -343,6 +346,8 @@ export function MobileCockpit(props: MobileCockpitProps) {
           <ExploreSpacePopover onClose={() => setExploreOpen(false)} />
         )}
       </AnimatePresence>
+
+      <InstallPwaPrompt />
     </div>
   );
 }

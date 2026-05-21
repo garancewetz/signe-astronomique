@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './ErrorBoundary';
 import { CockpitFallback } from './CockpitFallback';
@@ -33,6 +33,7 @@ import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
 import type { CelestialReading } from '@/features/astronomy';
 import {
+  formatNatalShareText,
   useNatalForm,
   useSearchHistory,
   useShareLink,
@@ -140,16 +141,17 @@ export function Cockpit() {
 
   const closeAnalysis = useCallback(() => setAnalysisOpen(false), []);
 
-  /** Body picker callback — wires to the SÉLECTION section. */
+  /**
+   * Body picker callback — drives the desktop's BODY panel and, on mobile,
+   * the contextual SelectionContent that surfaces in the bottom sheet.
+   */
   const handleBodySelect = useCallback((body: SelectedBody | null) => {
     setSelectedBody(body);
     setSideViewActive(false);
     if (body) {
       setActivePanel('body');
-      setMobileActiveTab('selection');
     } else {
       setActivePanel((prev) => (prev === 'body' ? null : prev));
-      setMobileActiveTab((prev) => (prev === 'selection' ? null : prev));
     }
   }, []);
 
@@ -197,22 +199,30 @@ export function Cockpit() {
     setActivePanel(null);
   }, []);
 
+  // Pre-formatted body for the native share sheet. Computed here (rather
+  // than inside useShareLink) so the hook stays i18n-free.
+  const shareText = useMemo(
+    () => formatNatalShareText(date, time, city.label, t.intlLocale),
+    [city.label, date, time, t.intlLocale],
+  );
+
   const { handleShareLink, shareCopied, canShareLink } = useShareLink({
     date,
     time,
     city,
     hasReading: !!reading,
+    shareText,
     sharedFromUrl,
     onAutoJump: handleJump,
     onRecordSearch: recordSearch,
   });
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     const el = cockpitRef.current;
     if (!el) return;
     if (document.fullscreenElement) void document.exitFullscreen();
     else void el.requestFullscreen();
-  };
+  }, []);
 
   // Canvas left inset: sidebar width only — body/legend float over the
   // canvas as glassmorphism cards, and the analysis modal is centered.
@@ -295,6 +305,7 @@ export function Cockpit() {
           onRecordSearch={recordSearch}
           onRemoveSearch={removeSearch}
           reading={reading}
+          hasSharedFromUrl={sharedFromUrl !== null}
           selectedBody={selectedBody}
           onCloseSelection={clearSelection}
           onFlySun={flyToSun}
@@ -402,7 +413,7 @@ export function Cockpit() {
         canExportReport={!!reading}
       />
 
-      {/* === MODALE ANALYSE — onglets MON SIGNE / CARTE / LECTURE / DONNÉES === */}
+      {/* === ANALYSIS MODAL — tabs: resume / carte / lecture / donnees === */}
       <AnalysisModal
         open={analysisOpen}
         activeTab={analysisTab}
@@ -436,7 +447,7 @@ export function Cockpit() {
         )}
       </AnimatePresence>
 
-      {/* === RAPPORT COMPLET (hors-écran) — source de l'export PNG === */}
+      {/* === FULL REPORT (off-screen) — source for the PNG export === */}
       {reading && (
         <div
           aria-hidden="true"

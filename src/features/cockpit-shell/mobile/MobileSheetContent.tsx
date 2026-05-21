@@ -13,7 +13,7 @@ import type { ReactNode } from 'react';
 import { BodyInfoHud } from '../BodyInfoHud';
 import type { ReportPanelKey } from '@/features/natal-report';
 import type { SelectedBody } from '@/features/space-viewport';
-import { MenuRow } from '@/ui';
+import { Button, MenuRow } from '@/ui';
 import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 import { useT } from '@/context/useLocale';
 import type { MobileTabKey } from './MobileTabBar';
@@ -36,12 +36,14 @@ interface MobileSheetContentProps {
 }
 
 export function MobileSheetContent(props: MobileSheetContentProps) {
-  const { activeTab } = props;
+  const { activeTab, selectedBody } = props;
 
-  if (activeTab === 'selection') return <SelectionContent {...props} />;
   if (activeTab === 'display') return <DisplayContent />;
   if (activeTab === 'navigation') return <NavigationContent {...props} />;
   if (activeTab === 'analysis') return <AnalysisContent {...props} />;
+  // No tab active — show body info contextually when something is picked
+  // in the 3D scene; otherwise fall back to the home / CTA screen.
+  if (selectedBody) return <SelectionContent {...props} />;
   return <HomeContent {...props} />;
 }
 
@@ -54,18 +56,17 @@ function HomeContent({
     <SheetSection>
       <SheetEyebrow>{t.mobile.sheet.home.eyebrow}</SheetEyebrow>
 
-      <button
-        type="button"
-        onClick={onOpenCoords}
-        className="cockpit-focus w-full px-4 py-3 min-h-11 rounded-panel
-                   border border-border-control bg-violet-600/15
-                   text-white text-cockpit-sm tracking-cockpit
-                   hover:bg-violet-600/25 hover:border-accent-label
-                   transition-all inline-flex items-center justify-center gap-2"
-      >
-        <span aria-hidden className="text-violet-200/90 leading-none">✦</span>
-        {hasReading ? t.mobile.sheet.home.ctaModifyCoords : t.mobile.sheet.home.ctaCalculate}
-      </button>
+      {!hasReading && (
+        <Button
+          variant="solid"
+          size="lg"
+          onClick={onOpenCoords}
+          className="w-full text-cockpit-sm"
+        >
+          <span aria-hidden className="text-violet-200/90 leading-none">✦</span>
+          {t.mobile.sheet.home.ctaCalculate}
+        </Button>
+      )}
 
       <p className="pt-2 text-cockpit-xs text-slate-400/85 leading-relaxed">
         {t.mobile.sheet.home.hint}
@@ -78,18 +79,8 @@ function SelectionContent({
   selectedBody,
   onCloseSelection,
 }: MobileSheetContentProps) {
-  const t = useT();
   const { sideViewActive, toggleSideView } = useCockpitDisplay();
-  if (!selectedBody) {
-    return (
-      <SheetSection>
-        <SheetEyebrow>{t.mobile.sheet.selection.eyebrow}</SheetEyebrow>
-        <p className="text-cockpit-sm text-slate-400/85 leading-relaxed">
-          {t.mobile.sheet.selection.empty}
-        </p>
-      </SheetSection>
-    );
-  }
+  if (!selectedBody) return null;
   return (
     <BodyInfoHud
       variant="inline"

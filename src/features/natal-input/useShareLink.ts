@@ -13,6 +13,13 @@ interface UseShareLinkArgs {
   city: CityResult;
   /** Whether a reading exists. Gates the share button (we only share computed skies). */
   hasReading: boolean;
+  /**
+   * Pre-formatted message body for the native share sheet — typically
+   * "{city} — {date}, {time}" in the active locale. Computed by the
+   * cockpit so this hook stays i18n-agnostic. Falls back to `city.label`
+   * when omitted.
+   */
+  shareText?: string;
   /** Payload decoded from the page URL at mount, if any. Drives auto-jump. */
   sharedFromUrl: SharedNatal | null;
   /**
@@ -26,13 +33,21 @@ interface UseShareLinkArgs {
 }
 
 interface UseShareLinkReturn {
-  /** Copy the share URL to the clipboard (falls back to `window.prompt`). */
+  /**
+   * Open the native share sheet when available (mobile + Safari macOS) so
+   * WhatsApp/SMS/Mail/etc. appear automatically, otherwise copy the URL to
+   * the clipboard. Falls back to `window.prompt` if the clipboard is also
+   * blocked.
+   */
   handleShareLink: () => Promise<void>;
-  /** True for ~2 s after a successful copy — drives the icon + tooltip swap. */
+  /** True for ~2 s after a successful clipboard copy — drives the icon + tooltip swap. Stays false when the native share sheet handled the action (the OS provides its own confirmation). */
   shareCopied: boolean;
   /** Mirror of `hasReading`, returned for symmetry with the other return fields. */
   canShareLink: boolean;
 }
+
+/** Product name surfaced as the share-sheet title in iOS/Android/Safari. Brand-fixed across locales, so it doesn't need i18n. */
+const SHARE_TITLE = 'Signe Astronomique';
 
 /**
  * Owns the share-link concern: clipboard copy on demand, the brief
@@ -48,6 +63,7 @@ export function useShareLink({
   time,
   city,
   hasReading,
+  shareText,
   sharedFromUrl,
   onAutoJump,
   onRecordSearch,
@@ -76,6 +92,23 @@ export function useShareLink({
 
   const handleShareLink = useCallback(async () => {
     const url = buildShareUrl({ date, time, city });
+
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: SHARE_TITLE,
+          text: shareText ?? city.label,
+          url,
+        });
+        return;
+      } catch (err) {
+        // User dismissed the sheet — don't surprise them with a clipboard
+        // toast they didn't ask for. Any other failure (denied permission,
+        // sandboxed iframe, etc.) falls through to the clipboard path.
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+      }
+    }
+
     try {
       await navigator.clipboard.writeText(url);
       setShareCopied(true);
@@ -84,7 +117,7 @@ export function useShareLink({
       // back to a prompt so the user can still grab the link by hand.
       window.prompt('', url);
     }
-  }, [date, time, city]);
+  }, [date, time, city, shareText]);
 
   return { handleShareLink, shareCopied, canShareLink: hasReading };
 }
