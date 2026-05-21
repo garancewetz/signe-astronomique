@@ -1,7 +1,7 @@
-import { useLocale } from '../context/useLocale';
-import type { Locale } from '../i18n';
-import { LOCALES } from '../i18n';
-import { cn } from './ui/cn';
+import { useLocale } from '@/context/useLocale';
+import type { Locale } from '@/i18n';
+import { LOCALES } from '@/i18n';
+import { cn } from '@/ui/cn';
 
 /**
  * Two-state FR | EN toggle anchored in the sidebar header (desktop) and

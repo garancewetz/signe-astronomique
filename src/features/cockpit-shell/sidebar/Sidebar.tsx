@@ -16,11 +16,11 @@ import {
   type CityResult,
   type SearchHistoryEntry,
 } from '@/features/natal-input';
-import { cn, IconButton, surfaceClasses } from '../ui';
+import { cn, IconButton, surfaceClasses } from '@/ui';
 import { TooltipWrap } from '../Tooltip';
 import { type CelestialReading } from '@/features/astronomy';
-import { useCockpitDisplay } from '../../context/useCockpitDisplay';
-import { useT } from '../../context/useLocale';
+import { useCockpitDisplay } from '@/context/useCockpitDisplay';
+import { useT } from '@/context/useLocale';
 import { SidebarHeader } from './SidebarHeader';
 import { SystemDock } from './SystemDock';
 import type { SidebarPanelKey } from './types';

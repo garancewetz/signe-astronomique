@@ -1,8 +1,8 @@
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { TooltipWrap } from '../Tooltip';
-import { IconButton } from '../ui';
+import { IconButton } from '@/ui';
 import { LanguageSwitcher } from '../LanguageSwitcher';
-import { useT } from '../../context/useLocale';
+import { useT } from '@/context/useLocale';
 
 interface SidebarHeaderProps {
   collapsed: boolean;

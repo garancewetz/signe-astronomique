@@ -15,9 +15,9 @@ function GithubMark(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
-import { usePortalTarget } from '@/hooks/usePortalTarget';
+import { usePortalTarget } from '@/ui/usePortalTarget';
 import { useT } from '@/context/useLocale';
-import { cn, surfaceClasses } from '@/components/ui';
+import { cn, surfaceClasses } from '@/ui';
 
 const CONTACT_EMAIL = 'garance.wetzel@gmail.com';
 

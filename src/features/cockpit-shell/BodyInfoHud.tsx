@@ -18,10 +18,10 @@ import type {
   SelectedStar,
   SelectedSun,
 } from '@/features/space-viewport';
-import { Button, HudCard, type HudCardVariant, cn } from './ui';
-import { useLocale, useT } from '../context/useLocale';
-import type { Copy } from '../i18n/fr';
-import type { Locale } from '../i18n';
+import { Button, HudCard, type HudCardVariant, cn } from '@/ui';
+import { useLocale, useT } from '@/context/useLocale';
+import type { Copy } from '@/i18n/fr';
+import type { Locale } from '@/i18n';
 
 interface Props {
   selected: SelectedBody | null;

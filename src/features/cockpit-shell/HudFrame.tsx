@@ -4,7 +4,7 @@ import {
   liveTelemetry,
   type CelestialReading,
 } from '@/features/astronomy';
-import { useT } from '../context/useLocale';
+import { useT } from '@/context/useLocale';
 
 /** Birth-time formatter pinned to the birth location's timezone. Falls
  *  back to UTC (with a visible suffix) when the timezone is unknown. */

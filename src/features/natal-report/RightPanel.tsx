@@ -12,7 +12,7 @@ import {
   ScientificFooter,
   TwoMotionsCard,
 } from './MissionLog';
-import { PanelShell } from '@/components/ui';
+import { PanelShell } from '@/ui';
 import type { CelestialReading } from '@/features/astronomy';
 import {
   SPACE_AGE_START_YEAR,

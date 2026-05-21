@@ -5,9 +5,9 @@ import {
   orbitalCategoryLabel,
   satelliteName,
 } from '@/features/space-viewport';
-import { cn, HudCard, type HudCardVariant } from './ui';
-import { useLocale, useT } from '../context/useLocale';
-import { useCockpitDisplay } from '../context/useCockpitDisplay';
+import { cn, HudCard, type HudCardVariant } from '@/ui';
+import { useLocale, useT } from '@/context/useLocale';
+import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 
 interface LegendPanelProps {
   onClose: () => void;

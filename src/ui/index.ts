@@ -16,3 +16,8 @@ export { PanelPlaceholder } from './PanelPlaceholder';
 export { PanelShell } from './PanelShell';
 export { Surface } from './Surface';
 export { surfaceClasses, type SurfaceTone } from './surfaceClasses';
+
+export { useBodyScrollLock } from './useBodyScrollLock';
+export { useFocusTrap } from './useFocusTrap';
+export { useMobileLayout } from './useMobileLayout';
+export { usePortalTarget } from './usePortalTarget';

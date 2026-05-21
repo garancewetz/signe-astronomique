@@ -2,7 +2,7 @@ import { useId, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Clock, X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
-import { Field, Input, cn } from '@/components/ui';
+import { Field, Input, cn } from '@/ui';
 import { computeReading, type CelestialReading } from '@/features/astronomy';
 import { localBirthToUtc } from './timezone';
 import {

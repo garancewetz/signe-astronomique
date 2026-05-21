@@ -18,8 +18,8 @@ import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
 import { MobileSheetContent } from './MobileSheetContent';
 import { MobileAnalysisStack } from './MobileAnalysisStack';
 import { MobileSystemDrawer } from './MobileSystemDrawer';
-import { useT } from '../../context/useLocale';
-import { DistanceChip } from '../ui';
+import { useT } from '@/context/useLocale';
+import { DistanceChip } from '@/ui';
 
 const TOP_CHIP_PX = 44; // header content min-height, excl. safe-area
 const TAB_BAR_PX = 60; // h-12 button + py-1.5 (top + bottom flat case)

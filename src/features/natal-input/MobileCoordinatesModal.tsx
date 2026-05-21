@@ -5,8 +5,8 @@ import { CoordinatesForm } from './CoordinatesForm';
 import type { CityResult } from './CityAutocomplete';
 import type { SearchHistoryEntry } from './useSearchHistory';
 import type { CelestialReading } from '@/features/astronomy';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useFocusTrap } from '@/ui/useFocusTrap';
+import { useBodyScrollLock } from '@/ui/useBodyScrollLock';
 import { useT } from '@/context/useLocale';
 
 interface MobileCoordinatesModalProps {

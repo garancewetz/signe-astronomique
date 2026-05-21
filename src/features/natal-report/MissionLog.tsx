@@ -11,7 +11,7 @@ import {
   type PlanetId,
 } from '@/features/astronomy';
 import { useLocale, useT } from '@/context/useLocale';
-import { cn } from '@/components/ui/cn';
+import { cn } from '@/ui/cn';
 
 const ROMAN = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 

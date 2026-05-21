@@ -6,8 +6,8 @@ import {
   Telescope,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
-import { cn } from '../ui';
-import { useT } from '../../context/useLocale';
+import { cn } from '@/ui';
+import { useT } from '@/context/useLocale';
 
 export type MobileTabKey = 'selection' | 'display' | 'navigation' | 'analysis';
 
