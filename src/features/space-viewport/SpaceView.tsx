@@ -202,6 +202,22 @@ const SWARM_FADE_OUT_MS = 800;
 const RELICS_FADE_IN_MS = 600;
 
 /**
+ * VIIRS Black Marble is a 2012 snapshot — most of the cities lit up in
+ * that texture (Shenzhen, Dubai, the Indian and Chinese megalopolises…)
+ * either didn't exist or weren't electrified before the late 20th century.
+ * For older natal dates we dim the night layer down so we don't paint
+ * lights onto an Earth that was, factually, mostly dark. The curve is
+ * `t²` on (1900, 2012) — slow start, fast finish — which roughly tracks
+ * the accelerating curve of global electrification.
+ */
+function nightAlphaForYear(year: number): number {
+  if (year <= 1900) return 0;
+  if (year >= 2012) return 1;
+  const t = (year - 1900) / (2012 - 1900);
+  return t * t;
+}
+
+/**
  * Scientific 3D view. Cesium owns:
  *  - the Earth globe (real ECEF rotation, VIIRS Black Marble texture)
  *  - a geocentric celestial sphere in ECEF (200 000 km radius)
@@ -231,6 +247,7 @@ export function SpaceView({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
+  const nightLayerRef = useRef<ImageryLayer | null>(null);
   const cleanupsRef = useRef<Array<() => void>>([]);
   const previousReadingRef = useRef<CelestialReading | null>(null);
   // The reading currently being rendered (natal or live), exposed for the
@@ -385,6 +402,12 @@ export function SpaceView({
           '#060210'
         : '#060210';
     viewer.scene.backgroundColor = Color.fromCssColorString(cockpitBg);
+    // Globe base color: Cesium's default is a bright `#0000ff` blue, which
+    // bleeds through any partially-transparent imagery layer (notably the
+    // night layer when we dim it for pre-2012 dates). A deep near-black
+    // blue gives a properly dark night side, with the lambert term from
+    // enableLighting smoothing the terminator naturally.
+    viewer.scene.globe.baseColor = Color.fromCssColorString('#04060e');
 
     // Far frustum: the side-view feature places stars on an expanded
     // shell up to ~800 AU (vs 100 AU in normal mode), and the off-axis
@@ -419,20 +442,20 @@ export function SpaceView({
         { dayAlpha: 1, nightAlpha: 0 },
       ),
     );
-    viewer.imageryLayers.add(
-      new ImageryLayer(
-        new UrlTemplateImageryProvider({
-          url:
-            'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/' +
-            'VIIRS_CityLights_2012/default/2012-02-21/' +
-            'GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
-          tilingScheme: new WebMercatorTilingScheme(),
-          maximumLevel: 8,
-          credit: new Credit('NASA · VIIRS Black Marble 2012'),
-        }),
-        { dayAlpha: 0, nightAlpha: 1 },
-      ),
+    const nightLayer = new ImageryLayer(
+      new UrlTemplateImageryProvider({
+        url:
+          'https://map1.vis.earthdata.nasa.gov/wmts-webmerc/' +
+          'VIIRS_CityLights_2012/default/2012-02-21/' +
+          'GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg',
+        tilingScheme: new WebMercatorTilingScheme(),
+        maximumLevel: 8,
+        credit: new Credit('NASA · VIIRS Black Marble 2012'),
+      }),
+      { dayAlpha: 0, nightAlpha: 1 },
     );
+    viewer.imageryLayers.add(nightLayer);
+    nightLayerRef.current = nightLayer;
 
     viewer.clock.clockRange = ClockRange.LOOP_STOP;
     viewer.clock.shouldAnimate = false;
@@ -447,9 +470,9 @@ export function SpaceView({
 
     // Cesium's default mouse/wheel zoom controller has minimumZoomDistance ~1 m,
     // which lets the camera fly straight through the ellipsoid and pop out on
-    // the other side. Cap it ~50 km above mean radius to match the keyboard's
-    // MIN_DIST and keep the camera safely outside Earth.
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 50_000;
+    // the other side. Cap it ~500 km above mean radius to match the keyboard's
+    // MIN_DIST and keep the camera at a sensible inspection distance.
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 500_000;
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = 950_000_000;
 
     const detachKeyboard = attachKeyboardNav(viewer, { sideViewActiveRef });
@@ -469,6 +492,7 @@ export function SpaceView({
       cleanupsRef.current = [];
       viewer.destroy();
       viewerRef.current = null;
+      nightLayerRef.current = null;
     };
   }, []);
 
@@ -486,6 +510,16 @@ export function SpaceView({
     }),
     [t, locale],
   );
+
+  // Era-appropriate night-side dimming. VIIRS Black Marble is a 2012
+  // snapshot; for older birth dates we scale the layer's nightAlpha down
+  // so we don't paint anachronistic megacities onto a 1926 Earth.
+  useEffect(() => {
+    const layer = nightLayerRef.current;
+    if (!layer) return;
+    const active = reading ?? liveReading;
+    layer.nightAlpha = nightAlphaForYear(active.input.date.getFullYear());
+  }, [reading, liveReading]);
 
   // 2. Re-mount layers + camera animation.
   useSceneLayerComposition({

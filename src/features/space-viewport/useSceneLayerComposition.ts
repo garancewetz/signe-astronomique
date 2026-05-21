@@ -96,7 +96,6 @@ export function useSceneLayerComposition({
       mountSunLayer(viewer, {
         raHours: active.sunRA,
         decDeg: active.sunDec,
-        gmstRad,
         constellation: active.trueConstellation,
         displayName: bodyNames.sun,
         showLabels: showBodyLabels,
