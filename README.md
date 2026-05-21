@@ -19,7 +19,7 @@ Every body is pickable. Selecting one opens a HUD panel and unlocks two compleme
 - **Side view** — camera perpendicular to the Earth → constellation axis, with a graduated distance ruler in light-years.
 - **Depth view** — the constellation "exploded" so each star sits at its real distance, making the depth disparity legible at a glance.
 
-A natal report is rendered alongside the 3D view: ascendant constellation, planetary positions, and the 360° ecliptic radar with IAU angular sizes.
+A natal report is rendered alongside the 3D view: ascendant constellation, planetary positions, and the 360° ecliptic radar with IAU angular sizes. A "share this sky" button copies a self-contained URL that opens directly on the recipient's recomputed chart.
 
 ## Why it matters
 
@@ -70,11 +70,14 @@ src/
 │   │   ├── data/constellations.json      Hipparcos catalog (stars + pattern lines)
 │   │   ├── data/constellationCatalog.ts  typed JSON loader
 │   │   └── index.ts                      barrel — public API
-│   ├── natal-input/              coordinate capture (form, autocomplete, hooks)
+│   ├── natal-input/              coordinate capture + share-link encoding
 │   │   ├── CoordinatesForm.tsx           date / time / location form
 │   │   ├── CityAutocomplete.tsx          Nominatim autocomplete
 │   │   ├── MobileCoordinatesModal.tsx    fullscreen mobile variant
-│   │   ├── useNatalForm.ts               default city + date/time state
+│   │   ├── computeReadingFromForm.ts     wall-clock form → CelestialReading
+│   │   ├── shareLink.ts                  URL-param encode/decode for shareable links
+│   │   ├── useNatalForm.ts               default city + date/time state (URL-hydrated)
+│   │   ├── useShareLink.ts               clipboard + auto-jump on share-link landing
 │   │   ├── useSearchHistory.ts           localStorage-backed recent natal queries
 │   │   ├── useGeolocation.ts             browser geolocation (graceful fallback)
 │   │   ├── timezone.ts                   tz-lookup → birth time → UTC
