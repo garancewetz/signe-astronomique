@@ -10,14 +10,14 @@ import {
 } from 'cesium';
 import {
   CONSTELLATION_CATALOG,
-  isZodiacal,
+  CONSTELLATION_LORE,
   abbrToZodiacal,
+  isZodiacal,
+  starShellRadiusM,
   type CatalogStar,
+  type IauConstellation,
 } from '@/features/astronomy';
-import { CONSTELLATION_LORE } from '../../../utils/constellationLore';
-import { starShellRadiusM } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
-import type { IauConstellation } from '@/features/astronomy';
 
 const MAGNITUDE_LIMIT = 6.0;
 

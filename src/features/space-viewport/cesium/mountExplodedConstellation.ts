@@ -12,12 +12,12 @@ import {
 import {
   abbrToZodiacal,
   findConstellation,
+  loreName,
+  starShellRadiusMExpanded,
   type CatalogStar,
 } from '@/features/astronomy';
-import { loreName } from '../../../utils/constellationLore';
-import { starShellRadiusMExpanded } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
-import type { Locale } from '../../../i18n';
+import type { Locale } from '@/i18n';
 
 const MAGNITUDE_LIMIT = 6.0;
 

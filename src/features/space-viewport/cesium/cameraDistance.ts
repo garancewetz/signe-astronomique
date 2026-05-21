@@ -1,6 +1,6 @@
 import { Cartesian3, type Viewer } from 'cesium';
-import type { Locale } from '../../../i18n';
-import { EARTH_RADIUS_M, formatDistanceKmOrAU } from '../../../utils/formatDistance';
+import type { Locale } from '@/i18n';
+import { EARTH_RADIUS_M, formatDistanceKmOrAU } from '@/features/astronomy';
 
 interface AttachOptions {
   /**

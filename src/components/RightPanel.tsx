@@ -20,7 +20,7 @@ import {
   relicsAvailableOn,
   satelliteBlurb,
   satelliteName,
-} from '../data/satellitesDB';
+} from '@/features/space-viewport';
 import { useLocale, useT } from '../context/useLocale';
 
 export type ReportPanelKey = 'resume' | 'carte' | 'lecture' | 'donnees';

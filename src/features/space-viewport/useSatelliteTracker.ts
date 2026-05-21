@@ -5,7 +5,7 @@ import {
   isSilentEra,
   relicsAvailableOn,
   type SatelliteRelic,
-} from '../data/satellitesDB';
+} from './data/satellitesDB';
 
 /** A relic with its parsed SGP4 record, ready to propagate at any time. */
 export interface ParsedRelic {

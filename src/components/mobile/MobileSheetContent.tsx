@@ -12,7 +12,7 @@ import {
 import type { ReactNode } from 'react';
 import { BodyInfoHud } from '../BodyInfoHud';
 import type { ReportPanelKey } from '../RightPanel';
-import type { SelectedBody } from '../space/SpaceView';
+import type { SelectedBody } from '@/features/space-viewport';
 import { MenuRow } from '../ui';
 import { useCockpitDisplay } from '../../context/useCockpitDisplay';
 import { useT } from '../../context/useLocale';

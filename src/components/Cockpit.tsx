@@ -6,11 +6,13 @@ import { KeyboardHintChip } from './KeyboardHintChip';
 import { DistanceChip } from './ui';
 import { useT } from '../context/useLocale';
 import {
-  SpaceView,
   LIVE_TLE_VALIDITY_MS,
+  SpaceView,
+  useOrbitalPopulation,
+  useRevealSequence,
   type SelectedBody,
   type SpaceViewHandle,
-} from './space/SpaceView';
+} from '@/features/space-viewport';
 import { HudFrame } from './HudFrame';
 import { BodyInfoHud } from './BodyInfoHud';
 import {
@@ -27,9 +29,7 @@ import { useMobileLayout } from '../hooks/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
 import type { CelestialReading } from '@/features/astronomy';
-import { useOrbitalPopulation } from '../hooks/useOrbitalPopulation';
 import { useNatalForm, useSearchHistory } from '@/features/natal-input';
-import { useRevealSequence } from '../hooks/useRevealSequence';
 import { useExportHandlers } from '../hooks/useExportHandlers';
 import { CockpitDisplayProvider } from '../context/CockpitDisplayContext';
 

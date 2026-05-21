@@ -12,9 +12,9 @@ import {
   type Viewer,
 } from 'cesium';
 import { gstime, propagate, type SatRec } from 'satellite.js';
-import type { ParsedRelic } from '../../../hooks/useSatelliteTracker';
-import { satelliteBlurb, satelliteName } from '../../../data/satellitesDB';
-import type { Locale } from '../../../i18n';
+import type { ParsedRelic } from '../useSatelliteTracker';
+import { satelliteBlurb, satelliteName } from '../data/satellitesDB';
+import type { Locale } from '@/i18n';
 
 interface MountOptions {
   /** Filtered + parsed relics from useSatelliteTracker. */

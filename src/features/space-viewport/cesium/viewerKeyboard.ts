@@ -1,5 +1,5 @@
 import { Cartesian3, type Viewer } from 'cesium';
-import { EARTH_RADIUS_M } from '../../../utils/formatDistance';
+import { EARTH_RADIUS_M } from '@/features/astronomy';
 
 const NAV_KEYS = new Set([
   'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',

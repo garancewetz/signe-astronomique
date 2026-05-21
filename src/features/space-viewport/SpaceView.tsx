@@ -43,10 +43,10 @@ import {
 } from './cesium/cameraDirector';
 import { attachKeyboardNav } from './cesium/viewerKeyboard';
 import { useSceneLayerComposition } from './useSceneLayerComposition';
-import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
-import type { OrbitalSat } from '../../hooks/useOrbitalPopulation';
-import { useLocale, useT } from '../../context/useLocale';
-import type { Locale } from '../../i18n';
+import { useSatelliteTracker } from './useSatelliteTracker';
+import type { OrbitalSat } from './useOrbitalPopulation';
+import { useLocale, useT } from '@/context/useLocale';
+import type { Locale } from '@/i18n';
 import { PLANETS_META } from '@/features/astronomy';
 
 export interface SpaceViewHandle {

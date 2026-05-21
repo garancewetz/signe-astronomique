@@ -19,7 +19,7 @@
  * digits don't matter — only the data columns do.
  */
 
-import type { Locale } from '../i18n';
+import type { Locale } from '@/i18n';
 
 export interface SatelliteRelic {
   /** Stable internal id (slug). */
