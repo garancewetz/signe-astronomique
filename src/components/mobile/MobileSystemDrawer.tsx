@@ -6,7 +6,7 @@ import {
   List,
   Loader2,
 } from 'lucide-react';
-import { InfoCircleIcon } from '../ExploreSpacePopover';
+import { InfoCircleIcon } from '@/features/natal-report';
 import { cn, MenuRow, surfaceClasses } from '../ui';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';

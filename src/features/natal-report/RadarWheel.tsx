@@ -5,9 +5,9 @@ import {
   type CelestialReading,
   type IauConstellation,
 } from '@/features/astronomy';
-import { useLocale, useT } from '../context/useLocale';
-import type { Copy } from '../i18n/fr';
-import type { Locale } from '../i18n';
+import { useLocale, useT } from '@/context/useLocale';
+import type { Copy } from '@/i18n/fr';
+import type { Locale } from '@/i18n';
 
 interface Props {
   reading: CelestialReading | null;

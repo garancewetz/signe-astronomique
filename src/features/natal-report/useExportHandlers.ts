@@ -6,7 +6,7 @@ import {
   exportTargetedPdf,
   reportPdfFilename,
   viewFilename,
-} from '../utils/exportReport';
+} from './exportReport';
 
 interface UseExportHandlersArgs {
   spaceViewRef: RefObject<SpaceViewHandle | null>;

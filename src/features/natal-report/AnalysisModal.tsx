@@ -9,11 +9,11 @@ import {
   ResumeBody,
   type ReportPanelKey,
 } from './RightPanel';
-import { Button, cn, surfaceClasses } from './ui';
+import { Button, cn, surfaceClasses } from '@/components/ui';
 import type { CelestialReading } from '@/features/astronomy';
-import { useFocusTrap } from '../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
-import { useT } from '../context/useLocale';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useT } from '@/context/useLocale';
 
 interface TabDef {
   key: ReportPanelKey;

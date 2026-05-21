@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { BodyInfoHud } from '../BodyInfoHud';
-import type { ReportPanelKey } from '../RightPanel';
+import type { ReportPanelKey } from '@/features/natal-report';
 import type { SelectedBody } from '@/features/space-viewport';
 import { MenuRow } from '../ui';
 import { useCockpitDisplay } from '../../context/useCockpitDisplay';

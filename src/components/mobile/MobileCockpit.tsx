@@ -7,9 +7,11 @@ import {
   type SearchHistoryEntry,
 } from '@/features/natal-input';
 import type { CelestialReading } from '@/features/astronomy';
-import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '@/features/space-viewport';
-import { ExploreSpacePopover } from '../ExploreSpacePopover';
+import {
+  ExploreSpacePopover,
+  type ReportPanelKey,
+} from '@/features/natal-report';
 import { LegendPanel } from '../LegendPanel';
 import { BottomSheet, type SheetSnap } from './BottomSheet';
 import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
