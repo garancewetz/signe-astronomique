@@ -8,8 +8,8 @@ import {
   size,
   useFloating,
 } from '@floating-ui/react';
-import { timezoneFromLatLon } from '../utils/timezone';
-import { useT } from '../context/useLocale';
+import { timezoneFromLatLon } from './timezone';
+import { useT } from '@/context/useLocale';
 
 export interface CityResult {
   label: string;

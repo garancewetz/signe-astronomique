@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
-import { CoordinatesForm } from '../CoordinatesForm';
-import type { CityResult } from '../CityAutocomplete';
-import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
+import { CoordinatesForm } from './CoordinatesForm';
+import type { CityResult } from './CityAutocomplete';
+import type { SearchHistoryEntry } from './useSearchHistory';
 import type { CelestialReading } from '@/features/astronomy';
-import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
-import { useT } from '../../context/useLocale';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { useT } from '@/context/useLocale';
 
 interface MobileCoordinatesModalProps {
   open: boolean;

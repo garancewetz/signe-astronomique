@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import type { CityResult } from '../components/CityAutocomplete';
+import type { CityResult } from './CityAutocomplete';
 import { useGeolocation } from './useGeolocation';
-import { timezoneFromLatLon } from '../utils/timezone';
+import { timezoneFromLatLon } from './timezone';
 
 const DEFAULT_CITY: CityResult = {
   label: 'Paris, France',

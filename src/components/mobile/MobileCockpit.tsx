@@ -1,15 +1,17 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, MoreVertical } from 'lucide-react';
-import type { CityResult } from '../CityAutocomplete';
-import type { SearchHistoryEntry } from '../../hooks/useSearchHistory';
+import {
+  MobileCoordinatesModal,
+  type CityResult,
+  type SearchHistoryEntry,
+} from '@/features/natal-input';
 import type { CelestialReading } from '@/features/astronomy';
 import type { ReportPanelKey } from '../RightPanel';
 import type { SelectedBody } from '../space/SpaceView';
 import { ExploreSpacePopover } from '../ExploreSpacePopover';
 import { LegendPanel } from '../LegendPanel';
 import { BottomSheet, type SheetSnap } from './BottomSheet';
-import { MobileCoordinatesModal } from './MobileCoordinatesModal';
 import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
 import { MobileSheetContent } from './MobileSheetContent';
 import { MobileAnalysisStack } from './MobileAnalysisStack';
