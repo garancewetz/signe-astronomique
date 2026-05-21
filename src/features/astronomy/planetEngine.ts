@@ -1,14 +1,14 @@
 /**
  * Astrolabe · Planet Engine
  *
- * Positions géocentriques apparentes des 8 planètes + Pluton, à partir des
- * éléments orbitaux moyens du JPL (table "Approximate Positions of the
- * Planets", validité 1800-2050).
+ * Apparent geocentric positions of the 8 planets + Pluto, derived from the
+ * JPL mean orbital elements ("Approximate Positions of the Planets" table,
+ * valid 1800-2050).
  *
- * Précision typique : ~0.1° pour les planètes intérieures, ~1° pour les
- * géantes, suffisante pour identifier la constellation traversée.
+ * Typical accuracy: ~0.1° for the inner planets, ~1° for the gas giants —
+ * sufficient to identify the constellation the body is crossing.
  *
- * Référence : Standish & Williams (NASA JPL Solar System Dynamics).
+ * Reference: Standish & Williams (NASA JPL Solar System Dynamics).
  */
 
 const DEG = Math.PI / 180;
@@ -16,7 +16,7 @@ const RAD = 180 / Math.PI;
 
 const norm360 = (x: number) => ((x % 360) + 360) % 360;
 
-// ─── Identité ────────────────────────────────────────────────────────────────
+// ─── Identity ───────────────────────────────────────────────────────────────
 
 export type PlanetId =
   | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn'
@@ -45,17 +45,17 @@ export const PLANETS_META: Record<PlanetId, PlanetMeta> = {
   pluto:   { id: 'pluto',   fr: 'Pluton',  en: 'Pluto',   color: '#a78bfa', glyph: '♇' },
 };
 
-// ─── Éléments orbitaux JPL (1800-2050) ──────────────────────────────────────
-// Format : valeur à J2000 + variation par siècle julien.
-// Unités : AU (a), sans unité (e), degrés (i, L, ϖ, Ω).
+// ─── JPL orbital elements (1800-2050) ───────────────────────────────────────
+// Format: value at J2000 + drift per Julian century.
+// Units: AU (a), unitless (e), degrees (i, L, ϖ, Ω).
 
 interface OrbitalElements {
-  a:  [number, number]; // demi-grand axe (AU)
-  e:  [number, number]; // excentricité
-  i:  [number, number]; // inclinaison
-  L:  [number, number]; // longitude moyenne
-  pi: [number, number]; // longitude du périhélie ϖ
-  Om: [number, number]; // longitude du nœud ascendant Ω
+  a:  [number, number]; // semi-major axis (AU)
+  e:  [number, number]; // eccentricity
+  i:  [number, number]; // inclination
+  L:  [number, number]; // mean longitude
+  pi: [number, number]; // longitude of perihelion ϖ
+  Om: [number, number]; // longitude of the ascending node Ω
 }
 
 const ELEMENTS: Record<PlanetId | 'earth', OrbitalElements> = {
@@ -133,10 +133,10 @@ const ELEMENTS: Record<PlanetId | 'earth', OrbitalElements> = {
   },
 };
 
-// ─── Solveur de Kepler ──────────────────────────────────────────────────────
+// ─── Kepler solver ──────────────────────────────────────────────────────────
 
 function solveKepler(M: number, e: number): number {
-  // M en radians
+  // M in radians.
   let E = M + e * Math.sin(M);
   for (let i = 0; i < 8; i++) {
     const dE = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
@@ -146,7 +146,7 @@ function solveKepler(M: number, e: number): number {
   return E;
 }
 
-// ─── Position héliocentrique écliptique (J2000) ─────────────────────────────
+// ─── Heliocentric ecliptic position (J2000) ─────────────────────────────────
 
 interface Vec3 { x: number; y: number; z: number; }
 
@@ -159,21 +159,21 @@ function heliocentricEcliptic(body: PlanetId | 'earth', T: number): Vec3 {
   const pi = (el.pi[0] + el.pi[1] * T) * DEG;
   const Om = (el.Om[0] + el.Om[1] * T) * DEG;
 
-  const omega = pi - Om;        // argument du périhélie
-  const M = L - pi;             // anomalie moyenne
+  const omega = pi - Om;        // argument of perihelion
+  const M = L - pi;             // mean anomaly
   const Mn = ((M % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
   const E = solveKepler(Mn, e);
 
-  // Coordonnées dans le plan orbital
+  // Coordinates in the orbital plane.
   const xp = a * (Math.cos(E) - e);
   const yp = a * Math.sqrt(1 - e * e) * Math.sin(E);
 
-  // Rotation par ω, puis i, puis Ω
+  // Rotation by ω, then i, then Ω.
   const co = Math.cos(omega), so = Math.sin(omega);
   const ci = Math.cos(i),     si = Math.sin(i);
   const cO = Math.cos(Om),    sO = Math.sin(Om);
 
-  // Méthode JPL : matrice composée
+  // JPL method: composed rotation matrix.
   const x =
       (co * cO - so * sO * ci) * xp +
     (-so * cO - co * sO * ci) * yp;
@@ -185,19 +185,19 @@ function heliocentricEcliptic(body: PlanetId | 'earth', T: number): Vec3 {
   return { x, y, z };
 }
 
-// ─── API publique ───────────────────────────────────────────────────────────
+// ─── Public API ─────────────────────────────────────────────────────────────
 
 interface GeocentricPosition {
-  /** Longitude écliptique géocentrique (deg, [0..360)) */
+  /** Geocentric ecliptic longitude (deg, [0..360)). */
   lon: number;
-  /** Latitude écliptique géocentrique (deg) */
+  /** Geocentric ecliptic latitude (deg). */
   lat: number;
-  /** Distance Terre→corps en AU */
+  /** Earth → body distance in AU. */
   distance: number;
 }
 
 /**
- * Position géocentrique apparente d'une planète à un jour julien donné.
+ * Apparent geocentric position of a planet at a given Julian day.
  */
 export function planetGeocentric(body: PlanetId, jd: number): GeocentricPosition {
   const T = (jd - 2451545.0) / 36525;

@@ -1,16 +1,16 @@
 /**
  * Astrolabe - Astro Engine
  *
- * Algorithmes de Jean Meeus (Astronomical Algorithms, 2e éd.).
- * Précision visée :
- *   - Longitude écliptique du Soleil : ~0.01° sur 1900-2100
- *   - Lune : ~10' en longitude, ~3' en latitude
- *   - Planètes : ~0.1° (telluriques) à ~1° (géantes), via planetEngine.ts
- *   - Sidereal time : ~0.1s
- *   - Ascendant : ~1' (limité par l'arrondi de la latitude utilisateur)
+ * Algorithms from Jean Meeus (Astronomical Algorithms, 2nd ed.).
+ * Target accuracy:
+ *   - Sun ecliptic longitude: ~0.01° over 1900-2100
+ *   - Moon: ~10' in longitude, ~3' in latitude
+ *   - Planets: ~0.1° (terrestrial) to ~1° (gas giants), via planetEngine.ts
+ *   - Sidereal time: ~0.1s
+ *   - Ascendant: ~1' (capped by the rounding of the user-supplied latitude)
  *
- * Ce moteur opère ENTIÈREMENT en référentiel UTC. Les fuseaux horaires
- * doivent être convertis en amont par l'appelant.
+ * This engine operates ENTIRELY in UTC. Local time zones must be converted
+ * by the caller before invoking computeReading.
  */
 
 import { planetGeocentric, PLANETS_META, type PlanetId } from './planetEngine';
@@ -22,42 +22,42 @@ const RAD = 180 / Math.PI;
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface BirthInput {
-  /** Date/heure UTC de naissance */
+  /** UTC birth date/time. */
   date: Date;
-  /** Latitude en degrés, Nord positif */
+  /** Latitude in degrees, North positive. */
   latitude: number;
-  /** Longitude en degrés, Est positif */
+  /** Longitude in degrees, East positive. */
   longitude: number;
-  /** Lieu (label affichable, optionnel) */
+  /** Place (displayable label, optional). */
   placeLabel?: string;
-  /** IANA timezone du lieu (ex. "America/New_York"). Sert à formater
-   *  l'affichage et le moment de la journée dans le repère local. */
+  /** IANA time zone of the place (e.g. "America/New_York"). Used to format
+   *  the display and the time of day in the local frame. */
   timezone?: string;
 }
 
 /**
- * Représentation unifiée d'un astre (Soleil, Lune, planète) pour le rendu
- * et le rapport. Toutes les coordonnées sont apparentes, géocentriques.
+ * Unified representation of a celestial body (Sun, Moon, planet) for the
+ * scene and the report. All coordinates are apparent and geocentric.
  */
 export interface CelestialBody {
   id: 'sun' | 'moon' | PlanetId;
-  /** Nom français */
+  /** Display name (French). */
   name: string;
-  /** Glyphe astronomique unicode */
+  /** Unicode astronomical glyph. */
   glyph: string;
-  /** Couleur de marqueur (hex) */
+  /** Marker color (hex). */
   color: string;
-  /** Longitude écliptique tropicale, degrés [0..360) */
+  /** Tropical ecliptic longitude, degrees [0..360). */
   eclipticLongitude: number;
-  /** Latitude écliptique, degrés */
+  /** Ecliptic latitude, degrees. */
   eclipticLatitude: number;
-  /** Ascension droite, heures [0..24) */
+  /** Right ascension, hours [0..24). */
   ra: number;
-  /** Déclinaison, degrés */
+  /** Declination, degrees. */
   dec: number;
-  /** Constellation IAU traversée (frame ICRS) */
+  /** IAU constellation the body is crossing (ICRS frame). */
   constellation: IauConstellation;
-  /** Distance à la Terre — AU pour planètes, sans unité pour Soleil/Lune */
+  /** Distance to Earth — AU for planets, unitless for Sun/Moon. */
   distance?: number;
 }
 
@@ -72,64 +72,64 @@ export type MoonPhaseKey =
   | 'waningCrescent';
 
 interface MoonReading {
-  /** Longitude écliptique géocentrique apparente, degrés [0..360) */
+  /** Apparent geocentric ecliptic longitude, degrees [0..360). */
   eclipticLongitude: number;
-  /** Latitude écliptique géocentrique, degrés */
+  /** Geocentric ecliptic latitude, degrees. */
   eclipticLatitude: number;
-  /** Ascension droite, heures [0..24) */
+  /** Right ascension, hours [0..24). */
   ra: number;
-  /** Déclinaison, degrés */
+  /** Declination, degrees. */
   dec: number;
-  /** Élongation Soleil-Lune, degrés [0..360) */
+  /** Sun-Moon elongation, degrees [0..360). */
   elongation: number;
-  /** Fraction illuminée [0..1] */
+  /** Illuminated fraction [0..1]. */
   illumination: number;
   /** Stable phase identifier — localized by consumers via i18n. */
   phaseKey: MoonPhaseKey;
-  /** Constellation IAU dans laquelle se trouve la Lune */
+  /** IAU constellation the Moon currently sits in. */
   constellation: IauConstellation;
-  /** Distance Terre-Lune (km) — varie de ~363 000 (périgée) à ~405 000 (apogée) */
+  /** Earth-Moon distance (km) — varies from ~363 000 (perigee) to ~405 000 (apogee). */
   distanceKm: number;
 }
 
 export interface CelestialReading {
   julianDay: number;
-  /** Longitude écliptique tropicale (référentiel équinoxe de la date), degrés [0..360) */
+  /** Tropical ecliptic longitude (equinox-of-date frame), degrees [0..360). */
   sunEclipticLongitude: number;
-  /** Longitude écliptique sidérale (frame IAU/ICRS), degrés [0..360) */
+  /** Sidereal ecliptic longitude (IAU/ICRS frame), degrees [0..360). */
   sunSiderealLongitude: number;
-  /** Ascension droite du Soleil, heures [0..24) */
+  /** Sun right ascension, hours [0..24). */
   sunRA: number;
-  /** Déclinaison du Soleil, degrés */
+  /** Sun declination, degrees. */
   sunDec: number;
-  /** Obliquité apparente de l'écliptique, degrés */
+  /** Apparent obliquity of the ecliptic, degrees. */
   obliquity: number;
-  /** Temps sidéral apparent à Greenwich, heures [0..24) */
+  /** Apparent sidereal time at Greenwich, hours [0..24). */
   greenwichSiderealTime: number;
-  /** Temps sidéral local, heures [0..24) */
+  /** Local sidereal time, hours [0..24). */
   localSiderealTime: number;
-  /** Ascendant : longitude écliptique de l'horizon Est, degrés [0..360) */
+  /** Ascendant: ecliptic longitude of the eastern horizon, degrees [0..360). */
   ascendantLongitude: number;
-  /** Constellation IAU traversée par le Soleil au moment de la naissance */
+  /** IAU constellation crossed by the Sun at birth. */
   trueConstellation: IauConstellation;
-  /** Signe astrologique tropical "classique" (mapping naïf 30°/signe) */
+  /** "Classic" tropical zodiac sign (naive 30°-per-sign mapping). */
   tropicalSign: ZodiacSign;
   /**
-   * Décalage cumulé du zodiaque tropical par rapport au ciel IAU, en jours.
-   * = longitude tropicale du début d'Aries IAU, projetée en jours solaires.
-   * À ~80 BCE, le point vernal coïncidait avec la frontière Pisces→Aries IAU
-   * (gap = 0). Depuis, la précession (~50.29″/an) a creusé l'écart : ~30 j en 2026.
+   * Cumulative drift of the tropical zodiac vs. the IAU sky, in days.
+   * = tropical longitude of the IAU Aries boundary, projected to solar days.
+   * Around 80 BCE the vernal equinox sat on the IAU Pisces→Aries boundary
+   * (gap = 0). Precession (~50.29″/yr) has widened it since: ~30 d by 2026.
    */
   precessionGapDays: number;
-  /** Nombre de jours que le Soleil passe réellement dans cette constellation */
+  /** Number of days the Sun actually spends in this constellation. */
   daysInConstellation: number;
-  /** Position et phase de la Lune */
+  /** Moon position and phase. */
   moon: MoonReading;
-  /** Constellation où se lève l'horizon Est (Ascendant) */
+  /** Constellation rising on the eastern horizon (Ascendant). */
   ascendantConstellation: IauConstellation;
-  /** Tous les corps célestes (Soleil, Lune, 8 planètes + Pluton) */
+  /** All celestial bodies (Sun, Moon, 8 planets + Pluto). */
   bodies: CelestialBody[];
-  /** Input d'origine, repassé pour affichage */
+  /** Original input, kept for display. */
   input: BirthInput;
 }
 
@@ -140,21 +140,21 @@ type ZodiacSign =
 
 export type IauConstellation = ZodiacSign | 'Ophiuchus';
 
-// ─── Helpers numériques ──────────────────────────────────────────────────────
+// ─── Numerical helpers ──────────────────────────────────────────────────────
 
 const norm360 = (x: number) => ((x % 360) + 360) % 360;
 const norm24  = (x: number) => ((x % 24) + 24) % 24;
 
-// ─── Conversion calendrier → Jour Julien (Meeus 7.1) ─────────────────────────
+// ─── Calendar → Julian Day (Meeus 7.1) ──────────────────────────────────────
 
 /**
- * Jour julien à partir d'une Date JS (interprétée en UTC).
+ * Julian Day from a JS Date (interpreted as UTC).
  *
- * ⚠ Rappel pour l'appelant : `new Date(YYYY, M, D)` interprète M en base 0
- * (janvier = 0, février = 1...). Pour le 18 janvier 1992, utiliser
- * `new Date(Date.UTC(1992, 0, 18))` — pas `new Date(1992, 1, 18)`,
- * qui donnerait le 18 février. Ici, `getUTCMonth()` renvoie 0..11 et l'on
- * ajoute 1 pour obtenir le mois calendaire 1..12 utilisé par Meeus.
+ * ⚠ Reminder for callers: `new Date(YYYY, M, D)` interprets M as zero-based
+ * (January = 0, February = 1, …). For January 18 1992, use
+ * `new Date(Date.UTC(1992, 0, 18))` — *not* `new Date(1992, 1, 18)`, which
+ * would yield February 18. Here `getUTCMonth()` returns 0..11 and we add 1
+ * to obtain the 1..12 calendar month used by Meeus.
  */
 export function toJulianDay(date: Date): number {
   let Y = date.getUTCFullYear();
@@ -168,7 +168,7 @@ export function toJulianDay(date: Date): number {
     M += 12;
   }
   const A = Math.floor(Y / 100);
-  const B = 2 - A + Math.floor(A / 4); // calendrier grégorien
+  const B = 2 - A + Math.floor(A / 4); // Gregorian calendar
 
   return (
     Math.floor(365.25 * (Y + 4716)) +
@@ -177,20 +177,20 @@ export function toJulianDay(date: Date): number {
   );
 }
 
-// ─── Soleil : longitude écliptique apparente (Meeus ch. 25) ─────────────────
+// ─── Sun: apparent ecliptic longitude (Meeus ch. 25) ────────────────────────
 
 interface SunSolution { lambda: number; obliquity: number; }
 
 function sunApparentLongitude(jd: number): SunSolution {
   const T = (jd - 2451545.0) / 36525;
 
-  // Longitude moyenne géométrique
+  // Geometric mean longitude.
   const L0 = norm360(280.46646 + 36000.76983 * T + 0.0003032 * T * T);
-  // Anomalie moyenne
+  // Mean anomaly.
   const M = norm360(357.52911 + 35999.05029 * T - 0.0001537 * T * T);
   const Mr = M * DEG;
 
-  // Équation du centre
+  // Equation of centre.
   const C =
     (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(Mr) +
     (0.019993 - 0.000101 * T) * Math.sin(2 * Mr) +
@@ -198,11 +198,11 @@ function sunApparentLongitude(jd: number): SunSolution {
 
   const trueLong = L0 + C;
 
-  // Correction nutation + aberration (Meeus 25.8 simplifiée)
+  // Nutation + aberration correction (Meeus 25.8, simplified).
   const omega = 125.04 - 1934.136 * T;
   const lambda = trueLong - 0.00569 - 0.00478 * Math.sin(omega * DEG);
 
-  // Obliquité moyenne (Meeus 22.2) + correction de nutation
+  // Mean obliquity (Meeus 22.2) + nutation correction.
   const eps0 =
     23 + 26 / 60 + 21.448 / 3600 -
     (46.8150 * T + 0.00059 * T * T - 0.001813 * T * T * T) / 3600;
@@ -211,30 +211,30 @@ function sunApparentLongitude(jd: number): SunSolution {
   return { lambda: norm360(lambda), obliquity: eps };
 }
 
-// ─── Lune : position géocentrique apparente (Meeus ch. 47, simplifié) ──────
-// Précision : ~10' en longitude, ~3' en latitude — largement suffisant pour
-// la visualisation et la détermination de la phase.
+// ─── Moon: apparent geocentric position (Meeus ch. 47, abridged) ────────────
+// Accuracy: ~10' in longitude, ~3' in latitude — comfortably enough for the
+// 3D scene and the phase determination.
 
 interface MoonSolution {
-  lon: number;        // longitude écliptique géocentrique (deg)
-  lat: number;        // latitude écliptique géocentrique  (deg)
-  distanceKm: number; // distance Terre-Lune (km)
+  lon: number;        // geocentric ecliptic longitude (deg)
+  lat: number;        // geocentric ecliptic latitude  (deg)
+  distanceKm: number; // Earth-Moon distance (km)
 }
 
 function moonApparentPosition(jd: number): MoonSolution {
   const T = (jd - 2451545.0) / 36525;
 
-  // Arguments fondamentaux (Meeus 47.1-47.5)
-  const Lp = norm360(218.3164591 + 481267.88134236 * T - 0.0013268 * T * T);  // longitude moyenne
-  const D  = norm360(297.8502042 + 445267.1115168  * T - 0.00163   * T * T);  // élongation moyenne
-  const M  = norm360(357.5291092 + 35999.0502909   * T - 0.0001536 * T * T);  // anomalie moyenne du Soleil
-  const Mp = norm360(134.9634114 + 477198.8676313  * T + 0.0089970 * T * T);  // anomalie moyenne de la Lune
-  const F  = norm360( 93.2720993 + 483202.0175273  * T - 0.0034029 * T * T);  // argument de latitude
+  // Fundamental arguments (Meeus 47.1-47.5).
+  const Lp = norm360(218.3164591 + 481267.88134236 * T - 0.0013268 * T * T);  // mean longitude
+  const D  = norm360(297.8502042 + 445267.1115168  * T - 0.00163   * T * T);  // mean elongation
+  const M  = norm360(357.5291092 + 35999.0502909   * T - 0.0001536 * T * T);  // Sun's mean anomaly
+  const Mp = norm360(134.9634114 + 477198.8676313  * T + 0.0089970 * T * T);  // Moon's mean anomaly
+  const F  = norm360( 93.2720993 + 483202.0175273  * T - 0.0034029 * T * T);  // argument of latitude
 
   const sind = (x: number) => Math.sin(x * DEG);
   const cosd = (x: number) => Math.cos(x * DEG);
 
-  // Termes périodiques dominants pour la longitude (Meeus table 47.A, top 10)
+  // Dominant periodic terms for the longitude (Meeus table 47.A, top 10).
   const dLon =
       6.288774 * sind(Mp)
     + 1.274027 * sind(2 * D - Mp)
@@ -250,7 +250,7 @@ function moonApparentPosition(jd: number): MoonSolution {
     - 0.034720 * sind(D)
     - 0.030383 * sind(M + Mp);
 
-  // Termes périodiques dominants pour la latitude (Meeus table 47.B)
+  // Dominant periodic terms for the latitude (Meeus table 47.B).
   const dLat =
       5.128122 * sind(F)
     + 0.280602 * sind(Mp + F)
@@ -262,9 +262,9 @@ function moonApparentPosition(jd: number): MoonSolution {
     + 0.017198 * sind(2 * Mp + F)
     - 0.009445 * sind(2 * D + Mp - F);
 
-  // Termes dominants pour la distance, en km (Meeus table 47.A, colonne B).
-  // Précision résiduelle ~100 km, suffisante pour le rendu (apogée 405k,
-  // périgée 363k → la modulation orbitale reste lisible).
+  // Dominant terms for the distance, in km (Meeus table 47.A, column B).
+  // Residual accuracy ~100 km, sufficient for rendering (apogee ~405k,
+  // perigee ~363k → the orbital modulation stays readable).
   const distanceKm =
       385000.56
     - 20905.355 * cosd(Mp)
@@ -288,7 +288,7 @@ function moonApparentPosition(jd: number): MoonSolution {
   };
 }
 
-// ─── Temps sidéral apparent à Greenwich (Meeus 12.4) ────────────────────────
+// ─── Apparent sidereal time at Greenwich (Meeus 12.4) ───────────────────────
 
 function greenwichSiderealTime(jd: number): number {
   const T = (jd - 2451545.0) / 36525;
@@ -300,30 +300,29 @@ function greenwichSiderealTime(jd: number): number {
   return norm24(norm360(theta) / 15);
 }
 
-// ─── Ascendant : longitude écliptique de l'horizon Est (Meeus ch. 14) ───────
+// ─── Ascendant: ecliptic longitude of the eastern horizon (Meeus ch. 14) ────
 
 function ascendant(lstHours: number, latDeg: number, epsDeg: number): number {
   const lst = lstHours * 15 * DEG;
   const lat = latDeg * DEG;
   const eps = epsDeg * DEG;
 
-  // Meeus formule 14.6 : tan(asc) = -cos(LST) / (sin(LST)·cos(eps) + tan(lat)·sin(eps))
+  // Meeus 14.6: tan(asc) = -cos(LST) / (sin(LST)·cos(eps) + tan(lat)·sin(eps))
   const y = -Math.cos(lst);
   const x = Math.sin(lst) * Math.cos(eps) + Math.tan(lat) * Math.sin(eps);
   const asc = Math.atan2(y, x) * RAD;
 
-  // L'ascendant doit être dans le quadrant qui suit le MC (Médium Coeli).
-  // La formule atan2 ci-dessus retourne dans [-180, 180] ; on normalise.
+  // The ascendant must sit in the quadrant that follows the MC (Medium Coeli).
+  // The atan2 above returns [-180, 180]; normalize to [0, 360).
   return norm360(asc);
 }
 
-// ─── Limites IAU des 13 constellations zodiacales ───────────────────────────
-// Longitudes écliptiques (frame ICRS) où le Soleil ENTRE dans chaque
-// constellation — d'après les frontières IAU 1930 (E. Delporte).
-// Chaque ligne dit : « à partir de cette longitude, le Soleil est dans cette
-// constellation (et y restera jusqu'à la longitude de la ligne suivante) ».
-// La date donnée est la date de transit du Soleil à cette longitude, à l'époque
-// actuelle ; après précession (~50.29″/an) elle dérive lentement.
+// ─── IAU boundaries of the 13 zodiacal constellations ───────────────────────
+// Ecliptic longitudes (ICRS frame) where the Sun ENTERS each constellation —
+// from the IAU 1930 boundaries (E. Delporte). Each row reads: "from this
+// longitude the Sun sits in this constellation, and will stay there until
+// the next row's longitude." The accompanying date is the Sun's transit at
+// this longitude for the current epoch; precession (~50.29″/yr) drifts it.
 
 const IAU_BOUNDARIES: Array<{
   start: number;
@@ -339,7 +338,7 @@ const IAU_BOUNDARIES: Array<{
   { start: 174.15, constellation: 'Virgo',       approximateEntryDate: '16 septembre',durationDays: 45 },
   { start: 218.06, constellation: 'Libra',       approximateEntryDate: '31 octobre',  durationDays: 23 },
   { start: 241.05, constellation: 'Scorpio',     approximateEntryDate: '23 novembre', durationDays:  6 },
-  { start: 247.75, constellation: 'Ophiuchus',   approximateEntryDate: '29 novembre', durationDays: 19 }, // ★ le 13e
+  { start: 247.75, constellation: 'Ophiuchus',   approximateEntryDate: '29 novembre', durationDays: 19 }, // ★ the 13th
   { start: 266.60, constellation: 'Sagittarius', approximateEntryDate: '18 décembre', durationDays: 32 },
   { start: 299.71, constellation: 'Capricorn',   approximateEntryDate: '20 janvier',  durationDays: 27 },
   { start: 327.86, constellation: 'Aquarius',    approximateEntryDate: '16 février',  durationDays: 24 },
@@ -350,22 +349,22 @@ export function getIauBoundaries() {
   return IAU_BOUNDARIES;
 }
 
-/** Mappe une longitude écliptique sidérale [0..360) vers une constellation IAU. */
+/** Map a sidereal ecliptic longitude [0..360) to an IAU constellation. */
 function constellationFromSiderealLongitude(lon: number): IauConstellation {
   const x = norm360(lon);
-  let result: IauConstellation = 'Pisces'; // wrap : avant 29.08° on est encore en Pisces
+  let result: IauConstellation = 'Pisces'; // wrap: below 29.08° we're still in Pisces
   for (const b of IAU_BOUNDARIES) {
     if (x >= b.start) result = b.constellation;
   }
   return result;
 }
 
-/** Renvoie la durée en jours que le Soleil passe dans cette constellation. */
+/** Days the Sun actually spends in this constellation. */
 function daysInConstellation(c: IauConstellation): number {
   return IAU_BOUNDARIES.find(b => b.constellation === c)?.durationDays ?? 30;
 }
 
-// ─── Astrologie tropicale (référence pour comparaison) ──────────────────────
+// ─── Tropical astrology (comparison reference) ──────────────────────────────
 
 const TROPICAL_SIGNS: ZodiacSign[] = [
   'Aries','Taurus','Gemini','Cancer','Leo','Virgo',
@@ -377,12 +376,12 @@ function tropicalSignFromLongitude(lon: number): ZodiacSign {
 }
 
 /**
- * Dérive du point vernal depuis J2000, en degrés (~50.29″/an).
- * Sert à convertir une longitude tropicale courante en longitude écliptique
- * J2000 (frame ICRS), où sont tabulées les frontières IAU.
+ * Drift of the vernal point since J2000, in degrees (~50.29″/yr).
+ * Used to convert a current-epoch tropical longitude into a J2000 (ICRS)
+ * ecliptic longitude, where the IAU boundaries are tabulated.
  *
- * NB : ce n'est PAS la dérive cumulée du zodiaque depuis son ancrage
- * historique — pour ça, voir {@link zodiacDriftDegrees}.
+ * NB: this is NOT the cumulative zodiac drift since its historical anchor —
+ * for that, see {@link zodiacDriftDegrees}.
  */
 export function precessionOffset(jd: number): number {
   const yearsSinceJ2000 = (jd - 2451545.0) / 365.25;
@@ -390,17 +389,17 @@ export function precessionOffset(jd: number): number {
 }
 
 /**
- * Décalage angulaire entre le 0° tropical (point vernal courant) et le début
- * de la constellation IAU Aries, projeté sur l'écliptique. C'est la « vraie »
- * dérive du zodiaque par rapport au ciel : ~80 BCE, le point vernal était sur
- * la frontière IAU Pisces→Aries (gap = 0) ; depuis, la précession l'a écarté
- * d'environ 50.29″/an. En 2026, gap ≈ 29.4° ≈ 30 jours solaires.
+ * Angular gap between 0° tropical (the current vernal point) and the start
+ * of the IAU Aries constellation, projected onto the ecliptic. This is the
+ * "real" drift of the zodiac against the sky: around 80 BCE the vernal
+ * point sat on the IAU Pisces→Aries boundary (gap = 0); precession has
+ * widened that gap by ~50.29″/yr since. By 2026, gap ≈ 29.4° ≈ 30 solar days.
  */
 export function zodiacDriftDegrees(jd: number): number {
   return IAU_BOUNDARIES[0].start + precessionOffset(jd);
 }
 
-// ─── Conversion écliptique → équatoriale (Meeus 13.3) ───────────────────────
+// ─── Ecliptic → equatorial (Meeus 13.3) ─────────────────────────────────────
 
 interface Equatorial { ra: number; dec: number; }
 
@@ -419,7 +418,7 @@ function eclipticToEquatorial(lonDeg: number, latDeg: number, epsDeg: number): E
   };
 }
 
-// ─── Phase de la Lune ───────────────────────────────────────────────────────
+// ─── Moon phase ─────────────────────────────────────────────────────────────
 
 function phaseKey(elongation: number): MoonPhaseKey {
   const e = norm360(elongation);
@@ -433,26 +432,26 @@ function phaseKey(elongation: number): MoonPhaseKey {
   return 'waningCrescent';
 }
 
-/** Convertit une longitude tropicale en constellation IAU. */
+/** Convert a tropical longitude to an IAU constellation. */
 function eclipticToConstellation(lonTropical: number, jd: number): IauConstellation {
   const offset = precessionOffset(jd);
   return constellationFromSiderealLongitude(norm360(lonTropical - offset));
 }
 
-// ─── Point d'entrée principal ────────────────────────────────────────────────
+// ─── Main entry point ───────────────────────────────────────────────────────
 
 export function computeReading(input: BirthInput): CelestialReading {
   const jd = toJulianDay(input.date);
   const { lambda: sunTropical, obliquity: eps } = sunApparentLongitude(jd);
 
-  // Position équatoriale du Soleil
+  // Sun equatorial position.
   const sunEq = eclipticToEquatorial(sunTropical, 0, eps);
 
   const gst = greenwichSiderealTime(jd);
   const lst = norm24(gst + input.longitude / 15);
   const asc = ascendant(lst, input.latitude, eps);
 
-  // Précession & constellation traversée par le Soleil
+  // Precession + constellation the Sun is crossing.
   const offset = precessionOffset(jd);
   const sunSidereal = norm360(sunTropical - offset);
   const trueConstellation = constellationFromSiderealLongitude(sunSidereal);
@@ -469,13 +468,13 @@ export function computeReading(input: BirthInput): CelestialReading {
     );
   }
 
-  // Lune
+  // Moon.
   const moon = moonApparentPosition(jd);
   const moonEq = eclipticToEquatorial(moon.lon, moon.lat, eps);
   const elongation = norm360(moon.lon - sunTropical);
   const illumination = (1 - Math.cos(elongation * DEG)) / 2;
 
-  // Construction du tableau unifié de corps célestes
+  // Build the unified celestial-bodies array.
   const bodies: CelestialBody[] = [
     {
       id: 'sun',
@@ -501,7 +500,7 @@ export function computeReading(input: BirthInput): CelestialReading {
     },
   ];
 
-  // Planètes
+  // Planets.
   (Object.keys(PLANETS_META) as PlanetId[]).forEach(id => {
     const meta = PLANETS_META[id];
     const pos = planetGeocentric(id, jd);
@@ -551,7 +550,7 @@ export function computeReading(input: BirthInput): CelestialReading {
   };
 }
 
-// ─── Formatage pour affichage HUD ────────────────────────────────────────────
+// ─── HUD formatting helpers ─────────────────────────────────────────────────
 
 export function formatRA(hours: number): string {
   const h = Math.floor(hours);

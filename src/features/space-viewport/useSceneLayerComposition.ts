@@ -61,7 +61,7 @@ export function useSceneLayerComposition({
     const viewer = viewerRef.current;
     if (!viewer) return;
 
-    // Le reading actif est celui du JUMP natal s'il existe, sinon le live.
+    // The active reading is the natal JUMP if there is one, otherwise live.
     const active = reading ?? liveReading;
     const previous = previousReadingRef.current;
     const isFirstJump = reading != null && previous == null;
@@ -70,8 +70,8 @@ export function useSceneLayerComposition({
       previous != null &&
       reading.input.date.getTime() !== previous.input.date.getTime();
 
-    // On nettoie systématiquement les anciens layers : RA/Dec et GMST
-    // changent à chaque tick.
+    // Always tear down the previous layers: RA/Dec and GMST change on
+    // every tick, so layers cannot be reused as-is.
     cleanupsRef.current.forEach((c) => c());
     cleanupsRef.current = [];
 
@@ -135,9 +135,9 @@ export function useSceneLayerComposition({
       );
     }
 
-    // Animation caméra : seulement à l'arrivée d'un reading natal ou quand
-    // sa date change. Les ticks "live" minute par minute ne touchent pas la
-    // caméra, sinon elle saute toutes les minutes.
+    // Camera animation: only when a natal reading arrives or its date
+    // changes. Minute-by-minute "live" ticks must not touch the camera,
+    // otherwise it would jump every minute.
     if (isFirstJump || isReadingChange) {
       flyToCelestialDirection(viewer, {
         raHours: active.sunRA,

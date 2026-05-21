@@ -19,7 +19,7 @@ const DEG = Math.PI / 180;
 
 const norm360 = (x: number) => ((x % 360) + 360) % 360;
 
-/** Greenwich Mean Sidereal Time, degrés [0..360) — Meeus 12.4. */
+/** Greenwich Mean Sidereal Time, degrees [0..360) — Meeus 12.4. */
 function gmstDegrees(jd: number): number {
   const T = (jd - 2451545.0) / 36525;
   const theta =
@@ -63,10 +63,10 @@ export function raDecToEcefXYZ(
   return [xe * radiusM, ye * radiusM, zi * radiusM];
 }
 
-/** Conversion heures décimales → degrés (RA dans astroEngine est en heures). */
+/** Decimal hours → degrees (astroEngine stores RA in hours). */
 export const raHoursToDegrees = (raHours: number): number => raHours * 15;
 
-/** Une unité astronomique en kilomètres. */
+/** One astronomical unit in kilometres. */
 export const AU_KM = 149_597_870.7;
 
 /**

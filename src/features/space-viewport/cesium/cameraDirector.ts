@@ -7,9 +7,9 @@ import {
 import { raHoursToDegrees } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
 
-// 100 000 km — Terre fait ~7° apparent (taille d'une bille à bout de bras),
-// même calibration que lumina-sky. Ça laisse de la place pour la Lune
-// (à ~284 000 km de la caméra côté Terre) et la sphère céleste (200 000 km).
+// 100 000 km — Earth subtends ~7° (a marble at arm's length), same
+// calibration as lumina-sky. Leaves room for the Moon (~284 000 km from the
+// camera on Earth's far side) and the celestial sphere (200 000 km).
 const ORBITAL_ALTITUDE_M = 100_000_000;
 
 // 8 000 km — Earth fills ~half the FOV, LEO satellites are visibly
@@ -18,10 +18,10 @@ const ORBITAL_ALTITUDE_M = 100_000_000;
 const RELICS_ALTITUDE_M = 8_000_000;
 
 /**
- * Vue par défaut : orbite équatoriale à 30 000 km, regard nadir vers le
- * point (lat 0, lon 0). À cette altitude, la Terre occupe ~24° du champ et
- * la sphère céleste (200 000 km) reste largement au-delà — vrai sentiment
- * "cockpit en orbite".
+ * Default orbital view: equatorial orbit at 100 000 km, nadir gaze toward
+ * (lat 0, lon 0). At this altitude Earth fills ~24° of the field and the
+ * celestial sphere (200 000 km) stays comfortably behind — a real
+ * "cockpit-in-orbit" feel.
  */
 export function flyToOrbital(viewer: Viewer, duration = 1.5): void {
   viewer.camera.flyTo({
@@ -56,28 +56,28 @@ export function flyToRelicsView(viewer: Viewer, duration = 2.2): void {
 }
 
 interface CelestialDirParams {
-  /** RA en heures (convention astroEngine) */
+  /** RA in hours (astroEngine convention). */
   raHours: number;
-  /** Dec en degrés */
+  /** Dec in degrees. */
   decDeg: number;
-  /** GMST en radians à la date affichée */
+  /** GMST in radians at the rendered date. */
   gmstRad: number;
-  /** Durée d'animation (s). Défaut 2.6. */
+  /** Animation duration in seconds. Defaults to 2.6. */
   duration?: number;
 }
 
 /**
- * Cadre une direction céleste (RA/Dec) : la caméra se positionne en orbite
- * à l'opposé de cette direction et regarde vers la Terre — le corps visé
- * apparaît derrière la Terre, centré.
+ * Frame a celestial direction (RA/Dec): the camera parks in orbit on the
+ * opposite side of that direction and looks back at Earth — the target body
+ * appears behind Earth, centered in the view.
  *
- * Géométrie :
- *   dir      = direction unitaire Terre→corps (ECEF, GMST appliqué)
+ * Geometry:
+ *   dir      = unit Earth→body direction (ECEF, with GMST applied)
  *   camPos   = D · (−cos α · dir + sin α · perp)
- *   direction = −camPos / |camPos|       (caméra → centre Terre)
- *   up        = ẑ projeté ⊥ à direction
+ *   direction = −camPos / |camPos|       (camera → Earth's centre)
+ *   up        = ẑ projected ⊥ to direction
  *
- * α cale le corps à ~30% du demi-FOV vertical.
+ * α offsets the target to ~30% of the vertical half-FOV.
  */
 export function flyToCelestialDirection(
   viewer: Viewer,
@@ -89,12 +89,12 @@ export function flyToCelestialDirection(
   const dirEcef = raDecToEcef(raHoursToDegrees(raHours), decDeg, gmstRad, 1);
   const sunVec = new Cartesian3(dirEcef.x, dirEcef.y, dirEcef.z);
 
-  // Distance caméra constante (orbite stable autour de la Terre).
+  // Constant camera distance (stable orbit around Earth).
   const D = ORBITAL_ALTITUDE_M;
 
-  // Demi-FOV vertical réel pour calibrer alpha.
-  // Le frustum Cesium peut être perspective ou orthographique ; on garde
-  // un fallback à π/3 pour les cas non-perspective (jamais en SCENE3D natal).
+  // Real vertical half-FOV used to calibrate alpha. The Cesium frustum may
+  // be perspective or orthographic; we keep a π/3 fallback for the non-
+  // perspective case (never reached in SCENE3D natal mode).
   const frustum = camera.frustum;
   const fovHoriz =
     frustum instanceof PerspectiveFrustum && frustum.fov != null
@@ -108,7 +108,7 @@ export function flyToCelestialDirection(
       : fovHoriz;
   const ALPHA = fovVert * 0.3;
 
-  // perp = pôle céleste Z projeté sur le plan ⊥ à sunVec, normalisé.
+  // perp = celestial pole (Z) projected onto the plane ⊥ to sunVec, normalized.
   const zAxis = new Cartesian3(0, 0, 1);
   const dotZ = Cartesian3.dot(zAxis, sunVec);
   const perp = Cartesian3.subtract(

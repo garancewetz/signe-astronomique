@@ -21,12 +21,12 @@ const BODY_SIZE_EXAGGERATION = 100;
 
 const MIN_RADIUS_M = 8e5;
 
-// Cap = fraction de la distance géocentrique. Différencié pour préserver la
-// hiérarchie perceptive : Lune/Soleil = disques bien lisibles ; planètes =
-// petits points clairement plus petits que la Lune. Sinon le cap uniforme
-// fait que tout (Lune, Jupiter, Saturne…) finit à la même taille angulaire.
+// Cap = fraction of the geocentric distance, split by kind to preserve a
+// perceptual hierarchy: Moon/Sun = legibly large disks; planets = small
+// dots that read as clearly smaller than the Moon. A uniform cap would
+// flatten everything (Moon, Jupiter, Saturn…) to the same angular size.
 const MAX_FRACTION_LUMINARY = 0.012; // moon · sun
-const MAX_FRACTION_PLANET   = 0.003; // ~4× plus serré → Jupiter ≈ 1/3 Lune
+const MAX_FRACTION_PLANET   = 0.003; // ~4× tighter → Jupiter ≈ 1/3 the Moon
 
 function maxFractionOfDistance(kind: CelestialBodyKind): number {
   return kind === 'moon' || kind === 'sun'

@@ -213,7 +213,7 @@ function buildA11yText(
   };
 }
 
-// ─── Helpers géométriques ───────────────────────────────────────────────────
+// ─── Geometry helpers ───────────────────────────────────────────────────────
 
 function polarToCartesian(longitudeDeg: number, radius: number) {
   const a = (longitudeDeg * Math.PI) / 180;
@@ -228,19 +228,19 @@ function labelPosition(longitudeDeg: number, radius: number) {
   return { x, y };
 }
 
-/** Rotation tangente à la circonférence pour les labels arqués */
+/** Rotation tangent to the circumference, used for arched labels. */
 function tangentRotate(longitudeDeg: number, radius: number): string {
   const { x, y } = polarToCartesian(longitudeDeg, radius);
-  // Texte horizontal lisible : pas de rotation du texte sur la moitié droite,
-  // mais flip à 180° sur la gauche pour rester lisible.
+  // Keep text horizontally readable: no rotation on the right half, flip
+  // by 180° on the left half so the labels stay upright.
   const flipped = longitudeDeg > 90 && longitudeDeg < 270;
   const angle = flipped ? -longitudeDeg + 180 : -longitudeDeg;
   return `rotate(${angle} ${x} ${y})`;
 }
 
-/** Path d'un anneau partiel entre deux longitudes écliptiques. */
+/** SVG path for a partial annulus between two ecliptic longitudes. */
 function annulusPath(startDeg: number, endDeg: number, rIn: number, rOut: number): string {
-  // Normalisation : on s'assure que end > start (si wrap, on ajoute 360)
+  // Normalize so end > start; if the segment wraps past 360°, add a full turn.
   let span = endDeg - startDeg;
   if (span <= 0) span += 360;
   const largeArc = span > 180 ? 1 : 0;
@@ -253,8 +253,8 @@ function annulusPath(startDeg: number, endDeg: number, rIn: number, rOut: number
   const x1i = CX + rIn  * Math.cos(a1), y1i = CY - rIn  * Math.sin(a1);
   const x2i = CX + rIn  * Math.cos(a2), y2i = CY - rIn  * Math.sin(a2);
 
-  // En SVG, sweep-flag=0 = sens horaire. Nos longitudes croissent dans le sens
-  // antihoraire (cos, -sin), donc pour aller de start à end, on utilise sweep=0.
+  // In SVG, sweep-flag=0 = clockwise. Our ecliptic longitudes grow
+  // counter-clockwise (cos, -sin), so going from start → end uses sweep=0.
   return [
     `M ${x1o} ${y1o}`,
     `A ${rOut} ${rOut} 0 ${largeArc} 0 ${x2o} ${y2o}`,
@@ -272,7 +272,7 @@ interface Segment {
   spanDeg: number;
 }
 
-/** Construit les segments à partir des frontières IAU (vraies tailles). */
+/** Build the wheel segments from the IAU boundaries (true sizes). */
 function buildSegments(): Segment[] {
   const boundaries = getIauBoundaries();
   return boundaries.map((b, i) => {
@@ -317,7 +317,7 @@ function Ascendant({ longitude, ascLabel }: { longitude: number; ascLabel: strin
   );
 }
 
-// ─── Centre : métadonnées ───────────────────────────────────────────────────
+// ─── Centre: metadata ───────────────────────────────────────────────────────
 
 function CenterInfo({ reading, t }: { reading: CelestialReading; t: Copy }) {
   const date = reading.input.date;

@@ -125,7 +125,7 @@ export function BirthHeader({ reading }: { reading: CelestialReading }) {
   );
 }
 
-// ─── Résumé : sky at a glance ───────────────────────────────────────────────
+// ─── Summary: sky at a glance ───────────────────────────────────────────────
 
 export function ResumeCard({
   reading,

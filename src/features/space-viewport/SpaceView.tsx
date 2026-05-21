@@ -189,8 +189,8 @@ interface Props {
 // World Imagery fetch that would otherwise 401.
 Ion.defaultAccessToken = '';
 
-// Rafraîchissement de la position des corps "live" avant JUMP.
-// La Lune se déplace ~0.5°/h, donc 60 s donne <0.01° d'erreur — invisible.
+// Refresh interval for the "live" body positions before JUMP. The Moon
+// moves ~0.5°/h, so 60 s yields <0.01° of drift — invisible at this scale.
 const LIVE_REFRESH_MS = 60_000;
 
 // Strict temporal gating for the modern Celestrak swarm. Beyond this window
@@ -202,14 +202,14 @@ const SWARM_FADE_OUT_MS = 800;
 const RELICS_FADE_IN_MS = 600;
 
 /**
- * Vue 3D scientifique. Cesium gère :
- *  - le globe Terre (rotation ECEF réelle, texture VIIRS Black Marble)
- *  - une sphère céleste géocentrique en ECEF (rayon 200 000 km)
- *  - les corps mobiles (Soleil, Lune, planètes) à leurs vraies distances
+ * Scientific 3D view. Cesium owns:
+ *  - the Earth globe (real ECEF rotation, VIIRS Black Marble texture)
+ *  - a geocentric celestial sphere in ECEF (200 000 km radius)
+ *  - the moving bodies (Sun, Moon, planets) at their true distances
  *
- * Avant JUMP : on affiche un "ciel courant" (Soleil/Lune/planètes à
- * leur position géocentrique du moment, recalculée chaque minute).
- * Au JUMP : on bascule sur le reading natal et on anime la caméra.
+ * Before JUMP we render a "current sky" (Sun/Moon/planets at their
+ * geocentric positions for the current instant, refreshed every minute).
+ * On JUMP we swap in the natal reading and animate the camera.
  */
 export function SpaceView({
   reading,
@@ -233,8 +233,8 @@ export function SpaceView({
   const viewerRef = useRef<Viewer | null>(null);
   const cleanupsRef = useRef<Array<() => void>>([]);
   const previousReadingRef = useRef<CelestialReading | null>(null);
-  // Le reading actuellement rendu (natal ou live), exposé pour les
-  // commandes caméra impératives (boutons ☀ ☾ ⊕ de la console).
+  // The reading currently being rendered (natal or live), exposed for the
+  // imperative camera commands (the ☀ ☾ ⊕ buttons in the console).
   const activeReadingRef = useRef<CelestialReading | null>(null);
   const activeGmstRef = useRef<number>(0);
   // Mirror of the `sideViewActive` prop for read-access from the keyboard
@@ -259,8 +259,8 @@ export function SpaceView({
       captureCanvas: () => {
         const viewer = viewerRef.current;
         if (!viewer) return null;
-        // Cesium met le canvas à jour de manière asynchrone ; on force un
-        // render pour garantir que le buffer correspond à la frame courante.
+        // Cesium updates the canvas asynchronously; force a synchronous
+        // render so the buffer matches the current frame for the PNG export.
         viewer.render();
         return viewer.scene.canvas;
       },
@@ -363,16 +363,16 @@ export function SpaceView({
       // Skip the default Ion World Imagery / Terrain fetch (no token configured;
       // would 401). NASA Blue Marble + VIIRS layers are added explicitly below.
       baseLayer: false,
-      // Indispensable pour pouvoir relire le canvas WebGL côté export PNG.
+      // Required so the PNG export can read back the WebGL canvas.
       contextOptions: {
         webgl: { preserveDrawingBuffer: true },
       },
     });
 
     if (viewer.scene.skyAtmosphere) viewer.scene.skyAtmosphere.show = false;
-    // Éclairage solaire dynamique : Cesium calcule la direction du Soleil
-    // d'après viewer.clock.currentTime (mis à active.input.date plus bas),
-    // donc le terminator jour/nuit est correct pour la date de naissance.
+    // Dynamic solar lighting: Cesium computes the Sun direction from
+    // viewer.clock.currentTime (set to active.input.date below), so the
+    // day/night terminator matches the birth date.
     viewer.scene.globe.enableLighting = true;
     // Shadow maps: Earth-on-satellite occlusion. Does not paint lunar craters
     // (those would need a normal map); the moon's terminator comes from its
@@ -400,10 +400,10 @@ export function SpaceView({
       'display:none',
     );
 
-    // Globe jour/nuit : couche jour BlueMarble (couleurs naturelles) +
-    // couche nuit VIIRS Black Marble. Cesium module l'alpha selon la
-    // direction du Soleil via dayAlpha/nightAlpha quand enableLighting=true,
-    // ce qui produit un terminator naturel.
+    // Day/night globe: BlueMarble day layer (natural colors) + VIIRS Black
+    // Marble night layer. With enableLighting=true, Cesium modulates each
+    // layer's alpha via dayAlpha/nightAlpha based on the Sun direction,
+    // producing a natural terminator.
     viewer.imageryLayers.removeAll();
     viewer.imageryLayers.add(
       new ImageryLayer(
@@ -439,8 +439,8 @@ export function SpaceView({
 
     viewerRef.current = viewer;
 
-    // Pas de double-clic « vol vers » (comportement globe Cesium) : la vue
-    // sert à lire le ciel natal, pas à se promener sur les corps.
+    // Disable Cesium's default "fly to" on double-click: this view is for
+    // reading the natal sky, not for sightseeing among the bodies.
     viewer.screenSpaceEventHandler.removeInputAction(
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
@@ -487,7 +487,7 @@ export function SpaceView({
     [t, locale],
   );
 
-  // 2. Remontage des layers + animation caméra
+  // 2. Re-mount layers + camera animation.
   useSceneLayerComposition({
     viewerRef,
     cleanupsRef,
