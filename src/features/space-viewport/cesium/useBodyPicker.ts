@@ -134,6 +134,10 @@ function isBodyPayload(value: unknown): value is BodyPayload {
   }
 }
 
+function assertNever(value: never): never {
+  throw new Error(`Unhandled body payload kind: ${JSON.stringify(value)}`);
+}
+
 function payloadToSelection(p: BodyPayload): SelectedBody {
   switch (p.kind) {
     case 'star':
@@ -182,6 +186,10 @@ function payloadToSelection(p: BodyPayload): SelectedBody {
         blurb: p.blurb,
         glowColor: p.glowColor,
       };
+    default:
+      // Adding a new BodyPayload variant without extending this switch
+      // becomes a TS2345 here — `p` would no longer narrow to `never`.
+      return assertNever(p);
   }
 }
 
@@ -194,6 +202,8 @@ function payloadDisplayName(p: BodyPayload): string {
     case 'planet':
     case 'satellite':
       return p.name;
+    default:
+      return assertNever(p);
   }
 }
 
