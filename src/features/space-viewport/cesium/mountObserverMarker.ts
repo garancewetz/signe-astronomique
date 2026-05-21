@@ -19,8 +19,10 @@ interface MountOptions {
   label?: string;
 }
 
-// Rose-pink, distinct from the amber guides and sky satellites palette.
-const MARKER_HEX = '#f472b6';
+// Raspberry, distinct from the amber guides and sky satellites palette.
+// Deeper saturation than the previous pink-400 reads better against the
+// blue night side of the globe.
+const MARKER_HEX = '#e11d74';
 // Proximity threshold for the place-name label. Below ~5 000 km of
 // camera-to-marker distance the label fades in; from orbital views
 // (100 000 km) it stays hidden so the central canvas reads as clean
