@@ -9,11 +9,12 @@ const NAV_KEYS = new Set([
 ]);
 
 // Both clamps are measured from Earth's centre (`Cartesian3.magnitude` of
-// the camera position in ECEF). Adding a 50 km safe-altitude margin to the
-// mean radius keeps the camera just above the surface at max zoom-in,
-// without ever flying through the globe. MAX_DIST is set well inside the
-// celestial sphere (100 AU) so the constellation backdrop stays framed.
-const SAFE_ALTITUDE_M = 50_000;
+// the camera position in ECEF). Adding a 500 km safe-altitude margin to the
+// mean radius keeps the camera at a comfortable inspection distance — close
+// enough to read landmasses, far enough that perspective and parallax stay
+// manageable. MAX_DIST is set well inside the celestial sphere (100 AU) so
+// the constellation backdrop stays framed.
+const SAFE_ALTITUDE_M = 500_000;
 const MIN_DIST = EARTH_RADIUS_M + SAFE_ALTITUDE_M;
 const MAX_DIST = 950_000_000;
 
