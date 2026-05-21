@@ -110,6 +110,12 @@ export const en: Copy = {
       openAriaLabel: 'Open the system menu',
       legend: { label: 'Legend', sublabel: 'Symbols · colors · layers' },
       explore: { label: 'Useful links', sublabel: 'Sky maps · ephemerides' },
+      share: {
+        label: 'Share this sky',
+        sublabelReady: 'Copy a direct link to this sky',
+        sublabelCopied: 'Link copied to clipboard!',
+        sublabelLocked: 'Compute your sky first',
+      },
       exportView: { label: 'Export view', sublabel: '3D sky PNG' },
       exportReport: {
         label: 'Export report',
@@ -282,6 +288,12 @@ export const en: Copy = {
     fullscreen: {
       tooltipEnter: 'Enter fullscreen',
       tooltipExit: 'Exit fullscreen',
+    },
+    share: {
+      tooltipReady: 'Copy a link to this sky',
+      tooltipCopied: 'Link copied!',
+      tooltipLocked: 'Compute your sky first to share it',
+      ariaLabel: 'Copy the link to share this sky',
     },
     exportView: {
       tooltip: 'Save the current 3D view as a PNG image file',

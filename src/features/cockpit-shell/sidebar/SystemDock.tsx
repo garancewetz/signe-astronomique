@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import {
+  Check,
   Download,
   FileDown,
+  Link2,
   List,
   Loader2,
   Maximize2,
@@ -19,6 +21,9 @@ interface SystemDockProps {
   onToggleLegend: () => void;
   fullscreenActive: boolean;
   onToggleFullscreen: () => void;
+  onShareLink: () => void;
+  shareCopied: boolean;
+  canShareLink: boolean;
   onExportView: () => void;
   exportingView: boolean;
   onExportPdf: () => void;
@@ -32,6 +37,9 @@ export function SystemDock({
   onToggleLegend,
   fullscreenActive,
   onToggleFullscreen,
+  onShareLink,
+  shareCopied,
+  canShareLink,
   onExportView,
   exportingView,
   onExportPdf,
@@ -54,15 +62,7 @@ export function SystemDock({
             : 'grid grid-cols-3 gap-1 px-2 py-2',
         )}
       >
-        <SystemButton
-          tooltip={t.systemDock.explore.tooltip}
-          ariaLabel={t.systemDock.explore.ariaLabel}
-          active={exploreOpen}
-          activeTone="sky"
-          onClick={() => setExploreOpen((v) => !v)}
-        >
-          <InfoCircleIcon />
-        </SystemButton>
+        {/* Row 1 — understand → understand → immerse */}
         <SystemButton
           tooltip={t.systemDock.legend.tooltip}
           ariaLabel={t.systemDock.legend.ariaLabel}
@@ -71,6 +71,15 @@ export function SystemDock({
           onClick={onToggleLegend}
         >
           <List className="size-4" strokeWidth={1.4} aria-hidden />
+        </SystemButton>
+        <SystemButton
+          tooltip={t.systemDock.explore.tooltip}
+          ariaLabel={t.systemDock.explore.ariaLabel}
+          active={exploreOpen}
+          activeTone="sky"
+          onClick={() => setExploreOpen((v) => !v)}
+        >
+          <InfoCircleIcon />
         </SystemButton>
         <SystemButton
           tooltip={fullscreenActive ? t.systemDock.fullscreen.tooltipExit : t.systemDock.fullscreen.tooltipEnter}
@@ -83,6 +92,27 @@ export function SystemDock({
             <Minimize2 className="size-4" strokeWidth={1.35} aria-hidden />
           ) : (
             <Maximize2 className="size-4" strokeWidth={1.35} aria-hidden />
+          )}
+        </SystemButton>
+        {/* Row 2 — give away: light link → image → full report */}
+        <SystemButton
+          tooltip={
+            canShareLink
+              ? shareCopied
+                ? t.systemDock.share.tooltipCopied
+                : t.systemDock.share.tooltipReady
+              : t.systemDock.share.tooltipLocked
+          }
+          ariaLabel={t.systemDock.share.ariaLabel}
+          active={shareCopied}
+          activeTone="sky"
+          onClick={onShareLink}
+          disabled={!canShareLink}
+        >
+          {shareCopied ? (
+            <Check className="size-4" strokeWidth={1.6} aria-hidden />
+          ) : (
+            <Link2 className="size-4" strokeWidth={1.4} aria-hidden />
           )}
         </SystemButton>
         <SystemButton

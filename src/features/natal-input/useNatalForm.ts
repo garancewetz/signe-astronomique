@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { CityResult } from './CityAutocomplete';
 import { useGeolocation } from './useGeolocation';
+import { readNatalFromCurrentUrl, type SharedNatal } from './shareLink';
 import { timezoneFromLatLon } from './timezone';
 
 const DEFAULT_CITY: CityResult = {
@@ -30,6 +31,12 @@ export interface NatalFormState {
   setDate: (v: string) => void;
   setTime: (v: string) => void;
   setUserCity: (v: CityResult) => void;
+  /**
+   * Snapshot of the natal payload decoded from the URL at mount, or null
+   * when no share-link params were present. Consumers use this to
+   * auto-compute the reading once on first paint — see Cockpit.tsx.
+   */
+  sharedFromUrl: SharedNatal | null;
 }
 
 /**
@@ -37,11 +44,22 @@ export interface NatalFormState {
  * which falls back through `userCity → geoCity → DEFAULT_CITY`. Geolocation
  * is sampled once at mount via `useGeolocation` and surfaces as `geoCity`
  * once the browser resolves it.
+ *
+ * If the page URL carries a shared natal payload (see [[shareLink]]), the
+ * initial values are seeded from it instead of `new Date()` / geolocation.
  */
 export function useNatalForm(): NatalFormState {
-  const [date, setDate] = useState(() => formatInputDate(new Date()));
-  const [time, setTime] = useState(() => formatInputTime(new Date()));
-  const [userCity, setUserCity] = useState<CityResult | null>(null);
+  const sharedFromUrl = useMemo(() => readNatalFromCurrentUrl(), []);
+
+  const [date, setDate] = useState(
+    () => sharedFromUrl?.date ?? formatInputDate(new Date()),
+  );
+  const [time, setTime] = useState(
+    () => sharedFromUrl?.time ?? formatInputTime(new Date()),
+  );
+  const [userCity, setUserCity] = useState<CityResult | null>(
+    () => sharedFromUrl?.city ?? null,
+  );
 
   const geolocation = useGeolocation();
 
@@ -57,5 +75,5 @@ export function useNatalForm(): NatalFormState {
 
   const city = userCity ?? geoCity ?? DEFAULT_CITY;
 
-  return { date, time, city, setDate, setTime, setUserCity };
+  return { date, time, city, setDate, setTime, setUserCity, sharedFromUrl };
 }

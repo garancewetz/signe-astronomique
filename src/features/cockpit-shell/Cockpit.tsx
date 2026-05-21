@@ -32,7 +32,11 @@ import { useMobileLayout } from '@/ui/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
 import type { CelestialReading } from '@/features/astronomy';
-import { useNatalForm, useSearchHistory } from '@/features/natal-input';
+import {
+  useNatalForm,
+  useSearchHistory,
+  useShareLink,
+} from '@/features/natal-input';
 import { CockpitDisplayProvider } from '@/context/CockpitDisplayContext';
 
 export function Cockpit() {
@@ -79,7 +83,15 @@ export function Cockpit() {
   // see the effective state at render time.
   const constellationOverlayActive = constellationOverlayEnabled && orbitalAvailable;
 
-  const { date, time, city, setDate, setTime, setUserCity } = useNatalForm();
+  const {
+    date,
+    time,
+    city,
+    setDate,
+    setTime,
+    setUserCity,
+    sharedFromUrl,
+  } = useNatalForm();
   const {
     entries: searchHistory,
     record: recordSearch,
@@ -163,8 +175,14 @@ export function Cockpit() {
     [],
   );
 
-  const handleJump = (r: CelestialReading) => {
-    const isFirstCalc = reading == null;
+  // Tracks whether handleJump has ever fired so the "first calc" branch can
+  // run exactly once without depending on `reading` — which would otherwise
+  // force handleJump to re-memoize on every reading change and re-fire any
+  // effect that depends on it (notably the share-link auto-jump).
+  const hasCalculatedRef = useRef(false);
+  const handleJump = useCallback((r: CelestialReading) => {
+    const isFirstCalc = !hasCalculatedRef.current;
+    hasCalculatedRef.current = true;
     setReading(r);
     // Pulse the Analyse CTA so the user knows fresh data is ready, without
     // pulling them into the modal — they open it on their own terms.
@@ -177,7 +195,17 @@ export function Cockpit() {
     setSatellitesEnabled(false);
     setConstellationOverlayEnabled(false);
     setActivePanel(null);
-  };
+  }, []);
+
+  const { handleShareLink, shareCopied, canShareLink } = useShareLink({
+    date,
+    time,
+    city,
+    hasReading: !!reading,
+    sharedFromUrl,
+    onAutoJump: handleJump,
+    onRecordSearch: recordSearch,
+  });
 
   const toggleFullscreen = () => {
     const el = cockpitRef.current;
@@ -276,6 +304,9 @@ export function Cockpit() {
           activeTab={mobileActiveTab}
           onActiveTabChange={setMobileActiveTab}
           analysisAttention={analysisAttention}
+          onShareLink={handleShareLink}
+          shareCopied={shareCopied}
+          canShareLink={canShareLink}
           onExportView={handleExportView}
           exportingView={exportingView}
           onExportPdf={handleExportPdf}
@@ -361,6 +392,9 @@ export function Cockpit() {
         onFlyEarth={flyToEarth}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={toggleFullscreen}
+        onShareLink={handleShareLink}
+        shareCopied={shareCopied}
+        canShareLink={canShareLink}
         onExportView={handleExportView}
         exportingView={exportingView}
         onExportPdf={handleExportPdf}
