@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { CityResult } from '../components/CityAutocomplete';
+import type { CityResult } from './CityAutocomplete';
 
 const STORAGE_KEY = 'tcs:search-history:v1';
 const MAX_ENTRIES = 6;

@@ -2,14 +2,14 @@ import { useId, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Clock, X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
-import { Field, Input, cn } from './ui';
+import { Field, Input, cn } from '@/components/ui';
 import { computeReading, type CelestialReading } from '@/features/astronomy';
-import { localBirthToUtc } from '../utils/timezone';
+import { localBirthToUtc } from './timezone';
 import {
   signatureOf,
   type SearchHistoryEntry,
-} from '../hooks/useSearchHistory';
-import { useT } from '../context/useLocale';
+} from './useSearchHistory';
+import { useT } from '@/context/useLocale';
 
 const DEFAULT_FORM_CLASS =
   'shrink-0 px-3 py-2.5 space-y-2 border-b border-border-hud-faint';
