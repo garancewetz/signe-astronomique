@@ -14,6 +14,10 @@ import {
 } from 'cesium';
 import { AU_KM, gmstRadians } from '@/features/astronomy';
 import { attachCameraDistanceListener } from './cesium/cameraDistance';
+import {
+  MAX_CAMERA_DIST_M,
+  MIN_CAMERA_DIST_M,
+} from './cesium/cameraLimits';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 import {
@@ -51,16 +55,16 @@ import { PLANETS_META } from '@/features/astronomy';
 
 export interface SpaceViewHandle {
   /**
-   * Force un render synchrone et retourne le canvas WebGL Cesium courant.
-   * Utilisé par l'export PNG (cf. exportTargetedPng). Renvoie null si la
-   * vue n'est pas encore montée.
+   * Force a synchronous render and return the current Cesium WebGL canvas.
+   * Used by the PNG export path (see exportTargetedPng). Returns null when
+   * the view hasn't mounted yet.
    */
   captureCanvas: () => HTMLCanvasElement | null;
-  /** Recadre la caméra sur le Soleil (reading actif). */
+  /** Reframes the camera onto the Sun (active reading). */
   flyToSun: () => void;
-  /** Recadre la caméra sur la Lune (reading actif). */
+  /** Reframes the camera onto the Moon (active reading). */
   flyToMoon: () => void;
-  /** Replace la caméra en orbite équatoriale par défaut (Terre centrée). */
+  /** Resets the camera to the default equatorial orbit (Earth-centered). */
   flyToEarth: () => void;
 }
 
@@ -131,9 +135,9 @@ export interface SelectedSatellite {
 
 interface Props {
   reading: CelestialReading | null;
-  /** Affiche axe terrestre, équateur céleste et écliptique. */
+  /** Renders Earth's axis, celestial equator, and ecliptic. */
   showGuides: boolean;
-  /** Étiquettes Soleil / Lune / planètes dans la scène. */
+  /** In-scene labels for the Sun / Moon / planets. */
   showBodyLabels: boolean;
   /** Enables the orbital relics layer (historical satellites). */
   showSatellites: boolean;
@@ -180,7 +184,7 @@ interface Props {
    * the canvas's z-0 stacking context.
    */
   onDistanceChange?: (label: string | null) => void;
-  /** Référence impérative pour le capture-canvas. */
+  /** Imperative handle exposing the capture-canvas + fly-to actions. */
   ref?: Ref<SpaceViewHandle>;
 }
 
@@ -470,10 +474,11 @@ export function SpaceView({
 
     // Cesium's default mouse/wheel zoom controller has minimumZoomDistance ~1 m,
     // which lets the camera fly straight through the ellipsoid and pop out on
-    // the other side. Cap it ~500 km above mean radius to match the keyboard's
-    // MIN_DIST and keep the camera at a sensible inspection distance.
-    viewer.scene.screenSpaceCameraController.minimumZoomDistance = 500_000;
-    viewer.scene.screenSpaceCameraController.maximumZoomDistance = 950_000_000;
+    // the other side. Cap it at the shared `MIN_CAMERA_DIST_M` so the camera
+    // can't dive through the globe — the keyboard nav and the mobile pinch
+    // handler clamp to the same value.
+    viewer.scene.screenSpaceCameraController.minimumZoomDistance = MIN_CAMERA_DIST_M;
+    viewer.scene.screenSpaceCameraController.maximumZoomDistance = MAX_CAMERA_DIST_M;
 
     const detachKeyboard = attachKeyboardNav(viewer, { sideViewActiveRef });
 
@@ -482,7 +487,7 @@ export function SpaceView({
       onLabel: (label) => onDistanceChangeRef.current?.(label),
     });
 
-    // Vue par défaut avant tout JUMP : orbitale, regard Terre.
+    // Default pre-JUMP camera: equatorial orbit looking at Earth.
     flyToOrbital(viewer, 0);
 
     return () => {

@@ -1,5 +1,5 @@
 import { Cartesian3, type Viewer } from 'cesium';
-import { EARTH_RADIUS_M } from '@/features/astronomy';
+import { MAX_CAMERA_DIST_M, MIN_CAMERA_DIST_M } from './cameraLimits';
 
 const NAV_KEYS = new Set([
   'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
@@ -7,16 +7,6 @@ const NAV_KEYS = new Set([
   '+', '=', '-', '_',
   'PageUp', 'PageDown',
 ]);
-
-// Both clamps are measured from Earth's centre (`Cartesian3.magnitude` of
-// the camera position in ECEF). Adding a 500 km safe-altitude margin to the
-// mean radius keeps the camera at a comfortable inspection distance — close
-// enough to read landmasses, far enough that perspective and parallax stay
-// manageable. MAX_DIST is set well inside the celestial sphere (100 AU) so
-// the constellation backdrop stays framed.
-const SAFE_ALTITUDE_M = 500_000;
-const MIN_DIST = EARTH_RADIUS_M + SAFE_ALTITUDE_M;
-const MAX_DIST = 950_000_000;
 
 function isTypingTarget(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false;
@@ -34,10 +24,10 @@ interface AttachOptions {
 }
 
 /**
- * Navigation clavier — façon carte de jeu vidéo (AZERTY).
- *   ←/→ : orbite est/ouest    ↑/↓ : orbite nord/sud
- *   A/E : tourne la caméra (heading) en place
- *   Z/S (ou +/-) : zoom / dézoom
+ * Keyboard navigation — game-style AZERTY mapping.
+ *   ←/→ : orbit east/west       ↑/↓ : orbit north/south
+ *   A/E : in-place heading rotation
+ *   Z/S (or +/-) : zoom in / zoom out
  *
  * Side View is detected and switches to camera-local pan + view-axis zoom
  * (otherwise the earth-centric orbit would swing the camera in a huge arc
@@ -117,13 +107,13 @@ export function attachKeyboardNav(
     if (pressedKeys.has('+') || pressedKeys.has('=') ||
         pressedKeys.has('z') || pressedKeys.has('Z') ||
         pressedKeys.has('PageUp')) {
-      const target = Math.max(MIN_DIST, dist * zoomFactor);
+      const target = Math.max(MIN_CAMERA_DIST_M, dist * zoomFactor);
       if (target < dist) camera.zoomIn(dist - target);
     }
     if (pressedKeys.has('-') || pressedKeys.has('_') ||
         pressedKeys.has('s') || pressedKeys.has('S') ||
         pressedKeys.has('PageDown')) {
-      const target = Math.min(MAX_DIST, dist / zoomFactor);
+      const target = Math.min(MAX_CAMERA_DIST_M, dist / zoomFactor);
       if (target > dist) camera.zoomOut(target - dist);
     }
   };

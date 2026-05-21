@@ -1,4 +1,5 @@
 import { Cartesian3, PerspectiveFrustum, type Viewer } from 'cesium';
+import { MIN_CAMERA_DIST_M } from './cameraLimits';
 
 /**
  * In side view, the camera sits hundreds of AU from Earth looking sideways
@@ -21,6 +22,17 @@ import { Cartesian3, PerspectiveFrustum, type Viewer } from 'cesium';
  * Gated on `(pointer: coarse)` by the caller so desktops with mouse/wheel
  * keep their working behavior.
  */
+
+// On desktop, Cesium's screen-space controller effectively pins the side-view
+// zoom-out at the entry distance: the camera arrives hundreds of AU from
+// Earth — already far above `MAX_CAMERA_DIST_M` (the controller's
+// `maximumZoomDistance` cap in SpaceView.tsx) — so any subsequent
+// wheel-zoom-out is no-op'd. To match that feel on mobile we snapshot the
+// post-`flyToSideView` distance and use it as the pinch-zoom-out cap. The
+// delay covers `flyToSideView`'s 2.5 s animation (see SIDE_VIEW_DURATION_S
+// in sideView.ts) plus a small margin.
+const ENTRY_CAPTURE_DELAY_MS = 2700;
+
 export function attachSideViewTouch(viewer: Viewer): () => void {
   const canvas = viewer.scene.canvas;
   const controller = viewer.scene.screenSpaceCameraController;
@@ -31,6 +43,12 @@ export function attachSideViewTouch(viewer: Viewer): () => void {
   let lastX = 0;
   let lastY = 0;
   let lastDist = 0;
+  // Sentinel: pinch is unbounded until the entry-distance snapshot lands.
+  // Stays Infinity if the user exits side view before flyToSideView settles.
+  let maxDist = Number.POSITIVE_INFINITY;
+  const captureTimeoutId = window.setTimeout(() => {
+    maxDist = Cartesian3.magnitude(viewer.camera.positionWC);
+  }, ENTRY_CAPTURE_DELAY_MS);
 
   const worldPerPx = (cameraDist: number): number => {
     const frustum = viewer.camera.frustum;
@@ -97,12 +115,19 @@ export function attachSideViewTouch(viewer: Viewer): () => void {
       // Pinch zoom: scale = newDist/lastDist. Pinch out (scale>1) → zoom in.
       // Move along the view axis by a fraction of current camera distance so
       // step size stays perceptible regardless of how far we are from Earth.
+      // Clamp the post-zoom geocentric distance to [MIN_CAMERA_DIST_M, maxDist]
+      // so we don't dive through the globe or drift past the side-view entry
+      // distance (which is what desktop wheel-zoom is implicitly pinned to).
       if (lastDist > 0 && newDist > 0) {
         const scale = newDist / lastDist;
-        const zoomAmount = dist * (1 - 1 / scale);
-        if (Number.isFinite(zoomAmount) && Math.abs(zoomAmount) > 1) {
-          if (zoomAmount > 0) camera.zoomIn(zoomAmount);
-          else camera.zoomOut(-zoomAmount);
+        const rawAmount = dist * (1 - 1 / scale);
+        if (Number.isFinite(rawAmount)) {
+          const target = Math.min(maxDist, Math.max(MIN_CAMERA_DIST_M, dist - rawAmount));
+          const clampedAmount = dist - target;
+          if (Math.abs(clampedAmount) > 1) {
+            if (clampedAmount > 0) camera.zoomIn(clampedAmount);
+            else camera.zoomOut(-clampedAmount);
+          }
         }
       }
 
@@ -131,6 +156,7 @@ export function attachSideViewTouch(viewer: Viewer): () => void {
   canvas.addEventListener('touchcancel', onTouchEnd);
 
   return () => {
+    window.clearTimeout(captureTimeoutId);
     canvas.removeEventListener('touchstart', onTouchStart);
     canvas.removeEventListener('touchmove', onTouchMove);
     canvas.removeEventListener('touchend', onTouchEnd);
