@@ -18,11 +18,25 @@ export interface CityResult {
   timezone: string;
 }
 
+interface NominatimAddress {
+  city?: string;
+  town?: string;
+  village?: string;
+  hamlet?: string;
+  municipality?: string;
+  state?: string;
+  region?: string;
+  country?: string;
+}
+
 interface NominatimResult {
   display_name: string;
   lat: string;
   lon: string;
   place_id: number;
+  class?: string;
+  type?: string;
+  address?: NominatimAddress;
 }
 
 function isNominatimResult(x: unknown): x is NominatimResult {
@@ -33,6 +47,32 @@ function isNominatimResult(x: unknown): x is NominatimResult {
     typeof r.lat === 'string' &&
     typeof r.lon === 'string'
   );
+}
+
+// Keep only results that represent a populated place a person could be born
+// in — cities, towns, villages, hamlets — plus administrative boundaries
+// (which is how Nominatim ranks the canonical city entry: e.g. Terrassa city
+// comes back as class=boundary, type=administrative). Reject POIs (shops,
+// cafes, hotels…) so "Terassa" typed by mistake doesn't pin the marker on a
+// bakery in Mallorca instead of failing cleanly.
+const PLACE_TYPES = new Set([
+  'city',
+  'town',
+  'village',
+  'hamlet',
+  'municipality',
+  'suburb',
+  'neighbourhood',
+  'quarter',
+  'locality',
+  'island',
+  'islet',
+]);
+
+function isPopulatedPlace(r: NominatimResult): boolean {
+  if (r.class === 'place' && r.type && PLACE_TYPES.has(r.type)) return true;
+  if (r.class === 'boundary' && r.type === 'administrative') return true;
+  return false;
 }
 
 interface Props {
@@ -115,8 +155,13 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
         const url = new URL('https://nominatim.openstreetmap.org/search');
         url.searchParams.set('q', trimmed);
         url.searchParams.set('format', 'json');
-        url.searchParams.set('limit', '8');
+        // Bumped from 8 to 10 to leave headroom for `isPopulatedPlace`,
+        // which can drop several POI/road/junction results per query.
+        url.searchParams.set('limit', '10');
         url.searchParams.set('accept-language', t.cityAutocomplete.nominatimLang);
+        // Needed to read class/type (for the place filter) and address.state
+        // (for the disambiguation suffix in the dropdown).
+        url.searchParams.set('addressdetails', '1');
         const res = await fetch(url.toString(), { signal: controller.signal });
         if (id !== reqIdRef.current) return;
         if (!res.ok) {
@@ -130,18 +175,19 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
           return;
         }
         const raw: unknown = await res.json();
-        // Nominatim is a public, untyped endpoint — validate every record
-        // and drop entries with non-finite coordinates so the rest of the
-        // pipeline (Intl, Cesium, tz-lookup) never receives NaN.
+        // Nominatim is a public, untyped endpoint — validate every record,
+        // drop entries with non-finite coordinates so the rest of the
+        // pipeline (Intl, Cesium, tz-lookup) never receives NaN, and keep
+        // only populated places (see `isPopulatedPlace`).
         const data: NominatimResult[] = Array.isArray(raw)
-          ? raw.filter(isNominatimResult)
+          ? raw.filter(isNominatimResult).filter(isPopulatedPlace)
           : [];
         const cities = data.flatMap<CityResult>(r => {
           const lat = parseFloat(r.lat);
           const lon = parseFloat(r.lon);
           if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
           return [{
-            label: shorten(r.display_name),
+            label: buildLabel(r),
             lat,
             lon,
             timezone: timezoneFromLatLon(lat, lon),
@@ -308,11 +354,23 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
 }
 
 /**
- * Nominatim's display_name is often verbose ("Paris, Île-de-France,
- * France métropolitaine, France"). Keep the first segment + country.
+ * Build a compact, disambiguating label: "place, region, country" when the
+ * region is known, falling back to "place, country", with `display_name` as
+ * a last resort. Including the region lets users tell apart genuine
+ * homonyms (e.g. Valencia in Comunidad Valenciana vs. Valencia in Venezuela)
+ * without drowning the dropdown in Nominatim's full verbose path.
  */
-function shorten(displayName: string): string {
-  const parts = displayName.split(',').map(s => s.trim()).filter(Boolean);
-  if (parts.length <= 2) return parts.join(', ');
-  return `${parts[0]}, ${parts[parts.length - 1]}`;
+function buildLabel(r: NominatimResult): string {
+  const addr = r.address;
+  const place =
+    addr?.city ??
+    addr?.town ??
+    addr?.village ??
+    addr?.hamlet ??
+    addr?.municipality ??
+    r.display_name.split(',')[0]?.trim() ??
+    r.display_name;
+  const region = addr?.state ?? addr?.region;
+  const country = addr?.country;
+  return [place, region, country].filter(Boolean).join(', ');
 }
