@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from 'react';
 import {
-  Cartesian3,
   ClockRange,
   Color,
   Credit,
@@ -14,6 +13,7 @@ import {
   WebMercatorTilingScheme,
 } from 'cesium';
 import { AU_KM, gmstRadians } from '../../utils/skyCoordinates';
+import { attachCameraDistanceListener } from './cesium/cameraDistance';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 
 import {
@@ -46,6 +46,7 @@ import { useSceneLayerComposition } from './useSceneLayerComposition';
 import { useSatelliteTracker } from '../../hooks/useSatelliteTracker';
 import type { OrbitalSat } from '../../hooks/useOrbitalPopulation';
 import { useLocale, useT } from '../../context/useLocale';
+import type { Locale } from '../../i18n';
 import { PLANETS_META } from '../../utils/planetEngine';
 
 export interface SpaceViewHandle {
@@ -246,7 +247,7 @@ export function SpaceView({
   // Live camera distance HUD: locale + the parent's setter are both mirrored
   // into refs so the preRender listener (installed once in the viewer-init
   // effect) sees the current values without us having to re-subscribe.
-  const localeRef = useRef<'en' | 'fr'>('fr');
+  const localeRef = useRef<Locale>('fr');
   const onDistanceChangeRef = useRef<typeof onDistanceChange>(undefined);
   useEffect(() => {
     onDistanceChangeRef.current = onDistanceChange;
@@ -453,20 +454,10 @@ export function SpaceView({
 
     const detachKeyboard = attachKeyboardNav(viewer, { sideViewActiveRef });
 
-    // Live camera-distance HUD. Format the label inside the listener, but
-    // only push it to the parent when the rendered string actually changes —
-    // otherwise we'd setState every frame.
-    let lastLabel: string | null = null;
-    const removeDistanceListener = viewer.scene.preRender.addEventListener(
-      () => {
-        const distM = Cartesian3.magnitude(viewer.camera.position);
-        const label = formatCameraDistance(distM, localeRef.current);
-        if (label !== lastLabel) {
-          lastLabel = label;
-          onDistanceChangeRef.current?.(label);
-        }
-      },
-    );
+    const removeDistanceListener = attachCameraDistanceListener(viewer, {
+      getLocale: () => localeRef.current,
+      onLabel: (label) => onDistanceChangeRef.current?.(label),
+    });
 
     // Vue par défaut avant tout JUMP : orbitale, regard Terre.
     flyToOrbital(viewer, 0);
@@ -738,36 +729,3 @@ export function SpaceView({
   );
 }
 
-// Mean Earth radius (meters). Used to convert the camera's geocentric
-// distance into an altitude-above-surface for the HUD. Mean rather than
-// equatorial because the user reads this as "altitude", and the ellipsoid
-// difference (~22 km between equator and pole) is irrelevant at the
-// precision we display.
-const EARTH_RADIUS_M = 6_371_000;
-
-/**
- * Format the camera altitude (above Earth's surface) for the HUD chip.
- *
- * Input is the geocentric distance from `Cartesian3.magnitude(position)`;
- * we subtract Earth's radius so the reading agrees with everyday altitude
- * intuition. Without this, the chip would read e.g. "5 000 km" when the
- * camera is in fact 1 371 km *below* the surface — and worse, the reading
- * would mirror itself either side of Earth's centre.
- *
- * Below 0.1 AU: kilometres (locale grouping). Above: AU / UA, matching
- * `formatAU` in BodyInfoHud so the two readouts share a switching point.
- */
-function formatCameraDistance(
-  geocentricM: number,
-  locale: 'en' | 'fr',
-): string {
-  const altM = Math.max(0, geocentricM - EARTH_RADIUS_M);
-  const km = altM / 1000;
-  const au = km / AU_KM;
-  const intl = locale === 'en' ? 'en-US' : 'fr-FR';
-  if (au < 0.1) {
-    return `${Math.round(km).toLocaleString(intl)} km`;
-  }
-  const unit = locale === 'en' ? 'AU' : 'UA';
-  return `${au.toFixed(au < 1 ? 3 : 2)} ${unit}`;
-}

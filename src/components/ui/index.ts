@@ -1,5 +1,6 @@
 export { Button } from './Button';
 export { cn } from './cn';
+export { DistanceChip } from './DistanceChip';
 export { DockedPanel } from './DockedPanel';
 export { Field } from './Field';
 export { HudCard, type HudCardVariant } from './HudCard';

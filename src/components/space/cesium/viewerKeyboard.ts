@@ -1,4 +1,5 @@
 import { Cartesian3, type Viewer } from 'cesium';
+import { EARTH_RADIUS_M } from '../../../utils/formatDistance';
 
 const NAV_KEYS = new Set([
   'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
@@ -7,10 +8,13 @@ const NAV_KEYS = new Set([
   'PageUp', 'PageDown',
 ]);
 
-// MIN_DIST est mesuré depuis le centre Terre (magnitude de la position
-// ECEF). 6 371 km = rayon moyen, +50 km de marge → la caméra reste juste
-// au-dessus de la surface en zoom maxi, sans pouvoir traverser le globe.
-const MIN_DIST = 6_421_000;          // ~50 km d'altitude au-dessus du sol
+// Both clamps are measured from Earth's centre (`Cartesian3.magnitude` of
+// the camera position in ECEF). Adding a 50 km safe-altitude margin to the
+// mean radius keeps the camera just above the surface at max zoom-in,
+// without ever flying through the globe. MAX_DIST is set well inside the
+// celestial sphere (100 AU) so the constellation backdrop stays framed.
+const SAFE_ALTITUDE_M = 50_000;
+const MIN_DIST = EARTH_RADIUS_M + SAFE_ALTITUDE_M;
 const MAX_DIST = 950_000_000;
 
 function isTypingTarget(el: EventTarget | null): boolean {

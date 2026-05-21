@@ -15,6 +15,7 @@ import { MobileSheetContent } from './MobileSheetContent';
 import { MobileAnalysisStack } from './MobileAnalysisStack';
 import { MobileSystemDrawer } from './MobileSystemDrawer';
 import { useT } from '../../context/useLocale';
+import { DistanceChip } from '../ui';
 
 const TOP_CHIP_PX = 44; // header content min-height, excl. safe-area
 const TAB_BAR_PX = 60; // h-12 button + py-1.5 (top + bottom flat case)
@@ -228,19 +229,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
 
       <div className="relative flex-1 min-h-0 select-none touch-manipulation">
         {children}
-        {distanceLabel && (
-          <div
-            aria-live="off"
-            className="pointer-events-none absolute top-3 right-3 z-20
-                       px-2 py-1 rounded-md
-                       border border-border-hud-subtle bg-surface-console/55
-                       backdrop-blur-sm
-                       text-cockpit-xs tracking-cockpit-label uppercase
-                       text-slate-200 tabular-nums"
-          >
-            {distanceLabel}
-          </div>
-        )}
+        <DistanceChip label={distanceLabel} />
       </div>
 
       <BottomSheet

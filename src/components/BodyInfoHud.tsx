@@ -8,6 +8,7 @@ import {
 import { loreName } from '../utils/constellationLore';
 import { PLANETS_META } from '../utils/planetEngine';
 import { AU_KM } from '../utils/skyCoordinates';
+import { formatDistanceKmOrAU } from '../utils/formatDistance';
 import type {
   SelectedBody,
   SelectedMoon,
@@ -450,12 +451,7 @@ function formatLightYears(ly: number, locale: Locale): string {
 }
 
 function formatAU(au: number, locale: Locale): string {
-  const intl = locale === 'en' ? 'en-US' : 'fr-FR';
-  // AU in EN, UA in FR.
-  const unit = locale === 'en' ? 'AU' : 'UA';
-  if (au < 0.1)
-    return `${(au * AU_KM).toLocaleString(intl, { maximumFractionDigits: 0 })} km`;
-  return `${au.toFixed(au < 1 ? 3 : 2)} ${unit}`;
+  return formatDistanceKmOrAU(au * AU_KM, locale);
 }
 
 function formatKm(km: number, locale: Locale): string {

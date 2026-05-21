@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './ErrorBoundary';
 import { CockpitFallback } from './CockpitFallback';
 import { KeyboardHintChip } from './KeyboardHintChip';
+import { DistanceChip } from './ui';
 import { useT } from '../context/useLocale';
 import {
   SpaceView,
@@ -317,20 +318,8 @@ export function Cockpit() {
         hidden={activePanel === 'legend'}
       />
 
-      {/* === DISTANCE CAMÉRA — mise à jour live au zoom/orbite === */}
-      {distanceLabel && (
-        <div
-          aria-live="off"
-          className="pointer-events-none absolute top-3 right-3 z-20
-                     px-2 py-1 rounded-md
-                     border border-border-hud-subtle bg-surface-console/55
-                     backdrop-blur-sm
-                     text-cockpit-xs tracking-cockpit-label uppercase
-                     text-slate-200 tabular-nums"
-        >
-          {distanceLabel}
-        </div>
-      )}
+      {/* === DISTANCE CAMÉRA — altitude live, refresh par le listener Cesium === */}
+      <DistanceChip label={distanceLabel} />
 
       {/* === CADRE HUD (slim — état seul, branding déplacé en sidebar) === */}
       <div
