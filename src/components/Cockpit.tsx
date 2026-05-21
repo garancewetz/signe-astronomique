@@ -22,15 +22,17 @@ import {
   type ReportPanelKey,
   type SidebarPanelKey,
 } from './sidebar';
-import { FullReport } from './RightPanel';
-import { AnalysisModal } from './AnalysisModal';
+import {
+  AnalysisModal,
+  FullReport,
+  useExportHandlers,
+} from '@/features/natal-report';
 import { LegendPanel } from './LegendPanel';
 import { useMobileLayout } from '../hooks/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
 import type { CelestialReading } from '@/features/astronomy';
 import { useNatalForm, useSearchHistory } from '@/features/natal-input';
-import { useExportHandlers } from '../hooks/useExportHandlers';
 import { CockpitDisplayProvider } from '../context/CockpitDisplayContext';
 
 export function Cockpit() {

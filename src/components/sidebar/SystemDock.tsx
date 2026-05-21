@@ -9,7 +9,7 @@ import {
   Minimize2,
 } from 'lucide-react';
 import { TooltipWrap } from '../Tooltip';
-import { ExploreSpacePopover, InfoCircleIcon } from '../ExploreSpacePopover';
+import { ExploreSpacePopover, InfoCircleIcon } from '@/features/natal-report';
 import { cn, IconButton, type IconButtonActiveTone } from '../ui';
 import { useT } from '../../context/useLocale';
 

@@ -12,7 +12,7 @@ import {
   ScientificFooter,
   TwoMotionsCard,
 } from './MissionLog';
-import { PanelShell } from './ui';
+import { PanelShell } from '@/components/ui';
 import type { CelestialReading } from '@/features/astronomy';
 import {
   SPACE_AGE_START_YEAR,
@@ -21,7 +21,7 @@ import {
   satelliteBlurb,
   satelliteName,
 } from '@/features/space-viewport';
-import { useLocale, useT } from '../context/useLocale';
+import { useLocale, useT } from '@/context/useLocale';
 
 export type ReportPanelKey = 'resume' | 'carte' | 'lecture' | 'donnees';
 

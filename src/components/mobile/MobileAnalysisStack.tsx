@@ -5,7 +5,7 @@ import {
   LecturePanel,
   ResumePanel,
   type ReportPanelKey,
-} from '../RightPanel';
+} from '@/features/natal-report';
 import type { CelestialReading } from '@/features/astronomy';
 import { useCockpitDisplay } from '../../context/useCockpitDisplay';
 
