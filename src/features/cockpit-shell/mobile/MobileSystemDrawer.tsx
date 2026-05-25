@@ -97,7 +97,7 @@ export function MobileSystemDrawer({
             className={cn(
               'fixed top-[calc(3rem+env(safe-area-inset-top,0))] right-2 z-50',
               'w-[min(18rem,calc(100vw-1rem))]',
-              'rounded-panel overflow-hidden',
+              'rounded-panel overflow-hidden touch-manipulation',
               surfaceClasses('panel'),
             )}
             style={{ transformOrigin: 'top right' }}

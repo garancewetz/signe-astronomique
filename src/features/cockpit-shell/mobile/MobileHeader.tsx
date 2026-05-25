@@ -34,7 +34,7 @@ export function MobileHeader({
   return (
     <header
       ref={ref}
-      className="shrink-0 z-10
+      className="relative shrink-0 z-10 touch-manipulation
                  min-h-[calc(2.75rem+env(safe-area-inset-top,0))]
                  pt-[env(safe-area-inset-top,0)]
                  bg-surface-console/55 backdrop-blur-xl

@@ -204,7 +204,7 @@ export function BottomSheet({
       }}
       style={{ y, height: effectiveFullPx, bottom: bottomOffset }}
       className={cn(
-        'fixed left-0 right-0 z-30',
+        'fixed left-0 right-0 z-30 touch-manipulation',
         'bg-surface-console/95 backdrop-blur-2xl',
         'border-t border-border-hud-subtle',
         'rounded-t-xl',

@@ -84,7 +84,7 @@ export function MobileTabBar({
     <nav
       role="tablist"
       aria-label={t.mobile.cockpit.navAriaLabel}
-      className="shrink-0 z-31
+      className="relative shrink-0 z-31 touch-manipulation
                  grid grid-cols-3 gap-1 px-2 pt-1.5
                  bg-surface-console/95 backdrop-blur-2xl
                  border-t border-border-hud-subtle
