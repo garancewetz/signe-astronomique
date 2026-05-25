@@ -190,10 +190,11 @@ export function Cockpit() {
     // pulling them into the modal — they open it on their own terms.
     setAnalysisAttention((k) => k + 1);
     if (!isFirstCalc) return;
-    // First calc only: empty sky, scrub overlays so the user discovers the
-    // sphere before any layer is painted on top.
+    // First calc: keep the sky uncluttered but reward curiosity by lighting
+    // up the constellation patterns (coupled with body labels in the scene
+    // composition). Other heavy overlays stay off until the user opts in.
     setShowGuides(false);
-    setBodyLabelsEnabled(false);
+    setBodyLabelsEnabled(true);
     setSatellitesEnabled(false);
     setConstellationOverlayEnabled(false);
     setActivePanel(null);
