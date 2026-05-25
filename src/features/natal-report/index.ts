@@ -3,6 +3,7 @@
 // the export pipeline.
 
 export { AnalysisModal } from './AnalysisModal';
+export { OffscreenFullReport } from './OffscreenFullReport';
 export { RadarWheel } from './RadarWheel';
 export { ExploreSpacePopover, InfoCircleIcon } from './ExploreSpacePopover';
 

@@ -24,7 +24,7 @@ import {
 } from './sidebar';
 import {
   AnalysisModal,
-  FullReport,
+  OffscreenFullReport,
   useExportHandlers,
 } from '@/features/natal-report';
 import { LegendPanel } from './LegendPanel';
@@ -290,6 +290,10 @@ export function Cockpit() {
     hasSelectedStar,
   };
 
+  const offscreenReport = reading ? (
+    <OffscreenFullReport ref={fullReportRef} reading={reading} />
+  ) : null;
+
   if (isMobile) {
     return (
       <CockpitDisplayProvider {...displayValue}>
@@ -327,6 +331,7 @@ export function Cockpit() {
         >
           {spaceView}
         </MobileCockpit>
+        {offscreenReport}
       </CockpitDisplayProvider>
     );
   }
@@ -447,18 +452,8 @@ export function Cockpit() {
         )}
       </AnimatePresence>
 
-      {/* === FULL REPORT (off-screen) — source for the PNG export === */}
-      {reading && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed top-0 left-[-12000px] w-md
-                     bg-surface-raised text-slate-200"
-          ref={fullReportRef}
-        >
-          <FullReport reading={reading} />
-        </div>
-      )}
     </div>
+    {offscreenReport}
     </CockpitDisplayProvider>
   );
 }
