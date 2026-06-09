@@ -141,7 +141,6 @@
         position: fixed;
         inset: 0;
         z-index: 100;
-        overflow-y: auto;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -171,7 +170,9 @@
         position: relative;
         max-width: 40rem;
         width: 100%;
-        max-height: calc(100vh - 5rem);
+        /* dvh, not vh: iOS Safari's dynamic toolbar makes 100vh taller than
+           the visible viewport, which would push the CTA off-screen. */
+        max-height: calc(100dvh - 5rem);
         overflow-y: auto;
         padding: 2.25rem clamp(1.25rem, 4vw, 2.5rem);
         border: 1px solid rgba(167, 139, 250, 0.22);
@@ -189,16 +190,18 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 2.1rem;
-        height: 2.1rem;
+        /* 44px — project tap-target standard (matches ui min-h-11). */
+        width: 2.75rem;
+        height: 2.75rem;
         padding: 0;
         border: 1px solid rgba(148, 163, 184, 0.25);
         border-radius: 0.6rem;
         background: rgba(30, 20, 55, 0.6);
         color: #cbd5e1;
-        font-size: 1.1rem;
+        font-size: 1.25rem;
         line-height: 1;
         cursor: pointer;
+        touch-action: manipulation;
         transition: background 0.15s ease, color 0.15s ease,
           border-color 0.15s ease;
       }
@@ -244,6 +247,7 @@
         align-items: center;
         gap: 0.5rem;
         margin: 1.6rem 0 0;
+        min-height: 2.75rem;
         padding: 0.7rem 1.4rem;
         border: 1px solid rgba(167, 139, 250, 0.5);
         border-radius: 0.6rem;
@@ -254,6 +258,7 @@
         font-weight: 500;
         letter-spacing: 0.03em;
         cursor: pointer;
+        touch-action: manipulation;
         transition: background 0.15s ease, border-color 0.15s ease;
       }
       .seo-splash__cta:hover {

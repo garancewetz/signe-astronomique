@@ -49,32 +49,46 @@ createRoot(document.getElementById('root')!).render(
 // React renders underneath; this wires the dismiss interactions and fades the
 // overlay out before removing it from the DOM.
 function wireWelcomeOverlay() {
-  const overlay = document.getElementById('seo-splash')
+  // Local non-nullable binding: TS won't propagate the early-return narrowing
+  // into the nested `dismiss` closure, so capture it as a typed const here.
+  const overlay: HTMLElement | null = document.getElementById('seo-splash')
   if (!overlay) return
+  const el = overlay
 
   let dismissed = false
+  let removeTimer = 0
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') dismiss()
   }
   function dismiss() {
     if (dismissed) return
     dismissed = true
-    overlay!.classList.add('seo-splash--hidden')
-    overlay!.addEventListener('transitionend', () => overlay!.remove(), {
-      once: true,
-    })
-    // Fallback in case the transition never fires (e.g. reduced motion).
-    window.setTimeout(() => overlay!.remove(), 600)
+    el.classList.add('seo-splash--hidden')
+    el.addEventListener(
+      'transitionend',
+      () => {
+        window.clearTimeout(removeTimer)
+        el.remove()
+      },
+      { once: true },
+    )
+    // Fallback removal: with prefers-reduced-motion the transition is disabled,
+    // so `transitionend` never fires and we drop the node on a timer instead.
+    removeTimer = window.setTimeout(() => el.remove(), 600)
     document.removeEventListener('keydown', onKeydown)
   }
 
   document.getElementById('seo-splash-close')?.addEventListener('click', dismiss)
   document.getElementById('seo-splash-enter')?.addEventListener('click', dismiss)
   // A click on the blurred backdrop (outside the card) also closes.
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) dismiss()
+  el.addEventListener('click', (e) => {
+    if (e.target === el) dismiss()
   })
   document.addEventListener('keydown', onKeydown)
+
+  // Move focus into the dialog so keyboard / screen-reader users land on the
+  // dismiss control rather than being left behind it.
+  document.getElementById('seo-splash-close')?.focus()
 }
 
 wireWelcomeOverlay()
