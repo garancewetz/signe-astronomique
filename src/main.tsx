@@ -86,9 +86,52 @@ function wireWelcomeOverlay() {
   })
   document.addEventListener('keydown', onKeydown)
 
+  wireLanguageToggle(el)
+
   // Move focus into the dialog so keyboard / screen-reader users land on the
   // dismiss control rather than being left behind it.
   document.getElementById('seo-splash-close')?.focus()
+}
+
+// FR is the raw-HTML default; this lets a visitor flip the overlay to English
+// on demand. The EN copy lives in data-en attributes (and data-en-aria for the
+// close button) so it never ships as indexable French page text — we only swap
+// it into the DOM when EN is picked. App-wide language stays controlled by the
+// in-cockpit switcher; this toggle is scoped to the welcome overlay.
+function wireLanguageToggle(root: HTMLElement) {
+  const frBtn = document.getElementById('seo-lang-fr')
+  const enBtn = document.getElementById('seo-lang-en')
+  const closeBtn = document.getElementById('seo-splash-close')
+  if (!frBtn || !enBtn) return
+
+  const content = root.querySelector<HTMLElement>('.seo-splash__inner')
+  const nodes = root.querySelectorAll<HTMLElement>('[data-en]')
+  // Cache the original French markup so EN ↔ FR is reversible.
+  nodes.forEach((n) => {
+    n.dataset.fr = n.innerHTML
+  })
+  const frAria = closeBtn?.getAttribute('aria-label') ?? ''
+
+  const setLang = (lang: 'fr' | 'en') => {
+    nodes.forEach((n) => {
+      const next = lang === 'en' ? n.dataset.en : n.dataset.fr
+      if (next != null) n.innerHTML = next
+    })
+    if (closeBtn) {
+      const aria = lang === 'en' ? closeBtn.dataset.enAria : frAria
+      if (aria) closeBtn.setAttribute('aria-label', aria)
+    }
+    // Mark the content's language so assistive tech reads it correctly — the
+    // <main> carries lang="fr" in the raw HTML, so update it there.
+    content?.setAttribute('lang', lang)
+    frBtn.classList.toggle('is-active', lang === 'fr')
+    enBtn.classList.toggle('is-active', lang === 'en')
+    frBtn.setAttribute('aria-pressed', String(lang === 'fr'))
+    enBtn.setAttribute('aria-pressed', String(lang === 'en'))
+  }
+
+  frBtn.addEventListener('click', () => setLang('fr'))
+  enBtn.addEventListener('click', () => setLang('en'))
 }
 
 wireWelcomeOverlay()

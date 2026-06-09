@@ -183,6 +183,44 @@
           0 24px 70px rgba(0, 0, 0, 0.55),
           0 0 60px rgba(124, 58, 237, 0.18);
       }
+      .seo-splash__lang {
+        position: absolute;
+        top: 0.95rem;
+        left: 0.95rem;
+        display: inline-flex;
+        gap: 0.15rem;
+        padding: 0.2rem;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 0.55rem;
+        background: rgba(30, 20, 55, 0.55);
+      }
+      .seo-splash__lang-btn {
+        min-width: 2.2rem;
+        min-height: 1.9rem;
+        padding: 0.2rem 0.5rem;
+        border: 0;
+        border-radius: 0.4rem;
+        background: transparent;
+        color: #94a3b8;
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .seo-splash__lang-btn:hover {
+        color: #e2e8f0;
+      }
+      .seo-splash__lang-btn.is-active {
+        background: rgba(124, 58, 237, 0.35);
+        color: #f5f3ff;
+      }
+      .seo-splash__lang-btn:focus-visible {
+        outline: 2px solid #a78bfa;
+        outline-offset: 2px;
+      }
       .seo-splash__close {
         position: absolute;
         top: 0.85rem;
@@ -311,21 +349,40 @@
       the CSS bundle. Keep the copy in sync with the FAQ JSON-LD above.
     -->
     <div id="seo-splash" role="dialog" aria-modal="true" aria-labelledby="seo-splash-title">
-        <main class="seo-splash__inner">
+        <main class="seo-splash__inner" lang="fr">
+          <!--
+            FR is the raw-HTML default (so crawlers and first paint stay French,
+            matching <html lang="fr"> and the French SEO target). The EN copy
+            rides along in data-en attributes — not rendered as page text, so it
+            doesn't pollute the indexed French content — and main.tsx swaps it in
+            only when the visitor clicks the EN toggle.
+          -->
+          <div class="seo-splash__lang" role="group" aria-label="Langue / Language">
+            <button type="button" id="seo-lang-fr" class="seo-splash__lang-btn is-active" aria-pressed="true">FR</button>
+            <button type="button" id="seo-lang-en" class="seo-splash__lang-btn" aria-pressed="false">EN</button>
+          </div>
           <button
             type="button"
             id="seo-splash-close"
             class="seo-splash__close"
             aria-label="Fermer et explorer le ciel"
+            data-en-aria="Close and explore the sky"
           >
             ×
           </button>
           <p class="seo-splash__eyebrow">Signe astronomique</p>
-          <h1 class="seo-splash__title" id="seo-splash-title">
+          <h1
+            class="seo-splash__title"
+            id="seo-splash-title"
+            data-en="My true astronomical sign: the constellation the Sun was really in when you were born"
+          >
             Mon vrai signe astronomique : la constellation où était réellement
             le Soleil à ta naissance
           </h1>
-          <p class="seo-splash__lead">
+          <p
+            class="seo-splash__lead"
+            data-en="A free tool that recomputes your birth chart on the real sky. Instead of the symbolic zodiac frozen 2000 years ago, it places the Sun, the Moon, the planets and your ascendant in the &lt;strong&gt;constellation they were actually in&lt;/strong&gt; on the day you were born — following the official boundaries of the International Astronomical Union (IAU, 1930), including &lt;strong&gt;Ophiuchus, the forgotten 13th sign&lt;/strong&gt;. Because of the precession of the equinoxes, your true sign almost always differs by one notch from your horoscope."
+          >
             Outil gratuit qui recalcule ton thème astral sur le ciel réel.
             Au lieu du zodiaque symbolique figé il y a 2000 ans, il place le
             Soleil, la Lune, les planètes et ton ascendant dans la
@@ -336,13 +393,18 @@
             précession des équinoxes, ton vrai signe diffère presque toujours
             d'un cran de ton horoscope.
           </p>
-          <button type="button" id="seo-splash-enter" class="seo-splash__cta">
+          <button
+            type="button"
+            id="seo-splash-enter"
+            class="seo-splash__cta"
+            data-en="Explore my sky →"
+          >
             Explorer mon ciel →
           </button>
 
           <section class="seo-splash__faq" aria-label="Questions fréquentes">
-            <h2>Quelle différence entre signe astrologique et signe astronomique ?</h2>
-            <p>
+            <h2 data-en="What is the difference between an astrological sign and an astronomical sign?">Quelle différence entre signe astrologique et signe astronomique ?</h2>
+            <p data-en="The astrological sign rests on a symbolic division of the zodiac, fixed about 2000 years ago, splitting the ecliptic into twelve equal 30° sectors. The astronomical sign is the constellation the Sun was actually in on the day you were born, according to the boundaries drawn by the IAU in 1930. Because of the precession of the equinoxes, the two now almost always differ by a full sign.">
               Le signe astrologique repose sur un découpage symbolique du
               zodiaque, fixé il y a environ 2000 ans, qui divise l'écliptique en
               douze secteurs égaux de 30°. Le signe astronomique correspond à la
@@ -352,8 +414,8 @@
               presque toujours d'un signe entier.
             </p>
 
-            <h2>Qu'est-ce qu'Ophiuchus, le 13ᵉ signe oublié du zodiaque ?</h2>
-            <p>
+            <h2 data-en="What is Ophiuchus, the forgotten 13th sign of the zodiac?">Qu'est-ce qu'Ophiuchus, le 13ᵉ signe oublié du zodiaque ?</h2>
+            <p data-en="Ophiuchus, the Serpent Bearer, is the 13th constellation the Sun crosses along the ecliptic. It is left out of the traditional astrological zodiac but is astronomically real: the Sun stays there about 18 days a year. If you were born roughly between 30 November and 18 December, your true astronomical sign is Ophiuchus.">
               Ophiuchus, ou le Serpentaire, est la 13ᵉ constellation traversée
               par le Soleil sur l'écliptique. Elle est exclue du zodiaque
               astrologique traditionnel mais bien réelle astronomiquement : le
@@ -362,8 +424,8 @@
               astronomique est Ophiuchus.
             </p>
 
-            <h2>Pourquoi mon vrai signe ne correspond pas à mon horoscope ?</h2>
-            <p>
+            <h2 data-en="Why doesn't my true sign match my horoscope?">Pourquoi mon vrai signe ne correspond pas à mon horoscope ?</h2>
+            <p data-en="Because the astrological calendar was frozen in Ptolemy's time, around the 2nd century. Since then, the precession of the equinoxes — a very slow motion of Earth's axis, completing a full cone in about 26,000 years — has drifted the sky by about 24 days. Today the Sun is almost always in the constellation before the one your horoscope announces.">
               Parce que le calendrier astrologique a été figé à l'époque de
               Ptolémée, vers le IIᵉ siècle. Depuis, la précession des équinoxes —
               un mouvement très lent de l'axe terrestre, qui décrit un cône
@@ -372,8 +434,8 @@
               constellation précédant celle annoncée par l'horoscope.
             </p>
 
-            <h2>Qu'est-ce que l'ascendant en astronomie ?</h2>
-            <p>
+            <h2 data-en="What is the ascendant in astronomy?">Qu'est-ce que l'ascendant en astronomie ?</h2>
+            <p data-en="The ascendant is the constellation that was rising on the eastern horizon at the exact moment of your birth. Its position depends on the time and place: it changes roughly every two hours. Signe astronomique computes it with positional astronomy, from the local sidereal time and your latitude.">
               L'ascendant désigne la constellation qui se levait à l'horizon est
               à l'instant exact de votre naissance. Sa position dépend de l'heure
               et du lieu : elle change toutes les deux heures environ. Signe
@@ -381,8 +443,8 @@
               temps sidéral local et de votre latitude.
             </p>
 
-            <h2>C'est quoi un thème astral astronomique ?</h2>
-            <p>
+            <h2 data-en="What is an astronomical birth chart?">C'est quoi un thème astral astronomique ?</h2>
+            <p data-en="A birth chart maps the positions of the Sun, Moon and planets seen from your birthplace, at your date and time of birth. The astronomical version places each body in the IAU constellation it was really in, to compare against the traditional astrological version.">
               Un thème astral est la carte des positions du Soleil, de la Lune et
               des planètes vues depuis votre lieu de naissance, à votre date et
               heure de naissance. La version astronomique place chaque astre dans
