@@ -20,6 +20,7 @@
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="author" content="Signe astronomique" />
+    <meta name="google-site-verification" content="i9g4WAi9gAszHYIEYaFm2UfoXHG8-9RevYo_NZMfqlc" />
 
     <link rel="canonical" href="https://signe-astronomique.netlify.app/" />
 
@@ -127,9 +128,223 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+    <!--
+      Styles for the static landing splash inside #root. Inline so they apply
+      before the CSS bundle loads and require no extra request. Allowed by CSP
+      (style-src includes 'unsafe-inline'). Removed from view once React mounts.
+    -->
+    <style>
+      #seo-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        overflow-y: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1.25rem;
+        background:
+          radial-gradient(ellipse at 50% 0%, #1a0f3a 0%, rgba(6, 2, 16, 0) 60%),
+          #060210;
+        color: #e2e8f0;
+        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo,
+          monospace;
+        -webkit-font-smoothing: antialiased;
+      }
+      .seo-splash__inner {
+        max-width: 44rem;
+        width: 100%;
+      }
+      .seo-splash__eyebrow {
+        margin: 0 0 1rem;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.28em;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #a78bfa;
+      }
+      .seo-splash__title {
+        margin: 0 auto 1.25rem;
+        max-width: 36rem;
+        text-align: center;
+        font-size: clamp(1.4rem, 4vw, 2rem);
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+        color: #f8fafc;
+        text-shadow: 0 0 24px rgba(124, 58, 237, 0.35);
+      }
+      .seo-splash__lead {
+        margin: 0 auto;
+        max-width: 38rem;
+        text-align: center;
+        font-size: 0.95rem;
+        font-weight: 300;
+        line-height: 1.75;
+        color: #cbd5e1;
+      }
+      .seo-splash__lead strong {
+        font-weight: 500;
+        color: #e9d5ff;
+      }
+      .seo-splash__loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin: 1.75rem 0 0;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+      }
+      .seo-splash__spinner {
+        width: 0.85rem;
+        height: 0.85rem;
+        border: 2px solid rgba(167, 139, 250, 0.3);
+        border-top-color: #a78bfa;
+        border-radius: 50%;
+        animation: seo-splash-spin 0.7s linear infinite;
+      }
+      @keyframes seo-splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .seo-splash__spinner {
+          animation: none;
+        }
+      }
+      .seo-splash__faq {
+        margin: 3rem auto 0;
+        max-width: 40rem;
+        border-top: 1px solid rgba(148, 163, 184, 0.15);
+        padding-top: 2rem;
+        text-align: left;
+      }
+      .seo-splash__faq h2 {
+        margin: 1.75rem 0 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #c4b5fd;
+      }
+      .seo-splash__faq h2:first-of-type {
+        margin-top: 0;
+      }
+      .seo-splash__faq p {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 300;
+        line-height: 1.7;
+        color: #94a3b8;
+      }
+      .seo-splash__noscript p {
+        margin: 2rem auto 0;
+        max-width: 36rem;
+        text-align: center;
+        font-size: 0.85rem;
+        color: #fca5a5;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Static pre-rendered landing content. This lives inside #root so React
+        wipes it on mount (createRoot replaces the container's children), but
+        it ships in the raw HTML — which means crawlers and no-JS visitors get
+        a fully readable page instead of an empty shell, and real visitors see
+        a branded splash while the (heavy, Cesium-laden) bundle loads.
+        Styles are inline so this renders correctly before the CSS bundle and
+        survives without any external request. Keep the copy in sync with the
+        FAQ JSON-LD above.
+      -->
+      <div id="seo-splash">
+        <main class="seo-splash__inner">
+          <p class="seo-splash__eyebrow">Signe astronomique</p>
+          <h1 class="seo-splash__title">
+            Mon vrai signe astronomique : la constellation où était réellement
+            le Soleil à ta naissance
+          </h1>
+          <p class="seo-splash__lead">
+            Outil gratuit qui recalcule ton thème astral sur le ciel réel.
+            Au lieu du zodiaque symbolique figé il y a 2000 ans, il place le
+            Soleil, la Lune, les planètes et ton ascendant dans la
+            <strong>constellation où ils se trouvaient vraiment</strong> le jour
+            de ta naissance — selon les frontières officielles de l'Union
+            Astronomique Internationale (IAU, 1930), avec
+            <strong>Ophiuchus, le 13ᵉ signe</strong> oublié. À cause de la
+            précession des équinoxes, ton vrai signe diffère presque toujours
+            d'un cran de ton horoscope.
+          </p>
+          <p class="seo-splash__loading" role="status">
+            <span class="seo-splash__spinner" aria-hidden="true"></span>
+            Chargement du cockpit céleste…
+          </p>
+
+          <section class="seo-splash__faq" aria-label="Questions fréquentes">
+            <h2>Quelle différence entre signe astrologique et signe astronomique ?</h2>
+            <p>
+              Le signe astrologique repose sur un découpage symbolique du
+              zodiaque, fixé il y a environ 2000 ans, qui divise l'écliptique en
+              douze secteurs égaux de 30°. Le signe astronomique correspond à la
+              constellation où le Soleil se trouvait réellement le jour de votre
+              naissance, selon les frontières tracées par l'IAU en 1930. À cause
+              de la précession des équinoxes, les deux divergent aujourd'hui
+              presque toujours d'un signe entier.
+            </p>
+
+            <h2>Qu'est-ce qu'Ophiuchus, le 13ᵉ signe oublié du zodiaque ?</h2>
+            <p>
+              Ophiuchus, ou le Serpentaire, est la 13ᵉ constellation traversée
+              par le Soleil sur l'écliptique. Elle est exclue du zodiaque
+              astrologique traditionnel mais bien réelle astronomiquement : le
+              Soleil y séjourne environ 18 jours par an. Si vous êtes né entre le
+              30 novembre et le 18 décembre environ, votre vrai signe
+              astronomique est Ophiuchus.
+            </p>
+
+            <h2>Pourquoi mon vrai signe ne correspond pas à mon horoscope ?</h2>
+            <p>
+              Parce que le calendrier astrologique a été figé à l'époque de
+              Ptolémée, vers le IIᵉ siècle. Depuis, la précession des équinoxes —
+              un mouvement très lent de l'axe terrestre, qui décrit un cône
+              complet en environ 26 000 ans — a fait dériver le ciel d'environ 24
+              jours. Aujourd'hui, le Soleil se trouve presque toujours dans la
+              constellation précédant celle annoncée par l'horoscope.
+            </p>
+
+            <h2>Qu'est-ce que l'ascendant en astronomie ?</h2>
+            <p>
+              L'ascendant désigne la constellation qui se levait à l'horizon est
+              à l'instant exact de votre naissance. Sa position dépend de l'heure
+              et du lieu : elle change toutes les deux heures environ. Signe
+              astronomique le calcule en astronomie de position, à partir du
+              temps sidéral local et de votre latitude.
+            </p>
+
+            <h2>C'est quoi un thème astral astronomique ?</h2>
+            <p>
+              Un thème astral est la carte des positions du Soleil, de la Lune et
+              des planètes vues depuis votre lieu de naissance, à votre date et
+              heure de naissance. La version astronomique place chaque astre dans
+              la constellation IAU où il se trouvait réellement, à comparer avec
+              la version astrologique traditionnelle.
+            </p>
+          </section>
+
+          <noscript>
+            <p class="seo-splash__noscript">
+              Cette application a besoin de JavaScript pour afficher le globe 3D
+              et calculer votre carte du ciel. Activez JavaScript pour explorer
+              votre vrai signe astronomique.
+            </p>
+          </noscript>
+        </main>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
