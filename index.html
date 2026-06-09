@@ -130,46 +130,98 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
     <!--
-      Styles for the static landing splash inside #root. Inline so they apply
-      before the CSS bundle loads and require no extra request. Allowed by CSP
-      (style-src includes 'unsafe-inline'). Removed from view once React mounts.
+      Styles for the welcome overlay above #root. Inline so they apply before
+      the CSS bundle loads and require no extra request. Allowed by CSP
+      (style-src includes 'unsafe-inline'). The overlay is a blurred glass
+      backdrop over the cockpit with a readable card; main.tsx wires the close
+      button, which fades it out (.seo-splash--hidden) and removes it.
     -->
     <style>
       #seo-splash {
         position: fixed;
         inset: 0;
-        z-index: 50;
+        z-index: 100;
         overflow-y: auto;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 2.5rem 1.25rem;
-        background:
-          radial-gradient(ellipse at 50% 0%, #1a0f3a 0%, rgba(6, 2, 16, 0) 60%),
-          #060210;
+        /* Translucent so the cockpit shows through, blurred. */
+        background: rgba(6, 2, 16, 0.55);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
         color: #e2e8f0;
         font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo,
           monospace;
         -webkit-font-smoothing: antialiased;
+        opacity: 1;
+        transition: opacity 0.45s ease;
+      }
+      /* Fade-out state added by main.tsx before the element is removed. */
+      #seo-splash.seo-splash--hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #seo-splash {
+          transition: none;
+        }
       }
       .seo-splash__inner {
-        max-width: 44rem;
+        position: relative;
+        max-width: 40rem;
         width: 100%;
+        max-height: calc(100vh - 5rem);
+        overflow-y: auto;
+        padding: 2.25rem clamp(1.25rem, 4vw, 2.5rem);
+        border: 1px solid rgba(167, 139, 250, 0.22);
+        border-radius: 1rem;
+        background: rgba(13, 8, 30, 0.82);
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.3),
+          0 24px 70px rgba(0, 0, 0, 0.55),
+          0 0 60px rgba(124, 58, 237, 0.18);
+      }
+      .seo-splash__close {
+        position: absolute;
+        top: 0.85rem;
+        right: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.1rem;
+        height: 2.1rem;
+        padding: 0;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 0.6rem;
+        background: rgba(30, 20, 55, 0.6);
+        color: #cbd5e1;
+        font-size: 1.1rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease,
+          border-color 0.15s ease;
+      }
+      .seo-splash__close:hover {
+        background: rgba(124, 58, 237, 0.25);
+        border-color: rgba(167, 139, 250, 0.5);
+        color: #f8fafc;
+      }
+      .seo-splash__close:focus-visible {
+        outline: 2px solid #a78bfa;
+        outline-offset: 2px;
       }
       .seo-splash__eyebrow {
-        margin: 0 0 1rem;
-        text-align: center;
+        margin: 0 0 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.28em;
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         font-weight: 600;
         color: #a78bfa;
       }
       .seo-splash__title {
-        margin: 0 auto 1.25rem;
-        max-width: 36rem;
-        text-align: center;
-        font-size: clamp(1.4rem, 4vw, 2rem);
+        margin: 0 0 1.1rem;
+        font-size: clamp(1.3rem, 3.5vw, 1.75rem);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: -0.01em;
@@ -177,10 +229,8 @@
         text-shadow: 0 0 24px rgba(124, 58, 237, 0.35);
       }
       .seo-splash__lead {
-        margin: 0 auto;
-        max-width: 38rem;
-        text-align: center;
-        font-size: 0.95rem;
+        margin: 0;
+        font-size: 0.92rem;
         font-weight: 300;
         line-height: 1.75;
         color: #cbd5e1;
@@ -189,44 +239,40 @@
         font-weight: 500;
         color: #e9d5ff;
       }
-      .seo-splash__loading {
-        display: flex;
+      .seo-splash__cta {
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: 0.6rem;
-        margin: 1.75rem 0 0;
-        font-size: 0.78rem;
-        letter-spacing: 0.08em;
-        color: #94a3b8;
+        gap: 0.5rem;
+        margin: 1.6rem 0 0;
+        padding: 0.7rem 1.4rem;
+        border: 1px solid rgba(167, 139, 250, 0.5);
+        border-radius: 0.6rem;
+        background: rgba(124, 58, 237, 0.25);
+        color: #f5f3ff;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
       }
-      .seo-splash__spinner {
-        width: 0.85rem;
-        height: 0.85rem;
-        border: 2px solid rgba(167, 139, 250, 0.3);
-        border-top-color: #a78bfa;
-        border-radius: 50%;
-        animation: seo-splash-spin 0.7s linear infinite;
+      .seo-splash__cta:hover {
+        background: rgba(124, 58, 237, 0.45);
+        border-color: rgba(167, 139, 250, 0.8);
       }
-      @keyframes seo-splash-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .seo-splash__spinner {
-          animation: none;
-        }
+      .seo-splash__cta:focus-visible {
+        outline: 2px solid #a78bfa;
+        outline-offset: 2px;
       }
       .seo-splash__faq {
-        margin: 3rem auto 0;
-        max-width: 40rem;
+        margin: 2.25rem 0 0;
         border-top: 1px solid rgba(148, 163, 184, 0.15);
-        padding-top: 2rem;
+        padding-top: 1.75rem;
         text-align: left;
       }
       .seo-splash__faq h2 {
-        margin: 1.75rem 0 0.5rem;
-        font-size: 0.95rem;
+        margin: 1.6rem 0 0.5rem;
+        font-size: 0.92rem;
         font-weight: 500;
         color: #c4b5fd;
       }
@@ -235,36 +281,42 @@
       }
       .seo-splash__faq p {
         margin: 0;
-        font-size: 0.85rem;
+        font-size: 0.83rem;
         font-weight: 300;
         line-height: 1.7;
         color: #94a3b8;
       }
       .seo-splash__noscript p {
-        margin: 2rem auto 0;
-        max-width: 36rem;
-        text-align: center;
-        font-size: 0.85rem;
+        margin: 1.5rem 0 0;
+        font-size: 0.83rem;
         color: #fca5a5;
       }
     </style>
   </head>
   <body>
-    <div id="root">
-      <!--
-        Static pre-rendered landing content. This lives inside #root so React
-        wipes it on mount (createRoot replaces the container's children), but
-        it ships in the raw HTML — which means crawlers and no-JS visitors get
-        a fully readable page instead of an empty shell, and real visitors see
-        a branded splash while the (heavy, Cesium-laden) bundle loads.
-        Styles are inline so this renders correctly before the CSS bundle and
-        survives without any external request. Keep the copy in sync with the
-        FAQ JSON-LD above.
-      -->
-      <div id="seo-splash">
+    <div id="root"></div>
+
+    <!--
+      Static landing content, as a sibling overlay above #root (NOT inside it,
+      so React doesn't wipe it on mount). It ships in the raw HTML — crawlers
+      and no-JS visitors get a fully readable page instead of an empty shell.
+      For real visitors it's a welcome card over the blurred cockpit; they read
+      it or dismiss it via the close button / CTA, which main.tsx wires to fade
+      the overlay out and remove it. Styles are inline so this renders before
+      the CSS bundle. Keep the copy in sync with the FAQ JSON-LD above.
+    -->
+    <div id="seo-splash" role="dialog" aria-modal="true" aria-labelledby="seo-splash-title">
         <main class="seo-splash__inner">
+          <button
+            type="button"
+            id="seo-splash-close"
+            class="seo-splash__close"
+            aria-label="Fermer et explorer le ciel"
+          >
+            ×
+          </button>
           <p class="seo-splash__eyebrow">Signe astronomique</p>
-          <h1 class="seo-splash__title">
+          <h1 class="seo-splash__title" id="seo-splash-title">
             Mon vrai signe astronomique : la constellation où était réellement
             le Soleil à ta naissance
           </h1>
@@ -279,10 +331,9 @@
             précession des équinoxes, ton vrai signe diffère presque toujours
             d'un cran de ton horoscope.
           </p>
-          <p class="seo-splash__loading" role="status">
-            <span class="seo-splash__spinner" aria-hidden="true"></span>
-            Chargement du cockpit céleste…
-          </p>
+          <button type="button" id="seo-splash-enter" class="seo-splash__cta">
+            Explorer mon ciel →
+          </button>
 
           <section class="seo-splash__faq" aria-label="Questions fréquentes">
             <h2>Quelle différence entre signe astrologique et signe astronomique ?</h2>
@@ -346,5 +397,6 @@
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- end seo-splash overlay -->
   </body>
 </html>

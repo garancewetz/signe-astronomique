@@ -42,3 +42,39 @@ createRoot(document.getElementById('root')!).render(
     </LocaleProvider>
   </StrictMode>,
 )
+
+// The welcome overlay (#seo-splash) is static HTML in index.html — it ships
+// in the raw markup so crawlers and no-JS visitors get readable content, and
+// for real visitors it sits over the blurred cockpit until they dismiss it.
+// React renders underneath; this wires the dismiss interactions and fades the
+// overlay out before removing it from the DOM.
+function wireWelcomeOverlay() {
+  const overlay = document.getElementById('seo-splash')
+  if (!overlay) return
+
+  let dismissed = false
+  const onKeydown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') dismiss()
+  }
+  function dismiss() {
+    if (dismissed) return
+    dismissed = true
+    overlay!.classList.add('seo-splash--hidden')
+    overlay!.addEventListener('transitionend', () => overlay!.remove(), {
+      once: true,
+    })
+    // Fallback in case the transition never fires (e.g. reduced motion).
+    window.setTimeout(() => overlay!.remove(), 600)
+    document.removeEventListener('keydown', onKeydown)
+  }
+
+  document.getElementById('seo-splash-close')?.addEventListener('click', dismiss)
+  document.getElementById('seo-splash-enter')?.addEventListener('click', dismiss)
+  // A click on the blurred backdrop (outside the card) also closes.
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) dismiss()
+  })
+  document.addEventListener('keydown', onKeydown)
+}
+
+wireWelcomeOverlay()
