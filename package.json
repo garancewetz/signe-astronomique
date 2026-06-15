@@ -40,16 +40,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@floating-ui/react": "0.27.16",
-    "cesium": "1.140.0",
-    "framer-motion": "12.38.0",
-    "html2canvas-pro": "2.0.2",
+    "@floating-ui/react": "0.27.19",
+    "cesium": "1.142.0",
+    "framer-motion": "12.40.0",
+    "html2canvas-pro": "2.0.4",
     "jspdf": "4.2.1",
-    "lucide-react": "1.14.0",
-    "react": "19.2.5",
-    "react-dom": "19.2.5",
+    "lucide-react": "1.18.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "satellite.js": "5.0.0",
-    "tailwind-merge": "3.5.0",
+    "tailwind-merge": "3.6.0",
     "tz-lookup": "6.1.25"
   },
   "knip": {
@@ -65,7 +65,7 @@
     "@eslint/js": "10.0.1",
     "@tailwindcss/vite": "4.2.4",
     "@types/node": "25.9.1",
-    "@types/react": "19.2.14",
+    "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.1",
     "eslint": "10.3.0",
