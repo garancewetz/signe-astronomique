@@ -12,14 +12,14 @@
 
 ## What it does
 
-The app renders a Cesium 3D scene centered on Earth, surrounded by a geocentric celestial sphere: the Sun, the Moon, the planets, the full Hipparcos star catalog with clickable constellations, a handful of historic relic satellites (ISS, Hubble, Sputnik, …) and — optionally — the entire active orbital population, propagated in real time via SGP4.
+The app renders a Cesium 3D scene centered on Earth, surrounded by a geocentric celestial sphere: the Sun, the Moon, the planets, the full Hipparcos star catalog with clickable constellations and a handful of historic relic satellites (ISS, Hubble, Sputnik, …).
 
 Every body is pickable. Selecting one opens a HUD panel and unlocks two complementary visualizations:
 
 - **Side view** — camera perpendicular to the Earth → constellation axis, with a graduated distance ruler in light-years.
 - **Depth view** — the constellation "exploded" so each star sits at its real distance, making the depth disparity legible at a glance.
 
-A natal report is rendered alongside the 3D view: ascendant constellation, planetary positions, and the 360° ecliptic radar with IAU angular sizes. A "share this sky" button hands the recipient a self-contained URL — opened via the native Web Share sheet on mobile/Safari, falling back to a clipboard copy elsewhere — and a [Netlify Edge function](netlify/edge-functions/og-share.ts) rewrites the index `<meta og:*>` tags on the fly so the link previews show the actual `Le ciel de {city} — {date}` card in WhatsApp / iMessage / mail. On mobile the cockpit installs as a PWA and the app surfaces a one-tap install hint after the first paint.
+Right after a calculation, a single card answers the only question people come with: **what is my real sign, and why isn't it the one my horoscope gives me?** It shows the true sign in large type, the horoscope sign struck through next to it, a small Earth → Sun → constellation diagram explaining what a sign actually is, and one sentence on the one-month precession shift. A "share this sky" button hands the recipient a self-contained URL — opened via the native Web Share sheet on mobile/Safari, falling back to a clipboard copy elsewhere — and a [Netlify Edge function](netlify/edge-functions/og-share.ts) rewrites the index `<meta og:*>` tags on the fly so the link previews show the actual `Le ciel de {city} — {date}` card in WhatsApp / iMessage / mail. On mobile the cockpit installs as a PWA and the app surfaces a one-tap install hint after the first paint.
 
 ## Why it matters
 
@@ -86,18 +86,15 @@ src/
 │   │   ├── SpaceView.tsx                 Cesium Viewer + camera + lifecycle + picker
 │   │   ├── useSceneLayerComposition.ts   re-mounts the celestial layers per reading
 │   │   ├── useSatelliteTracker.ts        relics → Cesium entities
-│   │   ├── useOrbitalPopulation.ts       Celestrak fetch (15 typed groups + Starlink)
 │   │   ├── useRevealSequence.ts          aim at the Sun + flash labels for ~3 s
 │   │   ├── data/
-│   │   │   ├── satellitesDB.ts                   relic TLEs (Sputnik, ISS, Hubble, …)
-│   │   │   └── orbitalCategories.ts              Celestrak palette + labels
+│   │   │   └── satellitesDB.ts                   relic TLEs (Sputnik, ISS, Hubble, …)
 │   │   ├── cesium/                       only place where `import 'cesium'` is allowed
 │   │   │   ├── mountStarsLayer.ts                Hipparcos stars, pickable
 │   │   │   ├── mountPlanetsLayer.ts
 │   │   │   ├── mountMoonLayer.ts
 │   │   │   ├── mountSunLayer.ts                  Cesium disk + pick entity
 │   │   │   ├── mountSatellitesLayer.ts           relics
-│   │   │   ├── mountOrbitalLayer.ts              active orbital population
 │   │   │   ├── mountReferenceLines.ts            ecliptic, equator, meridian
 │   │   │   ├── mountObserverMarker.ts            "you are here" marker
 │   │   │   ├── mountSelectedConstellation.ts     highlighted constellation pattern
@@ -113,11 +110,9 @@ src/
 │   │   │   ├── cameraLimits.ts                   shared min/max camera-distance clamps
 │   │   │   └── viewerKeyboard.ts                 AZERTY-friendly nav, side-view aware
 │   │   └── index.ts                      barrel
-│   ├── natal-report/             analytical views + export pipeline
-│   │   ├── AnalysisModal.tsx             tabbed modal hosting the four report views
-│   │   ├── RightPanel.tsx                Resume / Carte / Lecture / Donnees panel bodies
-│   │   ├── MissionLog.tsx                BirthHeader, AscendantCard, PlanetTable, …
-│   │   ├── RadarWheel.tsx                360° ecliptic radar (IAU angular sizes)
+│   ├── natal-report/             true-sign reveal + export pipeline
+│   │   ├── SignReveal.tsx                true sign vs horoscope + alignment diagram + why
+│   │   ├── SignRevealModal.tsx           dialog shown after each calculation
 │   │   ├── ExploreSpacePopover.tsx       sky-reading panel
 │   │   ├── useExportHandlers.ts          PNG + PDF export orchestration
 │   │   ├── exportReport.ts               canvas capture + PDF
@@ -128,7 +123,7 @@ src/
 │       ├── CockpitFallback.tsx           fallback UI rendered on caught errors
 │       ├── HudFrame.tsx                  decorative cockpit overlay
 │       ├── BodyInfoHud.tsx               HUD shown when a body is selected
-│       ├── LegendPanel.tsx               orbital legend (categories, counts, retry)
+│       ├── LegendPanel.tsx               glyphs, colors and layer toggles
 │       ├── KeyboardHintChip.tsx          shortcut legend opener
 │       ├── LanguageSwitcher.tsx          FR | EN toggle
 │       ├── Tooltip.tsx                   portal tooltip (anti-clipping)
@@ -137,10 +132,9 @@ src/
 │       │   ├── MobileCockpit.tsx                 top-level mobile layout (header + canvas + sheet + tab bar)
 │       │   ├── MobileHeader.tsx                  top chip showing the active natal coords
 │       │   ├── BottomSheet.tsx                   draggable 3-snap sheet, `visible`-via-translate
-│       │   ├── MobileTabBar.tsx                  bottom navigation (display / navigation / analysis)
+│       │   ├── MobileTabBar.tsx                  bottom navigation (display / navigation / my sign)
 │       │   ├── MobileSheetContent.tsx            tab-specific bodies inside the sheet
 │       │   ├── MobileSystemDrawer.tsx            right-hand drawer (export, share, language, …)
-│       │   ├── MobileAnalysisStack.tsx           full-screen analysis panel stack
 │       │   └── InstallPwaPrompt.tsx              one-shot install hint (Android prompt + iOS instructions)
 │       └── index.ts                      barrel — exports Cockpit + ErrorBoundary + Fallback
 ├── ui/                           shared primitives + cross-cutting UI hooks
@@ -170,28 +164,16 @@ src/
 - **Stars / Planets / Moon / Sun / ReferenceLines / ObserverMarker** — entities placed on a celestial sphere at ~100 AU (star radius scaled by magnitude), or on the globe for the observer marker.
 - **SelectedConstellation / ExplodedConstellation / DistanceRuler** — overlays that highlight the chosen constellation. The exploded variant places each star on a logarithmic shell so the real distance disparities become visible (educational view).
 - **Satellites Layer (relics)** — ISS, Hubble, Starlink-0, propagated each frame via `CallbackProperty`.
-- **Orbital Layer** — `PointPrimitiveCollection` batch, up to 4 000 active satellites, propagated once per second via `setInterval` (decoupled from the render loop). Color, size and label come from [`src/features/space-viewport/data/orbitalCategories.ts`](src/features/space-viewport/data/orbitalCategories.ts) — a single source of truth shared with the HUD legend.
 
 ## Sidebar and panels
 
-The main UI sits on a unified [`Sidebar`](src/features/cockpit-shell/sidebar/Sidebar.tsx) — a single left aside that hosts the coordinates form, an analysis CTA that opens the [`AnalysisModal`](src/features/natal-report/AnalysisModal.tsx), a flat grid of display-layer chips, and a pinned [`SystemDock`](src/features/cockpit-shell/sidebar/SystemDock.tsx). The Cesium canvas inset shifts with the sidebar's collapsed / expanded width — no camera math, just a viewport change that triggers automatic recentering.
+The main UI sits on a unified [`Sidebar`](src/features/cockpit-shell/sidebar/Sidebar.tsx) — a single left aside that hosts the coordinates form, a "My true sign" CTA that reopens the [`SignRevealModal`](src/features/natal-report/SignRevealModal.tsx) (it also opens on its own after each calculation), a flat grid of display-layer chips, and a pinned [`SystemDock`](src/features/cockpit-shell/sidebar/SystemDock.tsx). The Cesium canvas inset shifts with the sidebar's collapsed / expanded width — no camera math, just a viewport change that triggers automatic recentering.
 
-Selecting a body via click opens [`BodyInfoHud`](src/features/cockpit-shell/BodyInfoHud.tsx) as a floating panel. When the selection is a star, the sidebar's **side-view** chip activates — toggling it flips the Cesium camera into the perpendicular side view (and, paired with the radar, exposes the **depth view**).
+Selecting a body via click opens [`BodyInfoHud`](src/features/cockpit-shell/BodyInfoHud.tsx) as a floating panel. When the selection is a star, the sidebar's **side-view** chip activates — toggling it flips the Cesium camera into the perpendicular side view.
 
 ## Body picker
 
 [`useBodyPicker`](src/features/space-viewport/cesium/useBodyPicker.ts) listens for `LEFT_CLICK` on the viewer and reads the `PropertyBag` attached by each mount layer to its pickable entities. Payloads (`StarPayload`, `SunPayload`, `PlanetPayload`, `MoonPayload`, `SatellitePayload`) are validated by type guards before being lifted into `SelectedBody` in `SpaceView`. The routing switches end with `assertNever(p)` so adding a new payload variant without extending the dispatcher becomes a compile error — no casts, no `any`, no silent drops.
-
-## Live orbital toggle
-
-Activated through the `[ORBITAL]` button in the display panel. **Off by default** to keep the astrological reading legible.
-
-- **Modern Clutter** (default) — every active satellite today.
-- **Historical View** (`[NAISSANCE]`, visible when a natal reading is active) — only satellites launched on or before the birth year. Filtered from the TLE international designator.
-
-[`useOrbitalPopulation`](src/features/space-viewport/useOrbitalPopulation.ts) fetches 15 Celestrak groups in parallel (`stations`, `weather`, `gps-ops`, `galileo`, `glo-ops`, `beidou`, `geo`, `intelsat`, `ses`, `iridium-NEXT`, `oneweb`, `science`, …) plus the supplemental Starlink feed. It deliberately avoids `GROUP=active` (~5 MB, IP-blacklisted within a few hits). `Promise.allSettled` isolates failures: a rate-limited group doesn't break the rest. The result is exposed via `useSyncExternalStore` from a module-level cache — one fetch per session, instant retoggle, no setState-in-effect round-trip.
-
-On a network error the button flips to `[RETRY]`; one click re-runs the fetch via the hook's `retry()`.
 
 ## Astronomy notes
 
@@ -228,7 +210,6 @@ The cockpit is installable as a PWA. [`InstallPwaPrompt`](src/features/cockpit-s
 
 - **IAU 1930 constellation boundaries** — Eugène Delporte, *Délimitation scientifique des constellations*.
 - **Hipparcos star catalog** — ESA, public domain.
-- **Celestrak** — Dr. T.S. Kelso, [celestrak.org](https://celestrak.org/) — TLEs for the live orbital population.
 - **NASA GIBS** — Earth imagery (Blue Marble + VIIRS Black Marble Night Lights).
 - **OpenStreetMap / Nominatim** — city geocoding.
 

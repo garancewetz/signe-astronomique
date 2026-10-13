@@ -2,9 +2,10 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import {
   formatLST,
   liveTelemetry,
+  loreName,
   type CelestialReading,
 } from '@/features/astronomy';
-import { useT } from '@/context/useLocale';
+import { useLocale, useT } from '@/context/useLocale';
 
 /** Birth-time formatter pinned to the birth location's timezone. Falls
  *  back to UTC (with a visible suffix) when the timezone is unknown. */
@@ -40,6 +41,7 @@ export const HudFrame = memo(function HudFrame({
   onOpenSummary,
 }: HudFrameProps) {
   const t = useT();
+  const { locale } = useLocale();
   const liveDateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(t.intlLocale, {
@@ -59,7 +61,7 @@ export const HudFrame = memo(function HudFrame({
   const isNatal = !!reading;
   const mode = isNatal ? t.hudFrame.modeNatal : t.hudFrame.modeLive;
   const main = reading
-    ? `${reading.trueConstellation} · ${reading.moon.constellation}`
+    ? `☉ ${loreName(reading.trueConstellation, locale)}`
     : null;
 
   const sub = reading

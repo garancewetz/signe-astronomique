@@ -1,36 +1,10 @@
-// Public API for the natal-report feature: the analytical views (resume,
-// carte, lecture, donnees), the 360° radar, the modal that hosts them, and
-// the export pipeline.
+// Public API for the natal-report feature: the true-sign reveal, the modal
+// that hosts it, and the export pipeline.
 
-export { AnalysisModal } from './AnalysisModal';
+export { SignReveal } from './SignReveal';
+export { SignRevealModal } from './SignRevealModal';
 export { OffscreenFullReport } from './OffscreenFullReport';
-export { RadarWheel } from './RadarWheel';
 export { ExploreSpacePopover, InfoCircleIcon } from './ExploreSpacePopover';
-
-export {
-  CarteBody,
-  CartePanel,
-  DonneesBody,
-  DonneesPanel,
-  FullReport,
-  LectureBody,
-  LecturePanel,
-  ResumeBody,
-  ResumePanel,
-  type ReportPanelKey,
-} from './RightPanel';
-
-export {
-  AscendantCard,
-  AstroInfoCard,
-  BirthHeader,
-  HowToRead,
-  NotesCard,
-  PlanetTable,
-  ResumeCard,
-  ScientificFooter,
-  TwoMotionsCard,
-} from './MissionLog';
 
 export {
   useExportHandlers,

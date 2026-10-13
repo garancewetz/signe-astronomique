@@ -1,12 +1,11 @@
 // Public API for the space-viewport feature: Cesium scene, layer mounters,
-// camera director, body picker, and the orbital / satellite data sources.
+// camera director, body picker, and the satellite relics data.
 //
 // The Cesium dependency must stay walled off: no `import 'cesium'` is
 // allowed outside this folder. Sibling features interact with the scene
 // only through the imperative `SpaceViewHandle` exposed via ref.
 
 export {
-  LIVE_TLE_VALIDITY_MS,
   SpaceView,
   type SpaceViewHandle,
   type SelectedBody,
@@ -16,13 +15,6 @@ export {
   type SelectedMoon,
   type SelectedSatellite,
 } from './SpaceView';
-
-export {
-  useOrbitalPopulation,
-  type OrbitalCategory,
-  type OrbitalSat,
-  type OrbitalStatus,
-} from './useOrbitalPopulation';
 
 export {
   useSatelliteTracker,
@@ -44,9 +36,3 @@ export {
   satelliteName,
   type SatelliteRelic,
 } from './data/satellitesDB';
-
-export {
-  ORBITAL_CATEGORIES,
-  orbitalCategoryLabel,
-  type OrbitalCategoryStyle,
-} from './data/orbitalCategories';

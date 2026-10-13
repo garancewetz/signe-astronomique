@@ -7,17 +7,13 @@ import {
 } from '@/features/natal-input';
 import type { CelestialReading } from '@/features/astronomy';
 import type { SelectedBody } from '@/features/space-viewport';
-import {
-  ExploreSpacePopover,
-  type ReportPanelKey,
-} from '@/features/natal-report';
+import { ExploreSpacePopover } from '@/features/natal-report';
 import { LegendPanel } from '../LegendPanel';
 import { InstallPwaPrompt } from './InstallPwaPrompt';
 import { BottomSheet, type SheetSnap } from './BottomSheet';
 import { MobileHeader } from './MobileHeader';
 import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
 import { MobileSheetContent } from './MobileSheetContent';
-import { MobileAnalysisStack } from './MobileAnalysisStack';
 import { MobileSystemDrawer } from './MobileSystemDrawer';
 import { useT } from '@/context/useLocale';
 import { DistanceChip } from '@/ui';
@@ -70,8 +66,10 @@ interface MobileCockpitProps {
   onFlyMoon: () => void;
   onFlyEarth: () => void;
 
-  // Reveal action (used by ResumePanel)
-  onRevealConstellation: () => void;
+  /** Opens the true-sign reveal (owned by the parent Cockpit). */
+  onOpenSign: () => void;
+  /** Localized true sign once computed. */
+  signLabel: string | null;
 
   // Active tab is controlled by the parent so shared shell state stays
   // in one place across the desktop and mobile cockpits.
@@ -99,14 +97,13 @@ interface MobileCockpitProps {
 /**
  * Mobile layout shell. Composes a full-bleed canvas, a tappable top chip
  * (opens the coordinates modal), a draggable bottom sheet whose content
- * tracks the active tab, the tab bar, and a full-screen analysis stack
- * that reuses the desktop's report panels.
+ * tracks the active tab, and the tab bar. The true-sign reveal is a
+ * modal owned by the parent Cockpit.
  *
  * State owned here:
  *   - `snap`        — current bottom sheet snap point
  *   - `activeTab`   — which tab the sheet is rendering content for
  *   - `coordsOpen`  — coordinates modal visibility
- *   - `analysisPanel` — full-screen analysis panel currently pushed (or null)
  *
  * Selecting a body in the 3D scene pops the sheet from peek to mid via
  * the snap-pop hook below — body info renders contextually in the sheet
@@ -146,7 +143,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
   const [coordsOpen, setCoordsOpen] = useState(
     () => !reading && !hasSharedFromUrl,
   );
-  const [analysisPanel, setAnalysisPanel] = useState<ReportPanelKey | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
@@ -197,6 +193,16 @@ export function MobileCockpit(props: MobileCockpitProps) {
   }
 
   const handleTabChange = (next: MobileTabKey | null) => {
+    // "Mon signe" and "Ma naissance" have no sheet content — they open
+    // their dialog directly.
+    if (next === 'analysis') {
+      props.onOpenSign();
+      return;
+    }
+    if (next === 'coords') {
+      setCoordsOpen(true);
+      return;
+    }
     onActiveTabChange(next);
     if (next !== null && snap === 'peek') {
       setSnap('mid');
@@ -259,7 +265,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
             activeTab={activeTab}
             hasReading={hasReading}
             onOpenCoords={() => setCoordsOpen(true)}
-            onSelectAnalysisPanel={(p) => setAnalysisPanel(p)}
             onFlySun={props.onFlySun}
             onFlyMoon={props.onFlyMoon}
             onFlyEarth={props.onFlyEarth}
@@ -277,6 +282,7 @@ export function MobileCockpit(props: MobileCockpitProps) {
         onTabChange={handleTabChange}
         hasReading={hasReading}
         analysisAttention={props.analysisAttention}
+        signLabel={props.signLabel}
       />
 
       <MobileCoordinatesModal
@@ -292,13 +298,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
         searchHistory={searchHistory}
         onRecordSearch={onRecordSearch}
         onRemoveSearch={onRemoveSearch}
-      />
-
-      <MobileAnalysisStack
-        panel={analysisPanel}
-        onClose={() => setAnalysisPanel(null)}
-        reading={reading}
-        onRevealConstellation={props.onRevealConstellation}
       />
 
       <MobileSystemDrawer

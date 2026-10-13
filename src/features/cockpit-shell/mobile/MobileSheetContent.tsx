@@ -1,19 +1,12 @@
 import {
-  Atom,
-  Axis3d,
-  BookOpen,
   Globe2,
-  Map,
-  Network,
   Satellite,
-  Sparkles,
   Tag,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { BodyInfoHud } from '../BodyInfoHud';
-import type { ReportPanelKey } from '@/features/natal-report';
 import type { SelectedBody } from '@/features/space-viewport';
-import { Button, MenuRow } from '@/ui';
+import { Button, MenuRow, cn } from '@/ui';
 import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 import { useT } from '@/context/useLocale';
 import type { MobileTabKey } from './MobileTabBar';
@@ -23,7 +16,6 @@ interface MobileSheetContentProps {
 
   hasReading: boolean;
   onOpenCoords: () => void;
-  onSelectAnalysisPanel: (panel: ReportPanelKey) => void;
 
   // Navigation
   onFlySun: () => void;
@@ -38,9 +30,7 @@ interface MobileSheetContentProps {
 export function MobileSheetContent(props: MobileSheetContentProps) {
   const { activeTab, selectedBody } = props;
 
-  if (activeTab === 'display') return <DisplayContent />;
-  if (activeTab === 'navigation') return <NavigationContent {...props} />;
-  if (activeTab === 'analysis') return <AnalysisContent {...props} />;
+  if (activeTab === 'explore') return <ExploreContent {...props} />;
   // No tab active — show body info contextually when something is picked
   // in the 3D scene; otherwise fall back to the home / CTA screen.
   if (selectedBody) return <SelectionContent {...props} />;
@@ -92,7 +82,11 @@ function SelectionContent({
   );
 }
 
-function DisplayContent() {
+function ExploreContent({
+  onFlySun,
+  onFlyMoon,
+  onFlyEarth,
+}: MobileSheetContentProps) {
   const t = useT();
   const {
     bodyLabelsEnabled,
@@ -101,26 +95,31 @@ function DisplayContent() {
     toggleGuides,
     satellitesEnabled,
     toggleSatellites,
-    constellationOverlayEnabled,
-    toggleConstellationOverlay,
-    orbitalAvailable,
-    orbitalStatus,
-    hasSelectedStar,
-    sideViewActive,
-    toggleSideView,
   } = useCockpitDisplay();
-  const orbitalSublabel = !orbitalAvailable
-    ? t.mobile.sheet.display.orbital.sublabelUnavailable
-    : orbitalStatus === 'loading'
-      ? t.mobile.sheet.display.orbital.sublabelLoading
-      : orbitalStatus === 'error'
-        ? t.mobile.sheet.display.orbital.sublabelError
-        : t.mobile.sheet.display.orbital.sublabelLive;
+  const destinations = [
+    { key: 'sun', glyph: '☀', glyphClass: 'text-glyph-sun', label: t.mobile.sheet.navigation.sun.label, onClick: onFlySun },
+    { key: 'moon', glyph: '☾', glyphClass: 'text-glyph-moon', label: t.mobile.sheet.navigation.moon.label, onClick: onFlyMoon },
+    { key: 'earth', glyph: '⊕', glyphClass: 'text-glyph-earth', label: t.mobile.sheet.navigation.earth.label, onClick: onFlyEarth },
+  ];
 
   return (
     <SheetSection>
-      <SheetEyebrow>{t.mobile.sheet.display.eyebrow}</SheetEyebrow>
+      <SheetEyebrow>{t.mobile.sheet.navigation.eyebrow}</SheetEyebrow>
+      <div className="grid grid-cols-3 gap-2 pb-3">
+        {destinations.map((d) => (
+          <Button
+            key={d.key}
+            variant="outline"
+            onClick={d.onClick}
+            className="h-16 flex-col gap-1 tracking-normal"
+          >
+            <span aria-hidden className={cn('text-xl leading-none', d.glyphClass)}>{d.glyph}</span>
+            <span className="text-cockpit-md text-slate-200">{d.label}</span>
+          </Button>
+        ))}
+      </div>
 
+      <SheetEyebrow>{t.mobile.sheet.display.eyebrow}</SheetEyebrow>
       <MenuRow
         kind="toggle"
         size="lg"
@@ -142,125 +141,11 @@ function DisplayContent() {
       <MenuRow
         kind="toggle"
         size="lg"
-        label={t.mobile.sheet.display.orbital.label}
-        sublabel={orbitalSublabel}
-        icon={<Network className="size-4" strokeWidth={1.4} aria-hidden />}
-        active={constellationOverlayEnabled}
-        locked={!orbitalAvailable}
-        disabled={!orbitalAvailable}
-        onClick={orbitalAvailable ? toggleConstellationOverlay : undefined}
-      />
-      <MenuRow
-        kind="toggle"
-        size="lg"
         label={t.mobile.sheet.display.relics.label}
         sublabel={t.mobile.sheet.display.relics.sublabel}
         icon={<Satellite className="size-4" strokeWidth={1.4} aria-hidden />}
         active={satellitesEnabled}
         onClick={toggleSatellites}
-      />
-
-      <Divider />
-
-      <MenuRow
-        kind="toggle"
-        size="lg"
-        label={t.mobile.sheet.display.sideView.label}
-        sublabel={
-          hasSelectedStar
-            ? t.mobile.sheet.display.sideView.sublabelReady
-            : t.mobile.sheet.display.sideView.sublabelLocked
-        }
-        icon={<Axis3d className="size-4" strokeWidth={1.4} aria-hidden />}
-        active={sideViewActive}
-        locked={!hasSelectedStar}
-        disabled={!hasSelectedStar}
-        onClick={hasSelectedStar ? toggleSideView : undefined}
-      />
-    </SheetSection>
-  );
-}
-
-function NavigationContent({
-  onFlySun,
-  onFlyMoon,
-  onFlyEarth,
-}: MobileSheetContentProps) {
-  const t = useT();
-  return (
-    <SheetSection>
-      <SheetEyebrow>{t.mobile.sheet.navigation.eyebrow}</SheetEyebrow>
-
-      <MenuRow
-        size="lg"
-        chevron
-        label={t.mobile.sheet.navigation.sun.label}
-        sublabel={t.mobile.sheet.navigation.sun.sublabel}
-        icon={<span className="text-cockpit-glyph leading-none text-glyph-sun">☀</span>}
-        onClick={onFlySun}
-      />
-      <MenuRow
-        size="lg"
-        chevron
-        label={t.mobile.sheet.navigation.moon.label}
-        sublabel={t.mobile.sheet.navigation.moon.sublabel}
-        icon={<span className="text-cockpit-glyph leading-none text-glyph-moon">☾</span>}
-        onClick={onFlyMoon}
-      />
-      <MenuRow
-        size="lg"
-        chevron
-        label={t.mobile.sheet.navigation.earth.label}
-        sublabel={t.mobile.sheet.navigation.earth.sublabel}
-        icon={<span className="text-cockpit-glyph leading-none text-glyph-earth">⊕</span>}
-        onClick={onFlyEarth}
-      />
-    </SheetSection>
-  );
-}
-
-function AnalysisContent({
-  onSelectAnalysisPanel,
-}: MobileSheetContentProps) {
-  const t = useT();
-  return (
-    <SheetSection>
-      <SheetEyebrow>{t.mobile.sheet.analysis.eyebrow}</SheetEyebrow>
-
-      <MenuRow
-        size="lg"
-        chevron
-        label={t.mobile.sheet.analysis.resume.label}
-        sublabel={t.mobile.sheet.analysis.resume.sublabel}
-        icon={<Sparkles className="size-4" strokeWidth={1.4} aria-hidden />}
-        onClick={() => onSelectAnalysisPanel('resume')}
-      />
-      <MenuRow
-        size="lg"
-        chevron
-        label={t.mobile.sheet.analysis.carte.label}
-        sublabel={t.mobile.sheet.analysis.carte.sublabel}
-        icon={<Map className="size-4" strokeWidth={1.4} aria-hidden />}
-        onClick={() => onSelectAnalysisPanel('carte')}
-      />
-      <MenuRow
-        size="lg"
-        chevron
-        label={t.mobile.sheet.analysis.lecture.label}
-        sublabel={t.mobile.sheet.analysis.lecture.sublabel}
-        icon={<BookOpen className="size-4" strokeWidth={1.4} aria-hidden />}
-        onClick={() => onSelectAnalysisPanel('lecture')}
-      />
-
-      <Divider />
-
-      <MenuRow
-        size="lg"
-        chevron
-        label={t.mobile.sheet.analysis.donnees.label}
-        sublabel={t.mobile.sheet.analysis.donnees.sublabel}
-        icon={<Atom className="size-4" strokeWidth={1.4} aria-hidden />}
-        onClick={() => onSelectAnalysisPanel('donnees')}
       />
     </SheetSection>
   );
@@ -276,8 +161,4 @@ function SheetEyebrow({ children }: { children: ReactNode }) {
       {children}
     </div>
   );
-}
-
-function Divider() {
-  return <div aria-hidden="true" className="my-2 mx-1 h-px bg-border-hud-faint" />;
 }

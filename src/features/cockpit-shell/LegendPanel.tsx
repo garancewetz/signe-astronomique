@@ -1,8 +1,6 @@
 import { PLANETS_META } from '@/features/astronomy';
 import {
-  ORBITAL_CATEGORIES,
   SATELLITE_RELICS,
-  orbitalCategoryLabel,
   satelliteName,
 } from '@/features/space-viewport';
 import { cn, HudCard, type HudCardVariant } from '@/ui';
@@ -36,9 +34,6 @@ export function LegendPanel({
     toggleGuides,
     satellitesEnabled,
     toggleSatellites,
-    constellationOverlayEnabled,
-    toggleConstellationOverlay,
-    orbitalAvailable,
   } = useCockpitDisplay();
   const planetEntries = Object.values(PLANETS_META);
   return (
@@ -93,22 +88,6 @@ export function LegendPanel({
           ))}
         </Section>
 
-        <Section
-          title={t.legend.sections.orbital}
-          active={constellationOverlayEnabled}
-          onToggle={toggleConstellationOverlay}
-          disabled={!orbitalAvailable}
-        >
-          {Object.values(ORBITAL_CATEGORIES).map((cat) => (
-            <DotRow
-              key={cat.label}
-              color={cat.hex}
-              label={orbitalCategoryLabel(cat, locale)}
-              note={t.legend.orbitalRealTime}
-            />
-          ))}
-        </Section>
-
         <KeyboardSection />
       </div>
     </HudCard>
@@ -158,13 +137,11 @@ function Section({
   title,
   active,
   onToggle,
-  disabled = false,
   children,
 }: {
   title: string;
   active: boolean;
   onToggle: () => void;
-  disabled?: boolean;
   children: React.ReactNode;
 }) {
   const t = useT();
@@ -175,38 +152,31 @@ function Section({
         role="switch"
         aria-checked={active}
         aria-label={`${title} — ${active ? t.legend.toggleVisible : t.legend.toggleHidden}`}
-        onClick={disabled ? undefined : onToggle}
-        disabled={disabled}
+        onClick={onToggle}
         className={cn(
           'cockpit-focus group flex items-center gap-2 w-full mb-1.5',
           'text-cockpit-xs tracking-cockpit-caps uppercase',
           'transition-colors',
-          disabled
-            ? 'text-accent-label/40 cursor-not-allowed'
-            : active
-              ? 'text-cyan-100 hover:text-cyan-50'
-              : 'text-accent-label/75 hover:text-accent-label',
+          active
+            ? 'text-cyan-100 hover:text-cyan-50'
+            : 'text-accent-label/75 hover:text-accent-label',
         )}
       >
         <span className="flex-1 text-left truncate">{title}</span>
-        <SwitchKnob active={active} disabled={disabled} />
+        <SwitchKnob active={active} />
       </button>
       <div className="space-y-1">{children}</div>
     </div>
   );
 }
 
-function SwitchKnob({ active, disabled }: { active: boolean; disabled: boolean }) {
+function SwitchKnob({ active }: { active: boolean }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
         'shrink-0 relative inline-block w-7 h-3 rounded-full transition-colors',
-        disabled
-          ? 'bg-slate-700/40'
-          : active
-            ? 'bg-cyan-400/60'
-            : 'bg-slate-600/50',
+        active ? 'bg-cyan-400/60' : 'bg-slate-600/50',
       )}
     >
       <span
@@ -245,12 +215,10 @@ function DotRow({
   color,
   label,
   year,
-  note,
 }: {
   color: string;
   label: string;
   year?: number;
-  note?: string;
 }) {
   return (
     <div className="flex items-center gap-3">
@@ -260,8 +228,7 @@ function DotRow({
         style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
       />
       <span className="text-slate-300 truncate">{label}</span>
-      {note && <span className="text-slate-500 ml-auto text-cockpit-sm shrink-0">{note}</span>}
-      {year !== undefined && !note && (
+      {year !== undefined && (
         <span className="text-slate-500 ml-auto text-cockpit-sm">{year}</span>
       )}
     </div>

@@ -4,11 +4,9 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { CockpitFallback } from './CockpitFallback';
 import { KeyboardHintChip } from './KeyboardHintChip';
 import { DistanceChip } from '@/ui';
-import { useT } from '@/context/useLocale';
+import { useLocale, useT } from '@/context/useLocale';
 import {
-  LIVE_TLE_VALIDITY_MS,
   SpaceView,
-  useOrbitalPopulation,
   useRevealSequence,
   type SelectedBody,
   type SpaceViewHandle,
@@ -19,19 +17,18 @@ import {
   Sidebar,
   SIDEBAR_COLLAPSED_PX,
   SIDEBAR_EXPANDED_PX,
-  type ReportPanelKey,
   type SidebarPanelKey,
 } from './sidebar';
 import {
-  AnalysisModal,
   OffscreenFullReport,
+  SignRevealModal,
   useExportHandlers,
 } from '@/features/natal-report';
 import { LegendPanel } from './LegendPanel';
 import { useMobileLayout } from '@/ui/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
-import type { CelestialReading } from '@/features/astronomy';
+import { loreName, loreShortName, type CelestialReading } from '@/features/astronomy';
 import {
   formatNatalShareText,
   useNatalForm,
@@ -43,46 +40,26 @@ import { CockpitDisplayProvider } from '@/context/CockpitDisplayContext';
 export function Cockpit() {
   const isMobile = useMobileLayout();
   const t = useT();
+  const { locale } = useLocale();
 
   const [reading, setReading] = useState<CelestialReading | null>(null);
 
   // The natal form lives at the top of the sidebar (always visible).
-  // Only floating panels (body picker, legend) live in activePanel now —
-  // analysis content moved to a centered modal opened from the sidebar CTA.
+  // Only floating panels (body picker, legend) live in activePanel — the
+  // true-sign reveal is a centered modal shared by desktop and mobile.
   const [activePanel, setActivePanel] = useState<SidebarPanelKey | null>(null);
   const [analysisOpen, setAnalysisOpen] = useState(false);
-  const [analysisTab, setAnalysisTab] = useState<ReportPanelKey>('resume');
   const [analysisAttention, setAnalysisAttention] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [showGuides, setShowGuides] = useState(false);
   const [bodyLabelsEnabled, setBodyLabelsEnabled] = useState(false);
   const [satellitesEnabled, setSatellitesEnabled] = useState(false);
-  const [constellationOverlayEnabled, setConstellationOverlayEnabled] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
   const [selectedBody, setSelectedBody] = useState<SelectedBody | null>(null);
   const [sideViewActive, setSideViewActive] = useState(false);
   const [mobileActiveTab, setMobileActiveTab] = useState<MobileTabKey | null>(null);
   const [distanceLabel, setDistanceLabel] = useState<string | null>(null);
-
-  const {
-    satellites: orbitalSatellites,
-    status: orbitalStatus,
-    retry: retryOrbital,
-  } = useOrbitalPopulation(constellationOverlayEnabled);
-
-  // Live overlay availability — Celestrak TLEs only span ~2 weeks around
-  // their epoch. When the natal date wanders far from now, gate the toggle.
-  // nowMs is sampled at mount; the 2-week threshold absorbs session drift.
-  const [nowMs] = useState(() => Date.now());
-  const orbitalAvailable =
-    reading == null ||
-    Math.abs(reading.input.date.getTime() - nowMs) < LIVE_TLE_VALIDITY_MS;
-
-  // Derived: user intent gated by data validity. Avoids a setState-in-effect
-  // round-trip — the user toggle keeps its intent, but downstream consumers
-  // see the effective state at render time.
-  const constellationOverlayActive = constellationOverlayEnabled && orbitalAvailable;
 
   const {
     date,
@@ -123,11 +100,7 @@ export function Cockpit() {
     setBodyLabelsEnabled,
   });
 
-  /** Open the analysis modal on a given tab (defaults to 'resume'). */
-  const openAnalysis = useCallback((tab: ReportPanelKey = 'resume') => {
-    setAnalysisTab(tab);
-    setAnalysisOpen(true);
-  }, []);
+  const openAnalysis = useCallback(() => setAnalysisOpen(true), []);
 
   const togglePanel = useCallback(
     (key: SidebarPanelKey) =>
@@ -163,11 +136,6 @@ export function Cockpit() {
   const flyToSun = useCallback(() => spaceViewRef.current?.flyToSun(), []);
   const flyToMoon = useCallback(() => spaceViewRef.current?.flyToMoon(), []);
   const flyToEarth = useCallback(() => spaceViewRef.current?.flyToEarth(), []);
-  const openSummary = useCallback(() => openAnalysis('resume'), [openAnalysis]);
-  const handleOpenAnalysis = useCallback(
-    () => openAnalysis(),
-    [openAnalysis],
-  );
   const handleRevealFromModal = useCallback(() => {
     closeAnalysis();
     revealConstellation();
@@ -186,9 +154,10 @@ export function Cockpit() {
     const isFirstCalc = !hasCalculatedRef.current;
     hasCalculatedRef.current = true;
     setReading(r);
-    // Pulse the Analyse CTA so the user knows fresh data is ready, without
-    // pulling them into the modal — they open it on their own terms.
+    // The answer is what people came for: show it right away. The CTA
+    // pulse stays so they can find it again after closing.
     setAnalysisAttention((k) => k + 1);
+    setAnalysisOpen(true);
     if (!isFirstCalc) return;
     // First calc: keep the sky uncluttered but reward curiosity by lighting
     // up the constellation patterns (coupled with body labels in the scene
@@ -196,7 +165,6 @@ export function Cockpit() {
     setShowGuides(false);
     setBodyLabelsEnabled(true);
     setSatellitesEnabled(false);
-    setConstellationOverlayEnabled(false);
     setActivePanel(null);
   }, []);
 
@@ -241,15 +209,6 @@ export function Cockpit() {
   );
   const toggleSideView = useCallback(() => setSideViewActive((v) => !v), []);
 
-  const toggleConstellationOverlay = useCallback(() => {
-    if (orbitalStatus === 'error') {
-      retryOrbital();
-      setConstellationOverlayEnabled((v) => v || true);
-      return;
-    }
-    setConstellationOverlayEnabled((v) => !v);
-  }, [orbitalStatus, retryOrbital]);
-
   const hasSelectedStar = selectedBody?.kind === 'star';
 
   const spaceView = (
@@ -260,8 +219,6 @@ export function Cockpit() {
         showGuides={showGuides}
         showBodyLabels={bodyLabelsEnabled}
         showSatellites={satellitesEnabled}
-        orbitalSatellites={constellationOverlayActive ? orbitalSatellites : []}
-        constellationMode="modern"
         liveLatitude={city.lat}
         liveLongitude={city.lon}
         markerLatitude={reading?.input.latitude ?? city.lat}
@@ -282,18 +239,27 @@ export function Cockpit() {
     toggleGuides,
     satellitesEnabled,
     toggleSatellites,
-    constellationOverlayEnabled,
-    toggleConstellationOverlay,
-    orbitalAvailable,
-    orbitalStatus,
     sideViewActive,
     toggleSideView,
     hasSelectedStar,
   };
 
+  const signLabel = reading ? loreName(reading.trueConstellation, locale) : null;
+
   const offscreenReport = reading ? (
     <OffscreenFullReport ref={fullReportRef} reading={reading} />
   ) : null;
+
+  const signRevealModal = (
+    <SignRevealModal
+      open={analysisOpen}
+      onClose={closeAnalysis}
+      reading={reading}
+      onRevealConstellation={handleRevealFromModal}
+      onShare={handleShareLink}
+      shareCopied={shareCopied}
+    />
+  );
 
   if (isMobile) {
     return (
@@ -316,7 +282,8 @@ export function Cockpit() {
           onFlySun={flyToSun}
           onFlyMoon={flyToMoon}
           onFlyEarth={flyToEarth}
-          onRevealConstellation={revealConstellation}
+          onOpenSign={openAnalysis}
+          signLabel={reading ? loreShortName(reading.trueConstellation, locale) : null}
           activeTab={mobileActiveTab}
           onActiveTabChange={setMobileActiveTab}
           analysisAttention={analysisAttention}
@@ -332,6 +299,7 @@ export function Cockpit() {
         >
           {spaceView}
         </MobileCockpit>
+        {signRevealModal}
         {offscreenReport}
       </CockpitDisplayProvider>
     );
@@ -380,7 +348,7 @@ export function Cockpit() {
           reading={reading}
           observerLat={city.lat}
           observerLon={city.lon}
-          onOpenSummary={openSummary}
+          onOpenSummary={openAnalysis}
         />
       </div>
 
@@ -392,7 +360,7 @@ export function Cockpit() {
         onTogglePanel={togglePanel}
         analysisOpen={analysisOpen}
         analysisAttention={analysisAttention}
-        onOpenAnalysis={handleOpenAnalysis}
+        onOpenAnalysis={openAnalysis}
         date={date}
         time={time}
         city={city}
@@ -404,6 +372,7 @@ export function Cockpit() {
         onRecordSearch={recordSearch}
         onRemoveSearch={removeSearch}
         hasReading={!!reading}
+        signLabel={signLabel}
         onFlySun={flyToSun}
         onFlyMoon={flyToMoon}
         onFlyEarth={flyToEarth}
@@ -417,19 +386,6 @@ export function Cockpit() {
         onExportPdf={handleExportPdf}
         exportingPdf={exportingPdf}
         canExportReport={!!reading}
-      />
-
-      {/* === ANALYSIS MODAL — tabs: resume / carte / lecture / donnees === */}
-      <AnalysisModal
-        open={analysisOpen}
-        activeTab={analysisTab}
-        onActiveTabChange={setAnalysisTab}
-        onClose={closeAnalysis}
-        reading={reading}
-        labelsEnabled={bodyLabelsEnabled}
-        onToggleLabels={toggleBodyLabels}
-        onRevealConstellation={handleRevealFromModal}
-        satellitesEnabled={satellitesEnabled}
       />
 
       {/* === FLOATING HUD CARDS — glassmorphism overlays above the sky === */}
@@ -454,6 +410,7 @@ export function Cockpit() {
       </AnimatePresence>
 
     </div>
+    {signRevealModal}
     {offscreenReport}
     </CockpitDisplayProvider>
   );

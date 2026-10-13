@@ -46,6 +46,7 @@ export {
 export {
   CONSTELLATION_LORE,
   loreName,
+  loreShortName,
   lorePoetic,
 } from './constellationLore';
 

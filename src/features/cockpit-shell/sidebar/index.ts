@@ -11,4 +11,4 @@ export {
   SidebarSection,
 } from './SidebarSection';
 export { SystemDock } from './SystemDock';
-export type { ReportPanelKey, SidebarPanelKey } from './types';
+export type { SidebarPanelKey } from './types';

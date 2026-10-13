@@ -1,15 +1,18 @@
 import { useId, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Clock, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { Field, Input, cn } from '@/ui';
-import { computeReading, type CelestialReading } from '@/features/astronomy';
+import type { CelestialReading } from '@/features/astronomy';
 import { computeReadingFromForm } from './computeReadingFromForm';
 import {
   signatureOf,
   type SearchHistoryEntry,
 } from './useSearchHistory';
 import { useT } from '@/context/useLocale';
+
+/** Recent searches shown under the form — older ones stay stored. */
+const VISIBLE_HISTORY = 3;
 
 const DEFAULT_FORM_CLASS =
   'shrink-0 px-3 py-2.5 space-y-2 border-b border-border-hud-faint';
@@ -30,22 +33,8 @@ interface CoordinatesFormProps {
   onRemoveHistory?: (signature: string) => void;
 }
 
-function formatTodayDate(now: Date): string {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function formatNowTime(now: Date): string {
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
-  return `${hh}:${mm}`;
-}
-
 /**
- * Birth coordinates form (date · time · city) plus a "today" shortcut and
- * the primary CTA. Shared between the desktop sidebar and the mobile
+ * Birth coordinates form (date · time · city) plus the primary CTA. Shared between the desktop sidebar and the mobile
  * coordinates modal — the only thing that varies is the outer wrapper
  * styling, controlled via `className`.
  */
@@ -75,24 +64,6 @@ export function CoordinatesForm({
     setComputing(false);
   };
 
-  const handleJumpToNow = () => {
-    const now = new Date();
-    const nowDate = formatTodayDate(now);
-    const nowTime = formatNowTime(now);
-    onDateChange(nowDate);
-    onTimeChange(nowTime);
-    // "Aujourd'hui" bypasses the wall-clock-in-tz translation: we want the
-    // actual current instant, so we feed `now` straight into computeReading.
-    onJump(computeReading({
-      date: now,
-      latitude: city.lat,
-      longitude: city.lon,
-      placeLabel: city.label,
-      timezone: city.timezone,
-    }));
-    onRecordHistory?.({ date: nowDate, time: nowTime, city });
-  };
-
   const handleRestore = (entry: SearchHistoryEntry) => {
     onDateChange(entry.date);
     onTimeChange(entry.time);
@@ -109,27 +80,6 @@ export function CoordinatesForm({
       className={cn(className ?? DEFAULT_FORM_CLASS)}
       aria-label={t.natalForm.ariaLabel}
     >
-      <div className="flex justify-end pb-0.5">
-        <button
-          type="button"
-          onClick={handleJumpToNow}
-          aria-label={t.natalForm.todayAriaLabel}
-          className="cockpit-focus group inline-flex items-center gap-1
-                     px-1.5 py-1 rounded
-                     text-cockpit-xs tracking-cockpit-label uppercase
-                     text-violet-300/75 hover:text-violet-100
-                     hover:bg-violet-500/8
-                     transition-colors"
-        >
-          <Clock
-            className="size-3 transition-transform group-hover:rotate-12"
-            strokeWidth={1.5}
-            aria-hidden
-          />
-          {t.natalForm.todayLabel}
-        </button>
-      </div>
-
       <div className="grid grid-cols-2 gap-2 items-end">
         <Field label={t.natalForm.dateLabel} htmlFor={dateId}>
           <Input
@@ -156,12 +106,6 @@ export function CoordinatesForm({
         <CityAutocomplete value={city} onSelect={onCityChange} inputId={cityId} />
       </Field>
 
-      <div className="cockpit-input w-full text-cockpit-md flex items-center justify-between gap-1">
-        <span>φ {city.lat.toFixed(2)}°</span>
-        <span className="text-slate-600">·</span>
-        <span>λ {city.lon.toFixed(2)}°</span>
-      </div>
-
       <motion.button
         type="submit"
         disabled={computing}
@@ -182,7 +126,7 @@ export function CoordinatesForm({
 
       {history && history.length > 0 && (
         <SearchHistoryList
-          entries={history}
+          entries={history.slice(0, VISIBLE_HISTORY)}
           onRestore={handleRestore}
           onRemove={onRemoveHistory}
         />

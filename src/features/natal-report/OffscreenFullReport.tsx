@@ -1,9 +1,9 @@
 import { forwardRef } from 'react';
 import type { CelestialReading } from '@/features/astronomy';
-import { FullReport } from './RightPanel';
+import { SignReveal } from './SignReveal';
 
 /**
- * Off-screen mount of the full report. Positioned far off the viewport so
+ * Off-screen mount of the true-sign card. Positioned far off the viewport so
  * `html2canvas-pro` can rasterise it for the PDF export without ever painting
  * to the user's screen. The ref is what `useExportHandlers` reads.
  */
@@ -18,7 +18,9 @@ export const OffscreenFullReport = forwardRef<
                  bg-surface-raised text-slate-200"
       ref={ref}
     >
-      <FullReport reading={reading} />
+      <div className="px-5 py-5">
+        <SignReveal reading={reading} />
+      </div>
     </div>
   );
 });

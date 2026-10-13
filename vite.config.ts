@@ -16,7 +16,6 @@ import { VitePWA } from 'vite-plugin-pwa'
  * point of CSP, so we compute the hashes at build time instead.
  *
  * Sources allowed:
- *   - celestrak.org   — orbital TLEs
  *   - nominatim       — geocoding
  *   - earthdata.nasa  — Cesium imagery (NASA GIBS)
  *   - fonts.gstatic   — JetBrains Mono WOFF
@@ -54,7 +53,7 @@ function cspMetaTag(): Plugin {
       // requirement, add it to a Netlify _headers / netlify.toml file.
       const csp = [
         "default-src 'self'",
-        "connect-src 'self' https://celestrak.org https://*.celestrak.org https://nominatim.openstreetmap.org https://gibs.earthdata.nasa.gov https://*.earthdata.nasa.gov",
+        "connect-src 'self' https://nominatim.openstreetmap.org https://gibs.earthdata.nasa.gov https://*.earthdata.nasa.gov",
         "img-src 'self' data: blob: https://gibs.earthdata.nasa.gov https://*.earthdata.nasa.gov",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",

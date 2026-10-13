@@ -159,6 +159,14 @@ export function loreName(c: IauConstellation, locale: Locale): string {
   return locale === 'en' ? l.en : l.fr;
 }
 
+/**
+ * First name only for constellations with two common names
+ * ("Ophiuchus / Serpentaire" → "Ophiuchus") — for tabs and diagrams.
+ */
+export function loreShortName(c: IauConstellation, locale: Locale): string {
+  return loreName(c, locale).split(' / ')[0];
+}
+
 /** Locale-aware poetic blurb. */
 export function lorePoetic(c: IauConstellation, locale: Locale): string {
   const l = CONSTELLATION_LORE[c];

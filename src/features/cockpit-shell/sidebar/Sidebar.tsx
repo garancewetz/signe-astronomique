@@ -2,13 +2,9 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import {
-  AlertTriangle,
-  Axis3d,
+  ChevronDown,
   Globe2,
-  Network,
-  RefreshCcw,
   Satellite,
-  Sparkles,
   Tag,
 } from 'lucide-react';
 import {
@@ -22,6 +18,8 @@ import { type CelestialReading } from '@/features/astronomy';
 import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 import { useT } from '@/context/useLocale';
 import { SidebarHeader } from './SidebarHeader';
+import { SignResult } from './SignResult';
+import { CollapsedCameraRail, ExpandedCameraSection } from './SidebarCamera';
 import { SystemDock } from './SystemDock';
 import type { SidebarPanelKey } from './types';
 
@@ -57,6 +55,8 @@ interface SidebarProps {
   onRemoveSearch: (signature: string) => void;
 
   hasReading: boolean;
+  /** Localized true sign once a reading exists — shown as the result card. */
+  signLabel: string | null;
 
   // Camera fly-to actions — destinations rail above the layer grid.
   onFlySun: () => void;
@@ -107,6 +107,7 @@ export function Sidebar(props: SidebarProps) {
     onRecordSearch,
     onRemoveSearch,
     hasReading,
+    signLabel,
     onFlySun,
     onFlyMoon,
     onFlyEarth,
@@ -129,14 +130,8 @@ export function Sidebar(props: SidebarProps) {
     toggleGuides,
     satellitesEnabled,
     toggleSatellites,
-    constellationOverlayEnabled,
-    toggleConstellationOverlay,
-    orbitalAvailable,
-    orbitalStatus,
-    sideViewActive,
-    toggleSideView,
-    hasSelectedStar,
   } = useCockpitDisplay();
+  const [exploreOpen, setExploreOpen] = useState(false);
 
   // Pulse the Analyse CTA every time a new reading is computed — both for the
   // initial unlock and for subsequent recomputes (so the user notices fresh
@@ -156,21 +151,6 @@ export function Sidebar(props: SidebarProps) {
     return () => window.clearTimeout(id);
   }, [unlocking]);
 
-  const orbitalAriaLabel = orbitalAvailable
-    ? orbitalStatus === 'loading'
-      ? t.sidebar.layers.orbitalAria.loading
-      : orbitalStatus === 'error'
-        ? t.sidebar.layers.orbitalAria.error
-        : t.sidebar.layers.orbitalAria.live
-    : t.sidebar.layers.orbitalAria.unavailable;
-
-  const orbitalStatusDot: LayerDef['status'] =
-    orbitalStatus === 'loading'
-      ? 'loading'
-      : orbitalStatus === 'error'
-        ? 'error'
-        : null;
-
   const layers: LayerDef[] = [
     {
       key: 'labels',
@@ -187,30 +167,11 @@ export function Sidebar(props: SidebarProps) {
       onClick: toggleGuides,
     },
     {
-      key: 'orbital',
-      label: t.sidebar.layers.orbital,
-      icon: <Network className="size-3.5" strokeWidth={1.4} aria-hidden />,
-      active: constellationOverlayEnabled,
-      disabled: !orbitalAvailable,
-      ariaLabel: orbitalAriaLabel,
-      onClick: toggleConstellationOverlay,
-      status: orbitalStatusDot,
-    },
-    {
       key: 'relics',
       label: t.sidebar.layers.relics,
       icon: <Satellite className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: satellitesEnabled,
       onClick: toggleSatellites,
-    },
-    {
-      key: 'side-view',
-      label: hasSelectedStar ? t.sidebar.layers.sideView : t.sidebar.layers.sideViewLocked,
-      icon: <Axis3d className="size-3.5" strokeWidth={1.4} aria-hidden />,
-      active: sideViewActive,
-      disabled: !hasSelectedStar,
-      onClick: toggleSideView,
-      fullWidth: true,
     },
   ];
 
@@ -245,38 +206,62 @@ export function Sidebar(props: SidebarProps) {
         />
       )}
 
-      <AnalysisCTA
-        collapsed={collapsed}
-        active={analysisOpen}
-        locked={!hasReading}
-        unlocking={unlocking}
-        onClick={onOpenAnalysis}
-      />
+      {hasReading && signLabel && (
+        <SignResult
+          collapsed={collapsed}
+          signLabel={signLabel}
+          active={analysisOpen}
+          unlocking={unlocking}
+          onOpen={onOpenAnalysis}
+          onShare={onShareLink}
+          shareCopied={shareCopied}
+          canShare={canShareLink}
+        />
+      )}
 
       <div
         className="flex-1 min-h-0 overflow-y-auto overscroll-contain
                    [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
         {collapsed ? (
-          <CollapsedCameraRail
-            onFlySun={onFlySun}
-            onFlyMoon={onFlyMoon}
-            onFlyEarth={onFlyEarth}
-          />
+          <>
+            <CollapsedCameraRail
+              onFlySun={onFlySun}
+              onFlyMoon={onFlyMoon}
+              onFlyEarth={onFlyEarth}
+            />
+            <CollapsedLayerRail layers={layers} />
+          </>
         ) : (
-          <ExpandedCameraSection
-            onFlySun={onFlySun}
-            onFlyMoon={onFlyMoon}
-            onFlyEarth={onFlyEarth}
-          />
-        )}
-        {collapsed ? (
-          <CollapsedLayerRail layers={layers} />
-        ) : (
-          <ExpandedLayerGrid layers={layers} />
-        )}
-        {!collapsed && orbitalStatus === 'error' && (
-          <OrbitalErrorRibbon onRetry={toggleConstellationOverlay} />
+          <section className="px-3 pt-2 pb-2">
+            {/* Disclosure header, not an action — plain button by design. */}
+            <button
+              type="button"
+              onClick={() => setExploreOpen((v) => !v)}
+              aria-expanded={exploreOpen}
+              aria-controls="sidebar-explore"
+              className="cockpit-focus w-full flex items-center justify-between
+                         px-1 py-1.5 rounded text-cockpit-xs tracking-cockpit-label
+                         uppercase text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              {t.sidebar.exploreSectionLabel}
+              <ChevronDown
+                className={cn('size-3.5 transition-transform', exploreOpen && 'rotate-180')}
+                strokeWidth={1.6}
+                aria-hidden
+              />
+            </button>
+            {exploreOpen && (
+              <div id="sidebar-explore" className="-mx-3 pt-1">
+                <ExpandedCameraSection
+                  onFlySun={onFlySun}
+                  onFlyMoon={onFlyMoon}
+                  onFlyEarth={onFlyEarth}
+                />
+                <ExpandedLayerGrid layers={layers} />
+              </div>
+            )}
+          </section>
         )}
       </div>
 
@@ -286,9 +271,6 @@ export function Sidebar(props: SidebarProps) {
         onToggleLegend={() => onTogglePanel('legend')}
         fullscreenActive={fullscreenActive}
         onToggleFullscreen={onToggleFullscreen}
-        onShareLink={onShareLink}
-        shareCopied={shareCopied}
-        canShareLink={canShareLink}
         onExportView={onExportView}
         exportingView={exportingView}
         onExportPdf={onExportPdf}
@@ -296,116 +278,6 @@ export function Sidebar(props: SidebarProps) {
         canExportReport={canExportReport}
       />
     </motion.aside>
-  );
-}
-
-/* ── CTA — single entry point that opens the analysis modal ─────────────── */
-
-interface AnalysisCTAProps {
-  collapsed: boolean;
-  active: boolean;
-  locked: boolean;
-  unlocking: boolean;
-  onClick: () => void;
-}
-
-function AnalysisCTA({
-  collapsed,
-  active,
-  locked,
-  unlocking,
-  onClick,
-}: AnalysisCTAProps) {
-  const t = useT();
-  const ariaLabel = locked
-    ? t.analysisCta.lockedAriaLabel
-    : t.analysisCta.openAriaLabel;
-
-  // "Ready" = a reading exists and the modal is closed. That's the state we
-  // want to advertise visually so the user notices fresh data without us
-  // auto-opening the modal.
-  const ready = !locked && !active;
-
-  if (collapsed) {
-    return (
-      <div className="flex flex-col items-center py-2">
-        <TooltipWrap
-          text={locked ? t.analysisCta.tooltipLocked : t.analysisCta.tooltipReady}
-          placement="right"
-        >
-          <IconButton
-            size="xl"
-            onClick={onClick}
-            disabled={locked}
-            active={active}
-            aria-label={ariaLabel}
-            className={cn(
-              locked && 'animate-rail-breathe',
-              unlocking && !locked && 'animate-rail-unlock',
-              ready &&
-                !unlocking &&
-                'animate-cta-glow border-violet-400/55 bg-violet-500/12 text-violet-50',
-            )}
-          >
-            <Sparkles className="size-4.5" strokeWidth={1.4} aria-hidden />
-          </IconButton>
-        </TooltipWrap>
-      </div>
-    );
-  }
-
-  return (
-    <div className="px-3 pt-2 pb-3">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={locked}
-        aria-label={ariaLabel}
-        aria-pressed={active}
-        className={cn(
-          'cockpit-focus group w-full min-w-0 overflow-hidden',
-          'flex items-center gap-2.5 rounded-md border',
-          'px-2.5 py-2 transition-colors',
-          'text-cockpit-sm tracking-cockpit-caps font-medium',
-          'disabled:cursor-not-allowed',
-          active
-            ? 'border-cyan-300/45 bg-cyan-400/8 text-white'
-            : locked
-              ? 'border-white/8 bg-white/2 text-slate-400 animate-rail-breathe'
-              : 'border-violet-400/45 bg-violet-500/10 text-violet-50 hover:bg-violet-500/15 hover:border-violet-300/60',
-          unlocking && !locked && 'animate-rail-unlock',
-        )}
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            'grid place-items-center size-7 rounded transition-colors shrink-0',
-            active
-              ? 'bg-cyan-400/15 text-cyan-100'
-              : locked
-                ? 'bg-white/3 text-slate-500'
-                : 'bg-violet-400/20 text-violet-100 group-hover:text-white',
-            ready && !unlocking && 'animate-cta-glow',
-          )}
-        >
-          <Sparkles className="size-4" strokeWidth={1.4} />
-        </span>
-        <span className="flex-1 min-w-0 truncate text-left">{t.analysisCta.label}</span>
-        <span
-          aria-hidden="true"
-          className={cn(
-            'shrink-0 text-cockpit-xs tracking-cockpit-label normal-case',
-            active
-              ? 'text-cyan-200'
-              : locked
-                ? 'text-slate-600'
-                : 'text-violet-200',
-          )}
-        >
-          {locked ? '✕' : '→'}
-        </span>
-      </button>
-    </div>
   );
 }
 
@@ -419,10 +291,6 @@ interface LayerDef {
   disabled?: boolean;
   ariaLabel?: string;
   onClick: () => void;
-  /** Spans both columns of the grid — used for the gated side-view chip. */
-  fullWidth?: boolean;
-  /** Optional status dot ('loading' | 'error' | null) — used by the orbital layer. */
-  status?: 'loading' | 'error' | null;
 }
 
 function ExpandedLayerGrid({ layers }: { layers: LayerDef[] }) {
@@ -451,8 +319,6 @@ function LayerChip({
   disabled = false,
   ariaLabel,
   onClick,
-  fullWidth = false,
-  status,
 }: Omit<LayerDef, 'key'>) {
   return (
     <button
@@ -466,7 +332,6 @@ function LayerChip({
         'flex items-center gap-2 rounded-md border',
         'px-2 py-1.5 transition-colors',
         'disabled:cursor-not-allowed disabled:opacity-40',
-        fullWidth && 'col-span-2',
         active
           ? 'border-cyan-300/40 bg-cyan-400/8 text-white'
           : 'border-white/8 bg-white/3 text-slate-200 hover:bg-white/6 hover:border-white/15 hover:text-white',
@@ -491,178 +356,7 @@ function LayerChip({
       >
         {label}
       </span>
-      {status && (
-        <span
-          aria-hidden="true"
-          className={cn(
-            'shrink-0 size-1.5 rounded-full',
-            status === 'loading'
-              ? 'bg-amber-300 animate-rail-breathe'
-              : 'bg-rose-400',
-          )}
-        />
-      )}
     </button>
-  );
-}
-
-/* ── Camera dock — quick fly-to (Sun / Moon / Earth) ──────────────────── */
-
-interface CameraDockProps {
-  onFlySun: () => void;
-  onFlyMoon: () => void;
-  onFlyEarth: () => void;
-}
-
-interface CameraDestination {
-  key: 'sun' | 'moon' | 'earth';
-  glyph: string;
-  glyphClass: string;
-  label: string;
-  tooltip: string;
-  ariaLabel: string;
-}
-
-function useCameraDestinations(): readonly CameraDestination[] {
-  const t = useT();
-  return [
-    {
-      key: 'sun',
-      glyph: '☀',
-      glyphClass: 'text-glyph-sun',
-      label: t.sidebar.cameraDestinations.sun.label,
-      tooltip: t.sidebar.cameraDestinations.sun.tooltip,
-      ariaLabel: t.sidebar.cameraDestinations.sun.ariaLabel,
-    },
-    {
-      key: 'moon',
-      glyph: '☾',
-      glyphClass: 'text-glyph-moon',
-      label: t.sidebar.cameraDestinations.moon.label,
-      tooltip: t.sidebar.cameraDestinations.moon.tooltip,
-      ariaLabel: t.sidebar.cameraDestinations.moon.ariaLabel,
-    },
-    {
-      key: 'earth',
-      glyph: '⊕',
-      glyphClass: 'text-glyph-earth',
-      label: t.sidebar.cameraDestinations.earth.label,
-      tooltip: t.sidebar.cameraDestinations.earth.tooltip,
-      ariaLabel: t.sidebar.cameraDestinations.earth.ariaLabel,
-    },
-  ];
-}
-
-function ExpandedCameraSection({ onFlySun, onFlyMoon, onFlyEarth }: CameraDockProps) {
-  const t = useT();
-  const destinations = useCameraDestinations();
-  const handlers = { sun: onFlySun, moon: onFlyMoon, earth: onFlyEarth };
-  return (
-    <section
-      aria-label={t.sidebar.cameraSectionAriaLabel}
-      className="px-3 pt-2 pb-2 border-b border-border-hud-faint"
-    >
-      <div
-        className="px-1 pb-2 text-cockpit-xs tracking-cockpit-label uppercase
-                   text-slate-500"
-      >
-        {t.sidebar.cameraSectionLabel}
-      </div>
-      <div className="grid grid-cols-3 gap-1.5">
-        {destinations.map(({ key, glyph, glyphClass, tooltip, ariaLabel }) => (
-          <TooltipWrap key={key} text={tooltip} placement="bottom">
-            <IconButton
-              size="lg"
-              onClick={handlers[key]}
-              aria-label={ariaLabel}
-              className="w-full"
-            >
-              <span
-                aria-hidden="true"
-                className={cn('text-cockpit-glyph leading-none', glyphClass)}
-              >
-                {glyph}
-              </span>
-            </IconButton>
-          </TooltipWrap>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function CollapsedCameraRail({ onFlySun, onFlyMoon, onFlyEarth }: CameraDockProps) {
-  const t = useT();
-  const destinations = useCameraDestinations();
-  const handlers = { sun: onFlySun, moon: onFlyMoon, earth: onFlyEarth };
-  return (
-    <ul
-      role="list"
-      aria-label={t.sidebar.cameraSectionAriaLabel}
-      className="flex flex-col items-center gap-1 pt-2 pb-2 mb-1
-                 border-b border-border-hud-faint"
-    >
-      {destinations.map(({ key, glyph, glyphClass, tooltip, ariaLabel }) => (
-        <li key={key}>
-          <TooltipWrap text={tooltip} placement="right">
-            <IconButton
-              size="lg"
-              onClick={handlers[key]}
-              aria-label={ariaLabel}
-            >
-              <span
-                aria-hidden="true"
-                className={cn('text-cockpit-glyph leading-none', glyphClass)}
-              >
-                {glyph}
-              </span>
-            </IconButton>
-          </TooltipWrap>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/* ── Orbital error ribbon — visible when Celestrak fetch fails ──────────── */
-
-interface OrbitalErrorRibbonProps {
-  onRetry: () => void;
-}
-
-function OrbitalErrorRibbon({ onRetry }: OrbitalErrorRibbonProps) {
-  const t = useT();
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="mx-3 mt-2 mb-1 px-2.5 py-2 flex items-start gap-2
-                 rounded-md border border-rose-400/30 bg-rose-500/8
-                 text-cockpit-xs tracking-cockpit-tight text-rose-100"
-    >
-      <AlertTriangle
-        className="shrink-0 size-3.5 mt-px text-rose-300"
-        strokeWidth={1.6}
-        aria-hidden
-      />
-      <div className="flex-1 min-w-0 space-y-1">
-        <p className="leading-snug">{t.orbital.errorBody}</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          aria-label={t.orbital.retryAriaLabel}
-          className="cockpit-focus inline-flex items-center gap-1
-                     px-1.5 py-0.5 rounded
-                     text-cockpit-xs tracking-cockpit-label uppercase
-                     text-rose-100 hover:text-white
-                     border border-rose-400/40 hover:bg-rose-500/10
-                     transition-colors"
-        >
-          <RefreshCcw className="size-3" strokeWidth={1.6} aria-hidden />
-          {t.orbital.retryLabel}
-        </button>
-      </div>
-    </div>
   );
 }
 

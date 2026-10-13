@@ -23,7 +23,7 @@ export interface ExportHandlers {
 
 /**
  * Encapsulates the two exports: canvas-only PNG "view" (sky 3D only) and
- * the multi-page A4 PDF (sky cover + full report). Each flow has its own
+ * the two-page A4 PDF (sky cover + true-sign card). Each flow has its own
  * busy flag so the UI can disable the triggering button while a capture is
  * in flight.
  */
