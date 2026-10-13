@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
-const MOBILE_QUERY = '(max-width: 767px), (pointer: coarse) and (max-width: 1023px)';
+/** Mirrored by the welcome-card media query in index.html — keep in sync. */
+export const MOBILE_QUERY = '(max-width: 767px), (pointer: coarse) and (max-width: 1023px)';
 
 function readMatch(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
