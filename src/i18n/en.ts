@@ -28,8 +28,6 @@ export const en: Copy = {
 
   natalForm: {
     ariaLabel: 'Birth coordinates',
-    todayLabel: 'Today',
-    todayAriaLabel: 'Today — compute the current sky',
     dateLabel: 'DATE',
     timeLabel: 'TIME',
     placeLabel: 'BIRTHPLACE',
@@ -54,53 +52,38 @@ export const en: Copy = {
     nominatimLang: 'en',
   },
 
-  orbital: {
-    errorBody:
-      'Couldn’t reach Celestrak — the orbital population is unavailable.',
-    retryLabel: 'Retry',
-    retryAriaLabel: 'Retry loading the orbital population',
-  },
-
-  analysis: {
-    sectionLabel: 'REPORT',
-    title: 'ANALYSIS',
-    tablistAriaLabel: 'Analysis sections',
-    closeAriaLabel: 'Close analysis',
-    tabs: {
-      resume: { label: 'My sign', sublabel: 'Your birth sky' },
-      carte: { label: 'Chart', sublabel: 'Wheel of constellations' },
-      lecture: { label: 'Reading', sublabel: 'Understand your chart' },
-      donnees: { label: 'Data', sublabel: 'Raw astronomy' },
-    },
-    panelTitles: {
-      resume: 'MY SIGN',
-      carte: 'CHART',
-      lecture: 'READING',
-      donnees: 'DATA',
-    },
-    panelSubtitles: {
-      resume: 'YOUR BIRTH SKY',
-      carte: 'WHEEL OF CONSTELLATIONS',
-      lecture: 'UNDERSTAND YOUR CHART',
-      donnees: 'RAW ASTRONOMY',
-    },
-    panelCloseAriaLabel: (title: string): string =>
-      `Close the ${title.toLowerCase()} panel`,
+  signReveal: {
+    eyebrow: 'YOUR TRUE SIGN',
+    closeAriaLabel: 'Close',
+    horoscopeSays: 'Your horoscope says',
+    skySays: 'The real sky says',
+    whatTitle: 'What is your sign?',
+    whyTitle: 'And your horoscope?',
+    alignmentBody: (sign: string): string =>
+      `On the day you were born, seen from Earth, the Sun was in front of the **${sign}** constellation. That’s all a sign is: the constellation behind the Sun.`,
+    alignmentAriaLabel: (sign: string): string =>
+      `Diagram: Earth, the Sun and the ${sign} constellation are lined up.`,
+    sun: 'Sun',
+    earth: 'Earth',
+    sameTitle: 'Horoscope and sky agree',
+    sameBody: (date: string, sign: string): string =>
+      `Horoscope dates were set 2,000\u00a0years ago and the sky has drifted by about a month since. Lucky you: ${date} falls where both still say **${sign}**.`,
+    differBody: (date: string, horoscope: string, sky: string): string =>
+      `Horoscope dates were set 2,000\u00a0years ago. Since then, Earth’s axis has slowly wobbled (precession) and the sky has drifted by about a month: on ${date}, the Sun is no longer in front of ${horoscope}, but **${sky}**.`,
+    ophiuchus:
+      '**Ophiuchus** is the forgotten 13th sign: the Sun crosses it every year, but horoscopes only kept 12.',
+    revealCta: (sign: string): string => `See ${sign} in the sky`,
   },
 
   analysisCta: {
-    openAriaLabel: 'Open analysis',
-    lockedAriaLabel: 'Analysis — locked · enter your coordinates',
-    tooltipReady: 'Analysis',
-    tooltipLocked: 'Analysis · locked',
-    label: 'Analysis',
+    openAriaLabel: 'See my true sign',
   },
 
   mobile: {
     coordinatesModal: {
       ariaLabel: 'My birth coordinates',
-      sectionLabel: 'Console',
-      title: 'My coordinates',
+      sectionLabel: 'Your true sign',
+      title: 'Your birth',
       closeAriaLabel: 'Close',
       editAriaLabel: 'Edit my birth coordinates',
     },
@@ -111,7 +94,7 @@ export const en: Copy = {
       legend: { label: 'Legend', sublabel: 'Symbols · colors · layers' },
       explore: { label: 'Useful links', sublabel: 'Sky maps · ephemerides' },
       share: {
-        label: 'Share this sky',
+        label: 'Share my sign',
         sublabelReady: 'Direct link — SMS, WhatsApp, mail…',
         sublabelCopied: 'Link copied to clipboard!',
         sublabelLocked: 'Compute your sky first',
@@ -119,7 +102,7 @@ export const en: Copy = {
       exportView: { label: 'Export view', sublabel: '3D sky PNG' },
       exportReport: {
         label: 'Export report',
-        sublabelReady: 'A4 PDF — view + full chart',
+        sublabelReady: 'PDF — the sky + your true sign',
         sublabelLocked: 'Compute your sky first',
       },
       language: { label: 'Language', sublabel: 'Français · English' },
@@ -130,47 +113,28 @@ export const en: Copy = {
     },
     legend: { ariaLabel: 'Legend' },
     tabs: {
-      display: 'Display',
-      navigation: 'Navigation',
-      analysis: 'Analysis',
+      coords: 'My birth',
+      analysis: 'My sign',
+      explore: 'Explore',
     },
     sheet: {
       home: {
         eyebrow: 'Console',
         ctaCalculate: 'COMPUTE MY SIGN',
         hint:
-          'Pick a section in the bottom bar — display, navigation, or analysis once your sky is computed.',
+          'Enter your birth date, time and place to discover your true sign.',
       },
       display: {
-        eyebrow: 'Display',
+        eyebrow: 'Show',
         labels: { label: 'Names and lines', sublabel: 'Bodies · constellations' },
         guides: { label: 'Sky guides', sublabel: 'Axis · equator · ecliptic' },
-        orbital: {
-          label: 'Orbital population',
-          sublabelUnavailable: 'Unavailable for this date',
-          sublabelLoading: 'Loading Celestrak…',
-          sublabelError: 'Retry',
-          sublabelLive: 'Real time · Celestrak',
-        },
         relics: { label: 'Orbital relics', sublabel: 'Historic satellites' },
-        sideView: {
-          label: 'Axial perspective',
-          sublabelReady: 'Side view · constellation',
-          sublabelLocked: 'Select a star',
-        },
       },
       navigation: {
-        eyebrow: 'Navigation',
-        sun: { label: 'Sun', sublabel: 'Center the camera' },
-        moon: { label: 'Moon', sublabel: 'Center the camera' },
-        earth: { label: 'Earth', sublabel: 'Default orbital view' },
-      },
-      analysis: {
-        eyebrow: 'Analysis',
-        resume: { label: 'My sign', sublabel: 'Your birth sky' },
-        carte: { label: 'Chart', sublabel: 'Wheel of constellations' },
-        lecture: { label: 'Reading', sublabel: 'Understand your chart' },
-        donnees: { label: 'Data', sublabel: 'Raw astronomy' },
+        eyebrow: 'Camera',
+        sun: { label: 'Sun' },
+        moon: { label: 'Moon' },
+        earth: { label: 'Earth' },
       },
     },
     bottomSheet: {
@@ -207,27 +171,6 @@ export const en: Copy = {
       'In Side view: arrows pan the camera, A/E are disabled.',
   },
 
-  radarWheel: {
-    emptyTitle: 'Empty astronomical zodiac wheel.',
-    emptyDescription:
-      'Radar wheel of the 13 IAU constellations, waiting for a computed natal chart.',
-    title: (sunName: string): string =>
-      `Astronomical zodiac wheel — Sun in ${sunName}.`,
-    description: (args: {
-      dateLabel: string;
-      place: string;
-      sunName: string;
-      ascendantDeg: number;
-    }): string =>
-      `Position of the Sun, the Moon and the planets on ${args.dateLabel}${args.place ? `, ${args.place}` : ''}, ` +
-      `projected onto the 13 IAU constellations. Solar constellation: ${args.sunName}. ` +
-      `Ascendant at ${args.ascendantDeg.toFixed(1)}° of ecliptic longitude.`,
-    asc: 'ASC',
-    centerLabel: 'TC ECLIPTIC J2000',
-    localSuffix: 'LOCAL',
-    utcSuffix: 'UTC',
-  },
-
   sidebar: {
     expandTooltip: 'Expand the console',
     collapseTooltip: 'Collapse the console',
@@ -257,16 +200,14 @@ export const en: Copy = {
     layers: {
       labels: 'Names',
       guides: 'Guides',
-      orbital: 'Orbital',
-      orbitalAria: {
-        loading: 'Orbital population — loading Celestrak…',
-        error: 'Orbital population — retry',
-        live: 'Orbital population (real time)',
-        unavailable: 'Orbital population — unavailable for this date',
-      },
       relics: 'Relics',
-      sideView: 'Side view',
-      sideViewLocked: 'Side view · select a star',
+    },
+    exploreSectionLabel: 'Explore the sky',
+    result: {
+      eyebrow: 'Your true sign',
+      why: 'Why? →',
+      share: 'Share my sign',
+      shareCopied: 'Link copied!',
     },
   },
 
@@ -284,21 +225,15 @@ export const en: Copy = {
       tooltipEnter: 'Enter fullscreen',
       tooltipExit: 'Exit fullscreen',
     },
-    share: {
-      tooltipReady: 'Share a link to this sky',
-      tooltipCopied: 'Link copied!',
-      tooltipLocked: 'Compute your sky first to share it',
-      ariaLabel: 'Share a link to this sky',
-    },
     exportView: {
       tooltip: 'Save the current 3D view as a PNG image file',
       ariaLabel: 'Export the 3D view as a PNG image',
     },
     exportPdf: {
-      tooltipReady: 'Export the 3D view and full report as an A4 PDF',
+      tooltipReady: 'Download the PDF: the sky + your true sign',
       tooltipGenerating: 'Generating PDF…',
       tooltipLocked: 'Compute a natal chart first to export the PDF',
-      ariaLabel: 'Export the 3D view and full report as a PDF',
+      ariaLabel: 'Download the PDF of the sky and your true sign',
     },
   },
 
@@ -420,174 +355,6 @@ export const en: Copy = {
     ],
   },
 
-  resumeBody: {
-    toggleLabelsHide: 'Hide constellations',
-    toggleLabelsShow: 'Show constellations',
-  },
-
-  birthHeader: {
-    eyebrow: 'NATAL CHART · REAL SKY AT BIRTH',
-    placeLabelFallback: 'Natal sky',
-    north: 'N',
-    south: 'S',
-    east: 'E',
-    west: 'W',
-  },
-
-  resumeCard: {
-    sectionLabel: 'YOUR SKY AT A GLANCE',
-    rows: {
-      trueSign: 'True sign (Sun)',
-      moon: 'Moon',
-      ascendant: 'Ascendant',
-      seasonMoment: 'Season · moment',
-    },
-    revealAriaLabel: 'See this constellation in the sky',
-    revealTooltip: 'See this constellation in the sky',
-  },
-
-  seasons: {
-    spring: 'Spring',
-    summer: 'Summer',
-    autumn: 'Autumn',
-    winter: 'Winter',
-  },
-
-  timeOfDay: {
-    morning: 'morning',
-    afternoon: 'afternoon',
-    evening: 'evening',
-    night: 'night',
-  },
-
-  ascendantCard: {
-    sectionLabel: '↑ ASCENDANT · EASTERN HORIZON',
-    lstLabel: 'LST',
-  },
-
-  howToRead: {
-    sectionLabel: 'HOW TO READ YOUR SKY CHART',
-    intro:
-      'What you see is the **real sky** as it was above the place, on the date and at the time of your birth — not a symbolic diagram.',
-    layersHintPrefix: 'Turn on the ',
-    layersHintEmphasis: 'Guides',
-    layersHintSuffix:
-      ' layer in the sidebar to see Earth’s rotation axis, the celestial equator (its projection on the dome) and the ecliptic — the Sun’s apparent path across the year. The thirteen zodiacal constellations are the ones that path crosses.',
-    boundaries:
-      'The boundaries drawn here are the ones set by the IAU in 1930 (E. Delporte), traced from star positions. They don’t form twelve equal slices: the Sun stays 45 days in Virgo, 19 in Ophiuchus, and only 6 in Scorpius. The astrological calendar smoothed that real geometry into twelve 30° slices.',
-  },
-
-  twoMotions: {
-    sectionLabel: 'TWO MOTIONS, TWO SIGNS',
-    solar: {
-      lead: 'Your ',
-      leadEmphasis: 'solar sign',
-      mid: ' depends on where the Sun sits in the zodiac. The Sun takes ',
-      midEmphasis: '~365 days',
-      mid2: ' to travel along the ecliptic; the astrological calendar carves it into ',
-      mid2Emphasis: '12 sectors of 30°',
-      tail:
-        ', roughly 30 days each. That’s why a date alone is enough to determine it.',
-    },
-    ascendant: {
-      lead: 'Your ',
-      leadEmphasis: 'ascendant',
-      mid: ', though, is the sign that was rising just above the eastern horizon at the precise moment of your birth. And Earth completes one full rotation every ',
-      midEmphasis: '24 h',
-      mid2: ': the 360° of the zodiac sweep past the horizon in a day, so a new sign roughly every ',
-      mid2Emphasis: '~2 h',
-      tail: '.',
-    },
-    summary: {
-      lead: 'Hence the asymmetry: Earth’s ',
-      leadEmphasis: 'annual revolution',
-      mid: ' around the Sun sets the solar sign; its ',
-      midEmphasis: 'daily rotation',
-      tail:
-        ' sets the ascendant. That’s also why your birthplace matters: the eastern horizon depends on latitude and longitude.',
-    },
-  },
-
-  planetTable: {
-    sectionLabel: 'PLANETARY POSITIONS · HOUSES',
-    columns: { body: 'BODY', constellation: 'CONSTELLATION', degree: 'DEG', house: 'HOUSE' },
-    footnote: 'Equal houses (approx.)',
-  },
-
-  astroInfoCard: {
-    sectionLabel: 'RAW ASTRONOMICAL DATA',
-    rows: {
-      lst: 'Local sidereal time',
-      julianDay: 'Julian day',
-      obliquity: 'Obliquity of the ecliptic',
-      precessionGap: 'Precession gap',
-    },
-    daysUnit: 'd',
-  },
-
-  notesCard: {
-    sectionLabel: 'YOUR SIGN: ASTROLOGICAL vs ASTRONOMICAL',
-    tropicalIntroLead: 'The astrological calendar places you under the sign ',
-    tropicalIntroTail:
-      ' — a 30° slice carved from the vernal point 2,000 years ago.',
-    realityLead: 'On that same date, the Sun was actually in the constellation ',
-    realityMid: ': that’s your true astronomical sign. The precession of the equinoxes has drifted the sky about ',
-    realityTail: ' days away from the zodiac’s historical anchor.',
-    matchedCase:
-      'For this date, the astrological calendar slice and the Sun’s IAU constellation coincide — a rare case. Elsewhere along the ecliptic, precession almost always separates them by a full sign.',
-    method:
-      'The computation rests on positional astronomy: Meeus ephemerides, IAU/Delporte boundaries, ICRS J2000 frame. No symbolic interpretation — just where the bodies were.',
-  },
-
-  scientificFooter: 'ICRS J2000 · MEEUS 1998 · DELPORTE 1930',
-
-  lockedStub: {
-    eyebrow: 'Locked preview',
-    sidebarHint: 'Enter your coordinates in the sidebar',
-    resume: {
-      headline: 'Your true sign, in the real sky',
-      taglineLead:
-        'The Sun almost never sat in the constellation your horoscope claims. Over 2,000 years, Earth’s axis has slid by about a full constellation — here is your ',
-      taglineEmphasis: 'precise astronomical sky',
-      taglineTail: ', drift included.',
-    },
-    carte: {
-      headline: 'The wheel of true constellations',
-      taglineLead: 'The Sun, Moon and planets projected onto the ',
-      taglineEmphasis: '13 constellations',
-      taglineTail:
-        ' they actually cross — boundaries set by the International Astronomical Union (1930), not the 12 equal slices of the zodiac.',
-    },
-    lecture: {
-      headline: 'Understand your chart',
-      taglineSun: 'Sun',
-      taglineSunDesc: ' (your true constellation), the ',
-      taglineMoon: 'Moon',
-      taglineMoonDesc: ' (its exact phase) and the ',
-      taglineAscendant: 'ascendant',
-      taglineAscendantDesc:
-        ' (the eastern horizon point that was rising at your birth) — their astronomical definition, and how to spot them in the sky.',
-      taglineLead: 'The ',
-    },
-    donnees: {
-      headline: 'Positional astronomy',
-      taglineLead: 'Right ascension, declination, sidereal time, obliquity of the ecliptic: the ',
-      taglineEmphasis: 'raw coordinates',
-      taglineTail:
-        ' of the sky at your birth — the celestial equivalent of latitude and longitude (Meeus 1998 · JPL · IAU 1930).',
-    },
-  },
-
-  relicsOracle: {
-    sectionLabel: 'ORACLE · ORBITAL RELICS',
-    silencePoetic:
-      '“In that year, Earth’s orbit belonged only to silence.”',
-    silenceExplanation: (year: number): string =>
-      `No human object had yet left the atmosphere — the first one, Sputnik 1, would not launch until ${year}.`,
-    activeIntro:
-      'At the moment of your birth, these human objects were circling (or had already circled) Earth:',
-  },
-
   legend: {
     title: 'LEGEND',
     subtitle: 'SYMBOLS · COLORS · LAYERS',
@@ -595,7 +362,6 @@ export const en: Copy = {
       bodies: 'BODIES',
       guides: 'SKY GUIDES',
       relics: 'ORBITAL RELICS',
-      orbital: 'ORBITAL POPULATION',
     },
     guideLabels: {
       axis: 'Earth’s axis (rotation)',
@@ -603,7 +369,6 @@ export const en: Copy = {
       ecliptic: 'Ecliptic (Sun’s path)',
     },
     bodyLabels: { sun: 'Sun', moon: 'Moon' },
-    orbitalRealTime: 'real time',
     toggleVisible: 'visible',
     toggleHidden: 'hidden',
   },
@@ -613,7 +378,7 @@ export const en: Copy = {
     modeLive: 'LIVE SKY',
     placeLabelFallback: 'Natal sky',
     summaryAriaLabel: (mode: string, main: string): string =>
-      `Open the MY SIGN card — ${mode} · ${main}`,
+      `See my true sign — ${mode} · ${main}`,
   },
 
   languageSwitcher: {

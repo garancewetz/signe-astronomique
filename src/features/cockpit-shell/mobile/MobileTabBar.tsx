@@ -1,9 +1,9 @@
-import { Compass, Eye, LayoutDashboard, Lock } from 'lucide-react';
+import { CalendarDays, Compass, Lock, Sparkles } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { cn } from '@/ui';
 import { useT } from '@/context/useLocale';
 
-export type MobileTabKey = 'display' | 'navigation' | 'analysis';
+export type MobileTabKey = 'coords' | 'analysis' | 'explore';
 
 const UNLOCK_WINDOW_MS = 1200;
 
@@ -13,6 +13,8 @@ interface MobileTabBarProps {
   hasReading: boolean;
   /** Bumps on each new reading — pulses the Analyse tab (parity with desktop CTA). */
   analysisAttention: number;
+  /** Short localized true sign once computed — replaces the generic tab label. */
+  signLabel: string | null;
 }
 
 interface TabSpec {
@@ -36,6 +38,7 @@ export function MobileTabBar({
   onTabChange,
   hasReading,
   analysisAttention,
+  signLabel,
 }: MobileTabBarProps) {
   const t = useT();
   // Pulse the Analyse tab whenever a new reading is computed. Same pattern
@@ -60,23 +63,23 @@ export function MobileTabBar({
 
   const tabs: TabSpec[] = [
     {
-      key: 'display',
-      label: t.mobile.tabs.display,
-      icon: <Eye className="size-4" strokeWidth={1.4} aria-hidden />,
-      enabled: true,
-    },
-    {
-      key: 'navigation',
-      label: t.mobile.tabs.navigation,
-      icon: <Compass className="size-4" strokeWidth={1.4} aria-hidden />,
+      key: 'coords',
+      label: t.mobile.tabs.coords,
+      icon: <CalendarDays className="size-4" strokeWidth={1.4} aria-hidden />,
       enabled: true,
     },
     {
       key: 'analysis',
-      label: t.mobile.tabs.analysis,
-      icon: <LayoutDashboard className="size-4" strokeWidth={1.4} aria-hidden />,
+      label: signLabel ?? t.mobile.tabs.analysis,
+      icon: <Sparkles className="size-4" strokeWidth={1.4} aria-hidden />,
       enabled: hasReading,
       locked: !hasReading,
+    },
+    {
+      key: 'explore',
+      label: t.mobile.tabs.explore,
+      icon: <Compass className="size-4" strokeWidth={1.4} aria-hidden />,
+      enabled: true,
     },
   ];
 

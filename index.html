@@ -168,13 +168,14 @@
       }
       .seo-splash__inner {
         position: relative;
-        max-width: 40rem;
+        max-width: 30rem;
         width: 100%;
         /* dvh, not vh: iOS Safari's dynamic toolbar makes 100vh taller than
            the visible viewport, which would push the CTA off-screen. */
         max-height: calc(100dvh - 5rem);
         overflow-y: auto;
-        padding: 2.25rem clamp(1.25rem, 4vw, 2.5rem);
+        padding: 1rem clamp(1.25rem, 4vw, 2rem) 1.75rem;
+        text-align: center;
         border: 1px solid rgba(167, 139, 250, 0.22);
         border-radius: 1rem;
         background: rgba(13, 8, 30, 0.82);
@@ -183,10 +184,14 @@
           0 24px 70px rgba(0, 0, 0, 0.55),
           0 0 60px rgba(124, 58, 237, 0.18);
       }
+      /* Language toggle + close share one row so they never overlap the copy. */
+      .seo-splash__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+      }
       .seo-splash__lang {
-        position: absolute;
-        top: 0.95rem;
-        left: 0.95rem;
         display: inline-flex;
         gap: 0.15rem;
         padding: 0.2rem;
@@ -222,9 +227,6 @@
         outline-offset: 2px;
       }
       .seo-splash__close {
-        position: absolute;
-        top: 0.85rem;
-        right: 0.85rem;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -252,17 +254,9 @@
         outline: 2px solid #a78bfa;
         outline-offset: 2px;
       }
-      .seo-splash__eyebrow {
-        margin: 0 0 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.28em;
-        font-size: 0.7rem;
-        font-weight: 600;
-        color: #a78bfa;
-      }
       .seo-splash__title {
-        margin: 0 0 1.1rem;
-        font-size: clamp(1.3rem, 3.5vw, 1.75rem);
+        margin: 0 0 0.9rem;
+        font-size: clamp(1.6rem, 5vw, 2rem);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: -0.01em;
@@ -271,7 +265,7 @@
       }
       .seo-splash__lead {
         margin: 0;
-        font-size: 0.92rem;
+        font-size: 0.95rem;
         font-weight: 300;
         line-height: 1.75;
         color: #cbd5e1;
@@ -307,11 +301,46 @@
         outline: 2px solid #a78bfa;
         outline-offset: 2px;
       }
-      .seo-splash__faq {
-        margin: 2.25rem 0 0;
-        border-top: 1px solid rgba(148, 163, 184, 0.15);
-        padding-top: 1.75rem;
+      /* Long-form copy stays in the HTML for crawlers, folded for humans. */
+      .seo-splash__more {
+        margin: 1.75rem 0 0;
         text-align: left;
+      }
+      .seo-splash__more summary {
+        cursor: pointer;
+        text-align: center;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        list-style: none;
+      }
+      .seo-splash__more summary::-webkit-details-marker {
+        display: none;
+      }
+      .seo-splash__more summary:hover {
+        color: #e2e8f0;
+      }
+      .seo-splash__more summary:focus-visible {
+        outline: 2px solid #a78bfa;
+        outline-offset: 2px;
+      }
+      .seo-splash__more[open] summary {
+        margin-bottom: 1.25rem;
+      }
+      .seo-splash__more > p {
+        margin: 0;
+        font-size: 0.83rem;
+        font-weight: 300;
+        line-height: 1.7;
+        color: #94a3b8;
+      }
+      .seo-splash__more strong {
+        font-weight: 500;
+        color: #c4b5fd;
+      }
+      .seo-splash__faq {
+        margin: 1.5rem 0 0;
+        border-top: 1px solid rgba(148, 163, 184, 0.15);
+        padding-top: 1.5rem;
       }
       .seo-splash__faq h2 {
         margin: 1.6rem 0 0.5rem;
@@ -357,31 +386,49 @@
             doesn't pollute the indexed French content — and main.tsx swaps it in
             only when the visitor clicks the EN toggle.
           -->
-          <div class="seo-splash__lang" role="group" aria-label="Langue / Language">
-            <button type="button" id="seo-lang-fr" class="seo-splash__lang-btn is-active" aria-pressed="true">FR</button>
-            <button type="button" id="seo-lang-en" class="seo-splash__lang-btn" aria-pressed="false">EN</button>
+          <div class="seo-splash__top">
+            <div class="seo-splash__lang" role="group" aria-label="Langue / Language">
+              <button type="button" id="seo-lang-fr" class="seo-splash__lang-btn is-active" aria-pressed="true">FR</button>
+              <button type="button" id="seo-lang-en" class="seo-splash__lang-btn" aria-pressed="false">EN</button>
+            </div>
+            <button
+              type="button"
+              id="seo-splash-close"
+              class="seo-splash__close"
+              aria-label="Fermer et explorer le ciel"
+              data-en-aria="Close and explore the sky"
+            >
+              ×
+            </button>
           </div>
-          <button
-            type="button"
-            id="seo-splash-close"
-            class="seo-splash__close"
-            aria-label="Fermer et explorer le ciel"
-            data-en-aria="Close and explore the sky"
-          >
-            ×
-          </button>
-          <p class="seo-splash__eyebrow">Signe astronomique</p>
           <h1
             class="seo-splash__title"
             id="seo-splash-title"
-            data-en="My true astronomical sign: the constellation the Sun was really in when you were born"
+            data-en="What’s your true astronomical sign?"
           >
-            Mon vrai signe astronomique : la constellation où était réellement
-            le Soleil à ta naissance
+            Quel est ton vrai signe astronomique&nbsp;?
           </h1>
           <p
             class="seo-splash__lead"
-            data-en="A free tool that recomputes your birth chart on the real sky. Instead of the symbolic zodiac frozen 2000 years ago, it places the Sun, the Moon, the planets and your ascendant in the &lt;strong&gt;constellation they were actually in&lt;/strong&gt; on the day you were born — following the official boundaries of the International Astronomical Union (IAU, 1930), including &lt;strong&gt;Ophiuchus, the forgotten 13th sign&lt;/strong&gt;. Because of the precession of the equinoxes, your true sign almost always differs by one notch from your horoscope."
+            data-en="Since horoscopes were invented, the sky has &lt;strong&gt;drifted by a month&lt;/strong&gt;. Find out which constellation the Sun was really in when you were born."
+          >
+            Depuis l'invention des horoscopes, le ciel a
+            <strong>glissé d'un mois</strong>. Découvre devant quelle
+            constellation était vraiment le Soleil à ta naissance.
+          </p>
+          <button
+            type="button"
+            id="seo-splash-enter"
+            class="seo-splash__cta"
+            data-en="Find my true sign →"
+          >
+            Découvrir mon vrai signe →
+          </button>
+
+          <details class="seo-splash__more">
+            <summary data-en="Learn more ↓">En savoir plus ↓</summary>
+            <p
+              data-en="A free tool that recomputes your birth chart on the real sky. Instead of the symbolic zodiac frozen 2000 years ago, it places the Sun, the Moon, the planets and your ascendant in the &lt;strong&gt;constellation they were actually in&lt;/strong&gt; on the day you were born — following the official boundaries of the International Astronomical Union (IAU, 1930), including &lt;strong&gt;Ophiuchus, the forgotten 13th sign&lt;/strong&gt;. Because of the precession of the equinoxes, your true sign almost always differs by one notch from your horoscope."
           >
             Outil gratuit qui recalcule ton thème astral sur le ciel réel.
             Au lieu du zodiaque symbolique figé il y a 2000 ans, il place le
@@ -393,14 +440,6 @@
             précession des équinoxes, ton vrai signe diffère presque toujours
             d'un cran de ton horoscope.
           </p>
-          <button
-            type="button"
-            id="seo-splash-enter"
-            class="seo-splash__cta"
-            data-en="Explore my sky →"
-          >
-            Explorer mon ciel →
-          </button>
 
           <section class="seo-splash__faq" aria-label="Questions fréquentes">
             <h2 data-en="What is the difference between an astrological sign and an astronomical sign?">Quelle différence entre signe astrologique et signe astronomique ?</h2>
@@ -452,6 +491,7 @@
               la version astrologique traditionnelle.
             </p>
           </section>
+          </details>
 
           <noscript>
             <p class="seo-splash__noscript">

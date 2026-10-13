@@ -2,10 +2,8 @@ import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 
 /**
- * A4 portrait PDF: the sky view fills the first page as a cover, then the
- * full report flows across subsequent pages. The report image is sliced
- * canvas-side so each PDF page gets a clean chunk (no half-cut lines of text
- * across page breaks beyond what natural pagination produces).
+ * A4 portrait PDF: the sky view fills the first page as a cover, and the
+ * true-sign card sits centred on the second page.
  *
  * Prerequisite: the Cesium canvas must have been created with
  * `preserveDrawingBuffer: true` (cf. SpaceView), otherwise the buffer is
@@ -57,38 +55,30 @@ export async function exportTargetedPdf(
     logging: false,
   });
 
-  const usableW = pageW - margin * 2;
-  const usableH = pageH - margin * 2;
-  // Conversion: source pixels → PDF points.
-  const ptPerPx = usableW / reportCanvas.width;
-  const chunkPxH = Math.floor(usableH / ptPerPx);
-
-  let yPx = 0;
-  while (yPx < reportCanvas.height) {
-    const slicePxH = Math.min(chunkPxH, reportCanvas.height - yPx);
-    const slice = document.createElement('canvas');
-    slice.width = reportCanvas.width;
-    slice.height = slicePxH;
-    const sctx = slice.getContext('2d');
-    if (!sctx) throw new Error('Impossible de créer le contexte 2D');
-    sctx.fillStyle = '#02030a';
-    sctx.fillRect(0, 0, slice.width, slice.height);
-    sctx.drawImage(reportCanvas, 0, -yPx);
-
-    pdf.addPage();
-    pdf.setFillColor(...bgRgb);
-    pdf.rect(0, 0, pageW, pageH, 'F');
-    pdf.addImage(
-      slice.toDataURL('image/jpeg', 0.92),
-      'JPEG',
-      margin,
-      margin,
-      usableW,
-      slicePxH * ptPerPx,
-    );
-
-    yPx += slicePxH;
+  // The report is a single short card: keep it at a readable size (about
+  // two thirds of the page width), shrink it further if it would overflow,
+  // and centre it on one page rather than stretching it edge to edge.
+  const maxReportW = (pageW - margin * 2) * 0.68;
+  const maxReportH = pageH - margin * 2;
+  const reportAspect = reportCanvas.width / reportCanvas.height;
+  let reportW = maxReportW;
+  let reportH = reportW / reportAspect;
+  if (reportH > maxReportH) {
+    reportH = maxReportH;
+    reportW = reportH * reportAspect;
   }
+
+  pdf.addPage();
+  pdf.setFillColor(...bgRgb);
+  pdf.rect(0, 0, pageW, pageH, 'F');
+  pdf.addImage(
+    reportCanvas.toDataURL('image/jpeg', 0.92),
+    'JPEG',
+    (pageW - reportW) / 2,
+    (pageH - reportH) / 2,
+    reportW,
+    reportH,
+  );
 
   pdf.save(filename);
 }

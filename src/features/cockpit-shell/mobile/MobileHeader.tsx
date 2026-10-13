@@ -31,6 +31,13 @@ export function MobileHeader({
   ref,
 }: MobileHeaderProps) {
   const t = useT();
+  // `date` is the form's YYYY-MM-DD — build a local Date so the day can't
+  // shift through UTC, then show it the way people read dates.
+  const [y, m, d] = date.split('-').map(Number);
+  const dateLabel = y && m && d
+    ? new Intl.DateTimeFormat(t.intlLocale, { day: 'numeric', month: 'short', year: 'numeric' })
+        .format(new Date(y, m - 1, d))
+    : date;
   return (
     <header
       ref={ref}
@@ -61,7 +68,7 @@ export function MobileHeader({
           {t.cockpit.brand}
         </span>
         <span className="text-cockpit-xs text-slate-300 truncate flex-1">
-          · {date} · {city.label}
+          · {dateLabel} · {city.label}
         </span>
         <span
           aria-hidden="true"
