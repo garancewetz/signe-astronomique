@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { CockpitFallback, ErrorBoundary } from '@/features/cockpit-shell'
 import { LocaleProvider } from './context/LocaleContext'
+import { MOBILE_QUERY } from './ui/useMobileLayout'
 
 registerSW({ immediate: true })
 
@@ -78,8 +79,16 @@ function wireWelcomeOverlay() {
     document.removeEventListener('keydown', onKeydown)
   }
 
+  // Desktop shows the card as a non-blocking corner box (index.html media
+  // query): the form sits right beside it, so the CTA hands focus to it.
+  const isDesktop = !window.matchMedia(MOBILE_QUERY).matches
+  if (isDesktop) el.setAttribute('aria-modal', 'false')
+
   document.getElementById('seo-splash-close')?.addEventListener('click', dismiss)
-  document.getElementById('seo-splash-enter')?.addEventListener('click', dismiss)
+  document.getElementById('seo-splash-enter')?.addEventListener('click', () => {
+    dismiss()
+    if (isDesktop) nudgeBirthForm()
+  })
   // A click on the blurred backdrop (outside the card) also closes.
   el.addEventListener('click', (e) => {
     if (e.target === el) dismiss()
@@ -88,9 +97,24 @@ function wireWelcomeOverlay() {
 
   wireLanguageToggle(el)
 
-  // Move focus into the dialog so keyboard / screen-reader users land on the
-  // dismiss control rather than being left behind it.
-  document.getElementById('seo-splash-close')?.focus()
+  // On mobile the card is a real modal: move focus into it so keyboard /
+  // screen-reader users land on the dismiss control. On desktop it doesn't
+  // block anything, so focus stays where the visitor puts it.
+  if (!isDesktop) document.getElementById('seo-splash-close')?.focus()
+}
+
+// Focus the birth date and briefly glow the form, so "Find my true sign"
+// leads somewhere instead of just closing the card.
+function nudgeBirthForm() {
+  const form = document.querySelector<HTMLFormElement>('#cockpit-main form')
+  if (!form) return
+  form.querySelector<HTMLInputElement>('input[type="date"]')?.focus()
+  form.classList.add('animate-form-nudge')
+  form.addEventListener(
+    'animationend',
+    () => form.classList.remove('animate-form-nudge'),
+    { once: true },
+  )
 }
 
 // FR is the raw-HTML default; this lets a visitor flip the overlay to English

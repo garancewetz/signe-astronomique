@@ -358,6 +358,37 @@
         line-height: 1.7;
         color: #94a3b8;
       }
+      /* Desktop: a non-blocking card in the top-right corner — the birth form
+         is already visible in the sidebar, so nothing needs to be gated.
+         Mirrors the inverse of MOBILE_QUERY in src/ui/useMobileLayout.ts. */
+      @media (min-width: 1024px), (min-width: 768px) and (pointer: fine) {
+        #seo-splash {
+          inset: 3.5rem 1rem auto auto;
+          display: block;
+          width: min(23rem, calc(100vw - 2rem));
+          padding: 0;
+          background: none;
+          -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+        }
+        .seo-splash__inner {
+          max-height: calc(100dvh - 5rem);
+          padding: 0.75rem 1.25rem 1.25rem;
+        }
+        .seo-splash__top {
+          margin-bottom: 0.75rem;
+        }
+        .seo-splash__title {
+          font-size: 1.3rem;
+        }
+        .seo-splash__lead {
+          font-size: 0.85rem;
+          line-height: 1.65;
+        }
+        .seo-splash__cta {
+          margin-top: 1.1rem;
+        }
+      }
       .seo-splash__noscript p {
         margin: 1.5rem 0 0;
         font-size: 0.83rem;
@@ -503,6 +534,13 @@
         </main>
       </div>
     </div>
+    <script>
+      // A shared link already carries a birth date: skip the welcome card so
+      // the recipient lands straight on the result. Runs before first paint.
+      if (/[?&]d=/.test(location.search) && /[?&]lat=/.test(location.search)) {
+        document.getElementById('seo-splash')?.remove();
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <!-- end seo-splash overlay -->
   </body>
