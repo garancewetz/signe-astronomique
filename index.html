@@ -467,12 +467,13 @@
             type="button"
             id="seo-splash-enter"
             class="seo-splash__cta"
-            data-en="Find your true sign →"
+            data-en="← Enter your birth date"
           >
-            Calcule ton vrai signe →
+            ← Entre ta date de naissance
           </button>
-          <!-- WelcomeForm (src/features/cockpit-shell) renders the birth form
-               here once React is up; the CTA above is then hidden. -->
+          <!-- Desktop: the CTA above points at the sidebar form (main.tsx).
+               Mobile: WelcomeForm (src/features/cockpit-shell) renders the
+               birth form here once React is up and the CTA is hidden. -->
           <div id="seo-splash-form"></div>
           <p class="seo-splash__link">
             <a href="/signes/" data-en="True dates of every sign">Les vraies dates de chaque signe</a>

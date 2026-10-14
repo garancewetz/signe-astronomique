@@ -39,8 +39,6 @@ interface SidebarProps {
   /** Bumps each time a new reading is computed — used to pulse the CTA. */
   analysisAttention: number;
   onOpenAnalysis: () => void;
-  /** The welcome card shows the birth form: don't repeat it here. */
-  formHidden: boolean;
 
   // Always-visible coordinates form (top of sidebar)
   date: string;
@@ -98,7 +96,6 @@ export function Sidebar(props: SidebarProps) {
     analysisOpen,
     analysisAttention,
     onOpenAnalysis,
-    formHidden,
     date,
     time,
     city,
@@ -194,7 +191,7 @@ export function Sidebar(props: SidebarProps) {
     >
       <SidebarHeader collapsed={collapsed} onToggleCollapsed={onToggleCollapsed} />
 
-      {!collapsed && !formHidden && (
+      {!collapsed && (
         <CoordinatesForm
           date={date}
           time={time}
