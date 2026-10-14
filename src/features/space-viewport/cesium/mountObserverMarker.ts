@@ -19,10 +19,11 @@ interface MountOptions {
   label?: string;
 }
 
-// Raspberry, distinct from the amber guides and sky satellites palette.
-// Deeper saturation than the previous pink-400 reads better against the
-// blue night side of the globe.
-const MARKER_HEX = '#e11d74';
+// Neutral white "you are here" target: a dot ringed in the night colour,
+// inside a thin white ring. Reads on land, sea and night side alike, and
+// leaves gold to the true sign.
+const MARKER_HEX = '#f5f5f4';
+const OUTLINE_HEX = '#0b0e14';
 // Proximity threshold for the place-name label. Below ~5 000 km of
 // camera-to-marker distance the label fades in; from orbital views
 // (100 000 km) it stays hidden so the central canvas reads as clean
@@ -51,16 +52,30 @@ export function mountObserverMarker(
 
   const position = Cartesian3.fromDegrees(longitude, latitude, 0);
   const color = Color.fromCssColorString(MARKER_HEX);
+  // Slightly shrink at far ranges so it reads as a pin and not a blob.
+  const scaleByDistance = new NearFarScalar(2_000_000, 1.0, 60_000_000, 0.6);
+
+  // Outer ring: a transparent point whose outline draws the circle.
+  const ring = viewer.entities.add({
+    position,
+    point: {
+      pixelSize: 15,
+      color: Color.TRANSPARENT,
+      outlineColor: color.withAlpha(0.6),
+      outlineWidth: 1.5,
+      scaleByDistance,
+    },
+    properties: { kind: 'observer-marker' },
+  });
 
   const entity = viewer.entities.add({
     position,
     point: {
-      pixelSize: 9,
-      color: color.withAlpha(0.95),
-      outlineColor: color.withAlpha(0.35),
-      outlineWidth: 2,
-      // Slightly shrink at far ranges so it reads as a pin and not a blob.
-      scaleByDistance: new NearFarScalar(2_000_000, 1.0, 60_000_000, 0.6),
+      pixelSize: 6,
+      color,
+      outlineColor: Color.fromCssColorString(OUTLINE_HEX).withAlpha(0.9),
+      outlineWidth: 1.5,
+      scaleByDistance,
     },
     ...(label
       ? {
@@ -91,5 +106,6 @@ export function mountObserverMarker(
     // before this cleanup runs — accessing `viewer.entities` then throws.
     if (viewer.isDestroyed()) return;
     viewer.entities.remove(entity);
+    viewer.entities.remove(ring);
   };
 }
