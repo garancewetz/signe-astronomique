@@ -142,6 +142,7 @@ export const en: Copy = {
       display: {
         eyebrow: 'Show',
         labels: { label: 'Names and lines', sublabel: 'Bodies · constellations' },
+        zones: { label: 'Sign areas', sublabel: 'Official IAU boundaries' },
         guides: { label: 'Sky guides', sublabel: 'Axis · equator · ecliptic' },
         relics: { label: 'Orbital relics', sublabel: 'Historic satellites' },
       },
@@ -214,6 +215,7 @@ export const en: Copy = {
     },
     layers: {
       labels: 'Names',
+      zones: 'Areas',
       guides: 'Guides',
       relics: 'Relics',
     },
@@ -375,8 +377,14 @@ export const en: Copy = {
     subtitle: 'SYMBOLS · COLORS · LAYERS',
     sections: {
       bodies: 'BODIES',
+      zones: 'SIGN AREAS',
       guides: 'SKY GUIDES',
       relics: 'ORBITAL RELICS',
+    },
+    zoneLabels: {
+      yours: 'Your sign: its official area (IAU)',
+      others: 'The other signs',
+      sun: 'Sun’s position',
     },
     guideLabels: {
       axis: 'Earth’s axis (rotation)',

@@ -27,6 +27,7 @@ interface UseSceneLayerCompositionArgs {
   /** "Live" reading derived from the current Date — used pre-JUMP. */
   liveReading: CelestialReading;
   showGuides: boolean;
+  showZodiacBand: boolean;
   showBodyLabels: boolean;
   /** Dims the stars and skips the reference-line layer to keep the diagram clean. */
   sideViewActive: boolean;
@@ -55,6 +56,7 @@ export function useSceneLayerComposition({
   reading,
   liveReading,
   showGuides,
+  showZodiacBand,
   showBodyLabels,
   sideViewActive,
   bodyNames,
@@ -129,7 +131,7 @@ export function useSceneLayerComposition({
 
     // Natal mode: the official constellation territories along the Sun's
     // path, so the answer is visible in the sky, not only in the report.
-    if (reading && !sideViewActive) {
+    if (reading && showZodiacBand && !sideViewActive) {
       cleanupsRef.current.push(
         mountZodiacBand(viewer, {
           gmstRad,
@@ -170,6 +172,7 @@ export function useSceneLayerComposition({
     reading,
     liveReading,
     showGuides,
+    showZodiacBand,
     showBodyLabels,
     sideViewActive,
     bodyNames,

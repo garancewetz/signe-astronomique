@@ -147,6 +147,7 @@ export const fr = {
       display: {
         eyebrow: 'Afficher',
         labels: { label: 'Noms et lignes', sublabel: 'Astres · constellations' },
+        zones: { label: 'Zones des signes', sublabel: 'Frontières officielles IAU' },
         guides: { label: 'Repères du ciel', sublabel: 'Axe · équateur · écliptique' },
         relics: { label: 'Reliques orbitales', sublabel: 'Satellites historiques' },
       },
@@ -219,6 +220,7 @@ export const fr = {
     },
     layers: {
       labels: 'Noms',
+      zones: 'Zones',
       guides: 'Repères',
       relics: 'Reliques',
     },
@@ -380,8 +382,14 @@ export const fr = {
     subtitle: 'SYMBOLES · COULEURS · CALQUES',
     sections: {
       bodies: 'ASTRES',
+      zones: 'ZONES DES SIGNES',
       guides: 'REPÈRES DU CIEL',
       relics: 'RELIQUES ORBITALES',
+    },
+    zoneLabels: {
+      yours: 'Ton signe : sa zone officielle (IAU)',
+      others: 'Les autres signes',
+      sun: 'Position du Soleil',
     },
     guideLabels: {
       axis: 'Axe terrestre (rotation)',
