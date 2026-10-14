@@ -32,7 +32,7 @@ function inlineScriptHashes(html: string): string[] {
  * Sources allowed:
  *   - nominatim       — geocoding
  *   - earthdata.nasa  — Cesium imagery (NASA GIBS)
- *   - fonts.gstatic   — JetBrains Mono WOFF
+ *   - fonts.gstatic   — web font files (JetBrains Mono, IBM Plex)
  *   - fonts.googleapis— Google Fonts CSS
  */
 function cspMetaTag(): Plugin {
