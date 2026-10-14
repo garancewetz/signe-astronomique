@@ -359,6 +359,40 @@ function constellationFromSiderealLongitude(lon: number): IauConstellation {
   return result;
 }
 
+/** Mean apparent motion of the Sun along the ecliptic, degrees per day. */
+const SUN_DEG_PER_DAY = 360 / 365.2422;
+
+export interface BoundaryProximity {
+  /** Constellation on the other side of the nearest IAU boundary. */
+  neighbour: IauConstellation;
+  /**
+   * 'entered': the Sun crossed into its constellation `days` before;
+   * 'leaving': it crosses into `neighbour` `days` after.
+   */
+  side: 'entered' | 'leaving';
+  days: number;
+}
+
+/**
+ * Nearest IAU boundary to a sidereal (ICRS) ecliptic longitude, in solar
+ * days. Lets the report flag births on the edge of a constellation, where
+ * the sky view alone looks ambiguous and the birth hour can matter.
+ */
+export function nearestBoundary(siderealLon: number): BoundaryProximity {
+  const x = norm360(siderealLon);
+  const n = IAU_BOUNDARIES.length;
+  // Last boundary at or below x; below the first one we're in Pisces (last row).
+  let i = n - 1;
+  for (let k = 0; k < n; k++) if (x >= IAU_BOUNDARIES[k].start) i = k;
+  const prev = IAU_BOUNDARIES[(i - 1 + n) % n];
+  const next = IAU_BOUNDARIES[(i + 1) % n];
+  const since = norm360(x - IAU_BOUNDARIES[i].start) / SUN_DEG_PER_DAY;
+  const until = norm360(next.start - x) / SUN_DEG_PER_DAY;
+  return since <= until
+    ? { neighbour: prev.constellation, side: 'entered', days: since }
+    : { neighbour: next.constellation, side: 'leaving', days: until };
+}
+
 /** Days the Sun actually spends in this constellation. */
 function daysInConstellation(c: IauConstellation): number {
   return IAU_BOUNDARIES.find(b => b.constellation === c)?.durationDays ?? 30;

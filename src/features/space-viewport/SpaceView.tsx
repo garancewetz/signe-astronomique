@@ -49,7 +49,7 @@ import { useSceneLayerComposition } from './useSceneLayerComposition';
 import { useSatelliteTracker } from './useSatelliteTracker';
 import { useLocale, useT } from '@/context/useLocale';
 import type { Locale } from '@/i18n';
-import { PLANETS_META } from '@/features/astronomy';
+import { PLANETS_META, loreShortName } from '@/features/astronomy';
 
 export interface SpaceViewHandle {
   /**
@@ -474,6 +474,7 @@ export function SpaceView({
       moon: t.bodies.moon,
       planet: (id: PlanetId) =>
         locale === 'en' ? PLANETS_META[id].en : PLANETS_META[id].fr,
+      constellation: (c: IauConstellation) => loreShortName(c, locale),
     }),
     [t, locale],
   );

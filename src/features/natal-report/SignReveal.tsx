@@ -3,6 +3,7 @@ import { CalendarDays, Check, Link2 } from 'lucide-react';
 import {
   loreName,
   loreShortName,
+  nearestBoundary,
   type CelestialReading,
   type IauConstellation,
 } from '@/features/astronomy';
@@ -26,7 +27,12 @@ interface SignRevealProps {
   shareCopied?: boolean;
   /** Shows the link to the static /signes/ page (off in the PDF export). */
   showAllSignsLink?: boolean;
+  /** False when the time was left out (computed at noon): near a boundary, ask for it. */
+  birthTimeKnown?: boolean;
 }
+
+/** Births closer than this to a boundary get the "on the edge" note. */
+const EDGE_DAYS = 3;
 
 /**
  * The one screen people actually read: their true sign, what their
@@ -35,7 +41,7 @@ interface SignRevealProps {
  */
 export function SignReveal({
   reading, onRevealConstellation, onShare, shareCopied = false,
-  showAllSignsLink = false,
+  showAllSignsLink = false, birthTimeKnown = true,
 }: SignRevealProps) {
   const t = useT();
   const { locale } = useLocale();
@@ -45,6 +51,8 @@ export function SignReveal({
   const same = trueSign === horoscopeSign;
   const trueName = loreName(trueSign, locale);
   const horoscopeName = loreName(horoscopeSign, locale);
+  const edge = nearestBoundary(reading.sunSiderealLongitude);
+  const onEdge = edge.days < EDGE_DAYS;
 
   const birthFmt = new Intl.DateTimeFormat(t.intlLocale, {
     day: 'numeric', month: 'long', timeZone: reading.input.timezone ?? 'UTC',
@@ -89,10 +97,27 @@ export function SignReveal({
         </div>
       )}
 
+      {onEdge && (
+        <div className="rounded-panel border border-border-hud-strong bg-surface-raised/60
+                        px-4 py-3 space-y-1.5 text-cockpit-lg leading-relaxed text-slate-300">
+          <div className="font-medium text-white">{t.signReveal.edgeTitle}</div>
+          <p>
+            <Rich
+              text={(edge.side === 'leaving' ? t.signReveal.edgeLeaving : t.signReveal.edgeEntered)(
+                t.signReveal.edgeDays(Math.round(edge.days)),
+                loreShortName(edge.neighbour, locale),
+              )}
+            />
+          </p>
+          {!birthTimeKnown && <p className="text-slate-400">{t.signReveal.edgeAddTime}</p>}
+        </div>
+      )}
+
       <section className="space-y-2 text-cockpit-xl leading-relaxed text-slate-300">
         <SectionTitle>{t.signReveal.whatTitle}</SectionTitle>
         <SkyAlignment sign={trueSign} />
         <p><Rich text={t.signReveal.alignmentBody(trueName)} /></p>
+        {onRevealConstellation && <p className="text-slate-400">{t.signReveal.skyBandHint}</p>}
       </section>
 
       <section className="space-y-2 text-cockpit-xl leading-relaxed text-slate-300">

@@ -82,6 +82,15 @@ export const fr = {
     ophiuchus:
       '**Ophiuchus** est le 13ᵉ signe oublié : le Soleil le traverse chaque année, mais les horoscopes n’en ont gardé que 12.',
     revealCta: (sign: string): string => `Voir ${sign} dans le ciel`,
+    edgeTitle: 'Né·e à la frontière',
+    edgeLeaving: (days: string, next: string): string =>
+      `Tu es né·e à **${days}** d’une frontière : juste après, le Soleil passait dans la constellation voisine, ${next}.`,
+    edgeEntered: (days: string, prev: string): string =>
+      `Tu es né·e à **${days}** d’une frontière : juste avant, le Soleil était encore dans la constellation voisine, ${prev}.`,
+    edgeDays: (n: number): string => (n < 1 ? 'moins d’un jour' : n === 1 ? '1 jour' : `${n} jours`),
+    edgeAddTime: 'À ce point-là, l’heure peut compter : ajoute ton heure et ton lieu de naissance pour être sûr·e.',
+    skyBandHint:
+      'Dans le ciel, le trait doré sur le chemin du Soleil montre la zone officielle de ta constellation. Les traits bleus, eux, ne relient que ses étoiles les plus brillantes.',
     allSignsLink: 'Les vraies dates des 13 signes',
   },
 
