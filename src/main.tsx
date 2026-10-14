@@ -6,6 +6,8 @@ import App from './App.tsx'
 import { CockpitFallback, ErrorBoundary } from '@/features/cockpit-shell'
 import { LocaleProvider } from './context/LocaleContext'
 import { MOBILE_QUERY } from './ui/useMobileLayout'
+import { WELCOME_EVENTS } from '@/features/cockpit-shell/welcomeEvents'
+import { LOCALE_STORAGE_KEY } from './context/localeContextInternal'
 
 registerSW({ immediate: true })
 
@@ -58,6 +60,13 @@ function wireWelcomeOverlay() {
 
   let dismissed = false
   let removeTimer = 0
+  // Tells the birth form rendered inside the card (WelcomeForm) to unmount.
+  const remove = () => {
+    window.clearTimeout(removeTimer)
+    if (!el.isConnected) return
+    el.remove()
+    window.dispatchEvent(new Event(WELCOME_EVENTS.removed))
+  }
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') dismiss()
   }
@@ -65,17 +74,10 @@ function wireWelcomeOverlay() {
     if (dismissed) return
     dismissed = true
     el.classList.add('seo-splash--hidden')
-    el.addEventListener(
-      'transitionend',
-      () => {
-        window.clearTimeout(removeTimer)
-        el.remove()
-      },
-      { once: true },
-    )
+    el.addEventListener('transitionend', remove, { once: true })
     // Fallback removal: with prefers-reduced-motion the transition is disabled,
     // so `transitionend` never fires and we drop the node on a timer instead.
-    removeTimer = window.setTimeout(() => el.remove(), 600)
+    removeTimer = window.setTimeout(remove, 600)
     document.removeEventListener('keydown', onKeydown)
   }
 
@@ -85,6 +87,8 @@ function wireWelcomeOverlay() {
   if (isDesktop) el.setAttribute('aria-modal', 'false')
 
   document.getElementById('seo-splash-close')?.addEventListener('click', dismiss)
+  // The birth form inside the card computed a sign: the card has done its job.
+  window.addEventListener(WELCOME_EVENTS.dismiss, dismiss, { once: true })
   document.getElementById('seo-splash-enter')?.addEventListener('click', () => {
     dismiss()
     if (isDesktop) nudgeBirthForm()
@@ -121,7 +125,7 @@ function nudgeBirthForm() {
 // on demand. The EN copy lives in data-en attributes (and data-en-aria for the
 // close button) so it never ships as indexable French page text — we only swap
 // it into the DOM when EN is picked. App-wide language stays controlled by the
-// in-cockpit switcher; this toggle is scoped to the welcome overlay.
+// in-cockpit switcher too; this toggle also drives it via WELCOME_EVENTS.lang.
 function wireLanguageToggle(root: HTMLElement) {
   const frBtn = document.getElementById('seo-lang-fr')
   const enBtn = document.getElementById('seo-lang-en')
@@ -153,9 +157,21 @@ function wireLanguageToggle(root: HTMLElement) {
     frBtn.setAttribute('aria-pressed', String(lang === 'fr'))
     enBtn.setAttribute('aria-pressed', String(lang === 'en'))
   }
+  // The card now holds the React birth form: keep both in the same language.
+  const pick = (lang: 'fr' | 'en') => {
+    setLang(lang)
+    window.dispatchEvent(new CustomEvent(WELCOME_EVENTS.lang, { detail: lang }))
+  }
 
-  frBtn.addEventListener('click', () => setLang('fr'))
-  enBtn.addEventListener('click', () => setLang('en'))
+  frBtn.addEventListener('click', () => pick('fr'))
+  enBtn.addEventListener('click', () => pick('en'))
+
+  // Returning English visitors: open the card in English too.
+  try {
+    if (window.localStorage.getItem(LOCALE_STORAGE_KEY) === 'en') setLang('en')
+  } catch {
+    // Storage blocked (private mode): stay on the French default.
+  }
 }
 
 wireWelcomeOverlay()

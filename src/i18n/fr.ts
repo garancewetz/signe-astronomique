@@ -32,9 +32,12 @@ export const fr = {
 
   natalForm: {
     ariaLabel: 'Coordonnées de naissance',
-    dateLabel: 'DATE',
-    timeLabel: 'HEURE',
-    placeLabel: 'LIEU DE NAISSANCE',
+    title: 'Quand es-tu né·e ?',
+    dateLabel: 'Date de naissance',
+    timeLabel: 'Heure de naissance',
+    placeLabel: 'Lieu de naissance',
+    detailsToggle: 'Ajouter l’heure et le lieu',
+    detailsHint: 'Facultatif, pour plus de précision. Sans eux, on calcule à midi.',
     placePlaceholder: 'Ville de naissance…',
     submitIdle: 'Calcule ton vrai signe',
     submitBusy: 'Calcul du ciel…',

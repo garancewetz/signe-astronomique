@@ -143,6 +143,13 @@ export function MobileCockpit(props: MobileCockpitProps) {
   const [coordsOpen, setCoordsOpen] = useState(
     () => !reading && !hasSharedFromUrl,
   );
+  // A sign computed elsewhere (the welcome card's form) answers the modal's
+  // question too: close it so the sky shows once the result is dismissed.
+  const [prevReading, setPrevReading] = useState(reading);
+  if (prevReading !== reading) {
+    setPrevReading(reading);
+    if (reading) setCoordsOpen(false);
+  }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);

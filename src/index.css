@@ -141,10 +141,11 @@ body {
   background: rgb(from var(--color-background) r g b / 0.65);
   border: 1px solid var(--color-border-input);
   color: var(--color-foreground);
-  padding: 0.4rem 0.7rem;
+  min-height: 48px;
+  padding: 0.5rem 0.8rem;
   border-radius: var(--radius-cockpit);
   font-family: var(--font-mono);
-  font-size: var(--text-cockpit-input);
+  font-size: 16px;
   letter-spacing: 0.02em;
   outline: none;
   transition: border-color 150ms ease, box-shadow 150ms ease;
@@ -158,19 +159,8 @@ body {
   box-shadow: 0 0 0 2px var(--color-input-focus-visible-glow);
 }
 
-/*
- * Touch devices — iOS Safari auto-zooms on any <input> whose font-size is
- * < 16px when focused, which jolts the layout the first time the user taps
- * the natal form. Bump to 16px exactly on coarse pointers and grow the
- * tap target to ~44px (Apple HIG). Desktop keeps the dense cockpit look.
- */
-@media (pointer: coarse) {
-  .cockpit-input {
-    font-size: 16px;
-    min-height: 44px;
-    padding: 0.5rem 0.75rem;
-  }
-}
+/* 16px everywhere: iOS Safari auto-zooms on focus below that, and the birth
+   form is the one thing every visitor fills — it should read as such. */
 
 .cockpit-focus:focus {
   outline: none;

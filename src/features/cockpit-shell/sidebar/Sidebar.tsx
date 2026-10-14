@@ -23,7 +23,7 @@ import { CollapsedCameraRail, ExpandedCameraSection } from './SidebarCamera';
 import { SystemDock } from './SystemDock';
 import type { SidebarPanelKey } from './types';
 
-const EXPANDED_PX = 280;
+const EXPANDED_PX = 340;
 const COLLAPSED_PX = 56;
 const UNLOCK_WINDOW_MS = 1200;
 
@@ -39,6 +39,8 @@ interface SidebarProps {
   /** Bumps each time a new reading is computed — used to pulse the CTA. */
   analysisAttention: number;
   onOpenAnalysis: () => void;
+  /** The welcome card shows the birth form: don't repeat it here. */
+  formHidden: boolean;
 
   // Always-visible coordinates form (top of sidebar)
   date: string;
@@ -96,6 +98,7 @@ export function Sidebar(props: SidebarProps) {
     analysisOpen,
     analysisAttention,
     onOpenAnalysis,
+    formHidden,
     date,
     time,
     city,
@@ -191,7 +194,7 @@ export function Sidebar(props: SidebarProps) {
     >
       <SidebarHeader collapsed={collapsed} onToggleCollapsed={onToggleCollapsed} />
 
-      {!collapsed && (
+      {!collapsed && !formHidden && (
         <CoordinatesForm
           date={date}
           time={time}
@@ -200,6 +203,7 @@ export function Sidebar(props: SidebarProps) {
           onTimeChange={onTimeChange}
           onCityChange={onCityChange}
           onJump={onJump}
+          title={t.natalForm.title}
           history={searchHistory}
           onRecordHistory={onRecordSearch}
           onRemoveHistory={onRemoveSearch}

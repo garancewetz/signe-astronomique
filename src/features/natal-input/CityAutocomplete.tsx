@@ -326,7 +326,8 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
             id={listboxId}
             role="listbox"
             style={floatingStyles}
-            className="z-50 overflow-y-auto rounded-sm
+            // Above the welcome card (z-index 100), which can hold this form.
+            className="z-[110] overflow-y-auto rounded-sm
                        border border-border-control bg-surface/95
                        backdrop-blur-sm text-cockpit-md text-slate-200
                        shadow-cockpit-lift"
