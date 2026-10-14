@@ -29,8 +29,6 @@ interface CoordinatesFormProps {
   className?: string;
   /** Serif question shown above the fields (sidebar, mobile sheet). */
   title?: string;
-  /** Focus the date on mount — desktop only, a phone would pop its picker. */
-  autoFocusDate?: boolean;
   /** Hide the /signes/ link and the history chips (welcome card). */
   bare?: boolean;
   /** Recent searches surfaced as one-click chips below the form. */
@@ -53,7 +51,6 @@ export function CoordinatesForm({
   onJump,
   className,
   title,
-  autoFocusDate,
   bare,
   history,
   onRecordHistory,
@@ -110,8 +107,6 @@ export function CoordinatesForm({
           type="date"
           value={date}
           onChange={(e) => onDateChange(e.target.value)}
-          // Keyboard users land straight in the one field that matters.
-          autoFocus={autoFocusDate}
           required
         />
       </Field>

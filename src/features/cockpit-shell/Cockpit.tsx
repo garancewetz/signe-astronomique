@@ -12,6 +12,7 @@ import {
   type SpaceViewHandle,
 } from '@/features/space-viewport';
 import { WelcomeForm } from './WelcomeForm';
+import { WELCOME_EVENTS } from './welcomeEvents';
 import { useWelcomeSlot } from './useWelcomeSlot';
 import { HudFrame } from './HudFrame';
 import { BodyInfoHud } from './BodyInfoHud';
@@ -73,8 +74,9 @@ export function Cockpit() {
     setUserCity,
     sharedFromUrl,
   } = useNatalForm();
-  // While the welcome card holds the birth form, the sidebar doesn't repeat it.
-  const welcomeSlot = useWelcomeSlot();
+  // Mobile only: the welcome card hosts the birth form (there is no sidebar
+  // to point at). Desktop keeps the form in the sidebar so it never moves.
+  const welcomeSlot = useWelcomeSlot(isMobile);
   const {
     entries: searchHistory,
     record: recordSearch,
@@ -163,6 +165,9 @@ export function Cockpit() {
     // pulse stays so they can find it again after closing.
     setAnalysisAttention((k) => k + 1);
     setAnalysisOpen(true);
+    // Whichever form computed it (sidebar, mobile sheet, welcome card), the
+    // welcome card has done its job and must not sit over the result.
+    window.dispatchEvent(new Event(WELCOME_EVENTS.dismiss));
     if (!isFirstCalc) return;
     // First calc: keep the sky uncluttered but reward curiosity by lighting
     // up the constellation patterns (coupled with body labels in the scene
@@ -279,7 +284,6 @@ export function Cockpit() {
       onCityChange={setUserCity}
       onJump={handleJump}
       onRecordHistory={recordSearch}
-      autoFocusDate={!isMobile}
     />
   );
 
@@ -330,7 +334,6 @@ export function Cockpit() {
 
   return (
     <CockpitDisplayProvider {...displayValue}>
-    {welcomeForm}
     <div
       ref={cockpitRef}
       id="cockpit-main"
@@ -385,7 +388,6 @@ export function Cockpit() {
         analysisOpen={analysisOpen}
         analysisAttention={analysisAttention}
         onOpenAnalysis={openAnalysis}
-        formHidden={welcomeSlot !== null}
         date={date}
         time={time}
         city={city}
