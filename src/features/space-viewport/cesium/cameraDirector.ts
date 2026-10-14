@@ -12,6 +12,11 @@ import { raDecToEcef } from './skyVector';
 // camera on Earth's far side) and the celestial sphere (200 000 km).
 const ORBITAL_ALTITUDE_M = 100_000_000;
 
+// 22 000 km — arrival view: Earth fills ~40 % of the height, close enough
+// to feel immersive. The first calculation flies out to the orbital view
+// (flyToCelestialDirection), which turns into a dezoom onto the sky.
+const ARRIVAL_ALTITUDE_M = 22_000_000;
+
 // 8 000 km — Earth fills ~half the FOV, LEO satellites are visibly
 // orbiting (~1 px/s at this distance), and the camera is still far enough
 // out to keep the celestial backdrop legible.
@@ -33,6 +38,20 @@ export function flyToOrbital(viewer: Viewer, duration = 1.5): void {
     },
     duration,
     easingFunction: EasingFunction.QUADRATIC_IN_OUT,
+  });
+}
+
+/**
+ * Arrival view: close to Earth, looking down on the visitor's region. The
+ * latitude is softened toward the equator so the globe still reads as a
+ * whole sphere rather than a polar close-up.
+ */
+export function flyToArrival(viewer: Viewer, lat: number, lon: number): void {
+  const softenedLat = Math.max(-35, Math.min(35, lat * 0.6));
+  viewer.camera.flyTo({
+    destination: Cartesian3.fromDegrees(lon, softenedLat, ARRIVAL_ALTITUDE_M),
+    orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+    duration: 0,
   });
 }
 
