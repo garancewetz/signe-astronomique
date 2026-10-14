@@ -131,7 +131,7 @@ export function mountDistanceRuler(
           position: center,
           label: {
             text: `${ly} al`,
-            font: "10px 'JetBrains Mono', monospace",
+            font: "10px 'IBM Plex Mono', monospace",
             fillColor: Color.fromCssColorString(RULER_LABEL_HEX),
             style: LabelStyle.FILL,
             verticalOrigin: above ? VerticalOrigin.BOTTOM : VerticalOrigin.TOP,
@@ -162,7 +162,7 @@ export function mountDistanceRuler(
       },
       label: {
         text: 'Terre · 0 al',
-        font: "10px 'JetBrains Mono', monospace",
+        font: "10px 'IBM Plex Mono', monospace",
         fillColor: Color.fromCssColorString(RULER_LABEL_HEX),
         style: LabelStyle.FILL,
         verticalOrigin: VerticalOrigin.TOP,
@@ -185,7 +185,7 @@ export function mountDistanceRuler(
       position: Cartesian3.ZERO,
       label: {
         text: 'Terre & Soleil non à l’échelle',
-        font: "italic 9px 'JetBrains Mono', monospace",
+        font: "italic 9px 'IBM Plex Mono', monospace",
         fillColor: Color.fromCssColorString(RULER_LABEL_HEX).withAlpha(0.55),
         style: LabelStyle.FILL,
         verticalOrigin: VerticalOrigin.TOP,

@@ -75,7 +75,7 @@ export function mountPlanetsLayer(viewer: Viewer, opts: MountOptions): () => voi
           ? {
               label: {
                 text: `${body.glyph} ${displayName}`,
-                font: "10px 'JetBrains Mono', monospace",
+                font: "10px 'IBM Plex Mono', monospace",
                 fillColor: color.withAlpha(0.88),
                 style: LabelStyle.FILL,
                 verticalOrigin: VerticalOrigin.CENTER,

@@ -23,13 +23,8 @@ export function SidebarHeader({
       {!collapsed && (
         <div className="flex items-center gap-2 min-w-0">
           <span
-            aria-hidden="true"
-            className="inline-block size-1.5 rounded-full bg-cyan-300
-                       shadow-[0_0_8px_2px_rgba(103,232,249,0.55)]"
-          />
-          <span
-            className="truncate text-cockpit-sm tracking-cockpit-hud
-                       text-accent-title uppercase"
+            className="truncate font-serif text-[15px] font-semibold
+                       text-accent-title"
           >
             {t.cockpit.brand}
           </span>

@@ -74,7 +74,7 @@ export function mountSelectedConstellation(
         position: positions[brightest],
         label: {
           text: labelText,
-          font: "600 13px 'JetBrains Mono', monospace",
+          font: "600 13px 'IBM Plex Mono', monospace",
           fillColor: Color.fromCssColorString('#e0f2fe'),
           style: LabelStyle.FILL,
           verticalOrigin: VerticalOrigin.BOTTOM,

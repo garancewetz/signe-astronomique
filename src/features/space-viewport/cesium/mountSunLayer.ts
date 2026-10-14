@@ -96,7 +96,7 @@ export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
       ? {
           label: {
             text: `☀ ${displayName}`,
-            font: "10px 'JetBrains Mono', monospace",
+            font: "10px 'IBM Plex Mono', monospace",
             fillColor: Color.fromCssColorString('#fcd34d').withAlpha(0.9),
             style: LabelStyle.FILL,
             verticalOrigin: VerticalOrigin.CENTER,

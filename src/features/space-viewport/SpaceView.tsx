@@ -365,8 +365,8 @@ export function SpaceView({
     const cockpitBg =
       typeof document !== 'undefined'
         ? getComputedStyle(document.documentElement).getPropertyValue('--color-background').trim() ||
-          '#060210'
-        : '#060210';
+          '#0b0e14'
+        : '#0b0e14';
     viewer.scene.backgroundColor = Color.fromCssColorString(cockpitBg);
     // Globe base color: Cesium's default is a bright `#0000ff` blue, which
     // bleeds through any partially-transparent imagery layer (notably the

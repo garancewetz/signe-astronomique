@@ -10,7 +10,7 @@ export const en: Copy = {
   cockpit: {
     sidebarLabel: 'Cockpit console',
     skipToMain: 'Skip to main content',
-    brand: 'REAL SKY',
+    brand: 'Astronomical sign',
     srTitle: 'Real sky map',
   },
 
@@ -32,7 +32,7 @@ export const en: Copy = {
     timeLabel: 'TIME',
     placeLabel: 'BIRTHPLACE',
     placePlaceholder: 'Birth city…',
-    submitIdle: 'COMPUTE MY SIGN',
+    submitIdle: 'Find your true sign',
     submitBusy: 'Computing the sky…',
     allSignsLink: 'True dates of the 13 signs',
   },
@@ -123,7 +123,7 @@ export const en: Copy = {
     sheet: {
       home: {
         eyebrow: 'Console',
-        ctaCalculate: 'COMPUTE MY SIGN',
+        ctaCalculate: 'Find your true sign',
         hint:
           'Enter your birth date, time and place to discover your true sign.',
       },

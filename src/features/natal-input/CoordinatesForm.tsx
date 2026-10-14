@@ -111,17 +111,14 @@ export function CoordinatesForm({
         disabled={computing}
         whileHover={reduceMotion ? undefined : { scale: 1.02 }}
         whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-        className="cockpit-focus relative w-full mt-1 px-4 py-2 min-h-9 rounded-panel overflow-hidden
-                   border border-border-control bg-violet-600/15
-                   text-white text-cockpit-sm tracking-cockpit
-                   hover:bg-violet-600/25 hover:border-accent-label
+        className="cockpit-focus relative w-full mt-1 px-4 py-2 min-h-11 rounded-panel overflow-hidden
+                   border border-foreground bg-foreground
+                   text-background text-cockpit-lg font-semibold
+                   hover:bg-white hover:border-white
                    disabled:opacity-40 disabled:cursor-wait
                    transition-all inline-flex items-center justify-center gap-2"
       >
-        <span aria-hidden className="relative z-10 text-violet-200/90 leading-none">✦</span>
-        <span className="relative z-10">
-          {computing ? t.natalForm.submitBusy : t.natalForm.submitIdle}
-        </span>
+        {computing ? t.natalForm.submitBusy : `${t.natalForm.submitIdle} →`}
       </motion.button>
 
       <AllSignsLink />

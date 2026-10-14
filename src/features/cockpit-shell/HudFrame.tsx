@@ -1,7 +1,5 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import {
-  formatLST,
-  liveTelemetry,
   loreName,
   type CelestialReading,
 } from '@/features/astronomy';
@@ -67,10 +65,10 @@ export const HudFrame = memo(function HudFrame({
   const sub = reading
     ? `${reading.input.placeLabel ?? t.hudFrame.placeLabelFallback} · ${formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale)}`
     : (() => {
-        const { lstHours } = liveTelemetry(liveNow, observerLon);
         const latStr = `${Math.abs(observerLat).toFixed(2)}°${observerLat >= 0 ? 'N' : 'S'}`;
         const lonStr = `${Math.abs(observerLon).toFixed(2)}°${observerLon >= 0 ? 'E' : 'W'}`;
-        return `${liveDateFormatter.format(liveNow)} · LST ${formatLST(lstHours)} · ${latStr} ${lonStr}`;
+        // No sidereal time here: jargon for this audience.
+        return `${liveDateFormatter.format(liveNow)} · ${latStr} ${lonStr}`;
       })();
 
   const summaryClickable = isNatal && !!onOpenSummary;

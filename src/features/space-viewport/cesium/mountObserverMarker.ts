@@ -66,7 +66,7 @@ export function mountObserverMarker(
       ? {
           label: {
             text: label,
-            font: "10px 'JetBrains Mono', monospace",
+            font: "10px 'IBM Plex Mono', monospace",
             fillColor: color.withAlpha(0.95),
             style: LabelStyle.FILL,
             verticalOrigin: VerticalOrigin.BOTTOM,
