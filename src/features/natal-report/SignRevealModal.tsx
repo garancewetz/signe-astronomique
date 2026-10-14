@@ -15,6 +15,8 @@ interface SignRevealModalProps {
   onRevealConstellation: () => void;
   onShare: () => void;
   shareCopied: boolean;
+  /** False when the birth time was left out (computed at noon). */
+  birthTimeKnown: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export function SignRevealModal({
   onRevealConstellation,
   onShare,
   shareCopied,
+  birthTimeKnown,
 }: SignRevealModalProps) {
   const t = useT();
   const reduceMotion = useReducedMotion();
@@ -110,6 +113,7 @@ export function SignRevealModal({
                 onRevealConstellation={onRevealConstellation}
                 onShare={onShare}
                 shareCopied={shareCopied}
+                birthTimeKnown={birthTimeKnown}
                 showAllSignsLink
               />
             </div>

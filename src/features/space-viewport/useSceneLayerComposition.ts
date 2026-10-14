@@ -1,13 +1,14 @@
 import { useEffect, type MutableRefObject } from 'react';
 import { JulianDate, type Viewer } from 'cesium';
 import type { CelestialReading } from '@/features/astronomy';
-import type { PlanetId } from '@/features/astronomy';
+import type { IauConstellation, PlanetId } from '@/features/astronomy';
 import { gmstRadians } from '@/features/astronomy';
 import { mountStarsLayer } from './cesium/mountStarsLayer';
 import { mountSunLayer } from './cesium/mountSunLayer';
 import { mountMoonLayer } from './cesium/mountMoonLayer';
 import { mountPlanetsLayer } from './cesium/mountPlanetsLayer';
 import { mountReferenceLines } from './cesium/mountReferenceLines';
+import { mountZodiacBand } from './cesium/mountZodiacBand';
 import { flyToCelestialDirection } from './cesium/cameraDirector';
 
 interface UseSceneLayerCompositionArgs {
@@ -34,6 +35,7 @@ interface UseSceneLayerCompositionArgs {
     sun: string;
     moon: string;
     planet: (id: PlanetId) => string;
+    constellation: (c: IauConstellation) => string;
   };
 }
 
@@ -124,6 +126,18 @@ export function useSceneLayerComposition({
         showLabels: showBodyLabels,
       }),
     );
+
+    // Natal mode: the official constellation territories along the Sun's
+    // path, so the answer is visible in the sky, not only in the report.
+    if (reading && !sideViewActive) {
+      cleanupsRef.current.push(
+        mountZodiacBand(viewer, {
+          gmstRad,
+          trueConstellation: reading.trueConstellation,
+          nameOf: bodyNames.constellation,
+        }),
+      );
+    }
 
     if (showGuides) {
       cleanupsRef.current.push(

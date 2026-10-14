@@ -5,6 +5,8 @@
 export {
   toJulianDay,
   getIauBoundaries,
+  nearestBoundary,
+  type BoundaryProximity,
   precessionOffset,
   zodiacDriftDegrees,
   computeReading,

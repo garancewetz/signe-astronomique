@@ -77,6 +77,15 @@ export const en: Copy = {
     ophiuchus:
       '**Ophiuchus** is the forgotten 13th sign: the Sun crosses it every year, but horoscopes only kept 12.',
     revealCta: (sign: string): string => `See ${sign} in the sky`,
+    edgeTitle: 'Born on the edge',
+    edgeLeaving: (days: string, next: string): string =>
+      `You were born **${days}** from a boundary: right after, the Sun moved into the neighbouring constellation, ${next}.`,
+    edgeEntered: (days: string, prev: string): string =>
+      `You were born **${days}** from a boundary: right before, the Sun was still in the neighbouring constellation, ${prev}.`,
+    edgeDays: (n: number): string => (n < 1 ? 'less than a day' : n === 1 ? '1 day' : `${n} days`),
+    edgeAddTime: 'This close, the hour can matter: add your birth time and place to be sure.',
+    skyBandHint:
+      'In the sky, the gold stroke along the Sun’s path shows the official area of your constellation. The blue lines only join its brightest stars.',
     allSignsLink: 'True dates of the 13 signs',
   },
 

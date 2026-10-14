@@ -270,6 +270,7 @@ export function Cockpit() {
       onRevealConstellation={handleRevealFromModal}
       onShare={handleShareLink}
       shareCopied={shareCopied}
+      birthTimeKnown={time !== ''}
     />
   );
 
