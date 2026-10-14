@@ -38,7 +38,7 @@ export const fr = {
     placePlaceholder: 'Ville de naissance…',
     submitIdle: 'CALCULER MON SIGNE',
     submitBusy: 'Calcul du ciel…',
-    allSignsLink: 'Les vraies dates de chaque signe →',
+    allSignsLink: 'Les vraies dates des 13 signes',
   },
 
   searchHistory: {
@@ -79,7 +79,7 @@ export const fr = {
     ophiuchus:
       '**Ophiuchus** est le 13ᵉ signe oublié : le Soleil le traverse chaque année, mais les horoscopes n’en ont gardé que 12.',
     revealCta: (sign: string): string => `Voir ${sign} dans le ciel`,
-    allSignsLink: 'Les vraies dates de chaque signe →',
+    allSignsLink: 'Les vraies dates des 13 signes',
   },
 
   analysisCta: {
