@@ -70,68 +70,81 @@ function jsonLd(data: unknown): string {
 // ─── Shared layout ──────────────────────────────────────────────────────────
 
 const CSS = `
-:root { color-scheme: dark; }
+:root {
+  color-scheme: dark;
+  --bg: #0b0e14;
+  --surface: #11151e;
+  --surface-2: #161b26;
+  --line: rgba(148, 163, 184, 0.16);
+  --line-strong: rgba(148, 163, 184, 0.3);
+  --text: #e6e8ec;
+  --text-2: #b8bfcc;
+  --muted: #8a93a3;
+  --link: #a9b8f5;
+  --gold: #f2cf73;
+  --gold-soft: rgba(242, 207, 115, 0.1);
+  --serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.28), transparent 70%),
-    #060210;
-  color: #e2e8f0;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-weight: 300;
-  line-height: 1.7;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
 }
-a { color: #c4b5fd; text-underline-offset: 3px; }
-a:hover { color: #f5f3ff; }
-a:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; border-radius: 4px; }
-strong { font-weight: 500; color: #e9d5ff; }
+a { color: var(--link); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { color: var(--text); }
+a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 3px; }
+strong { font-weight: 600; color: var(--text); }
 .wrap { max-width: 90rem; margin: 0 auto; padding: 1rem 16px 3rem; }
 .narrow { max-width: 48rem; margin-inline: auto; }
-.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; font-size: 0.78rem; color: #94a3b8; }
-.top a { color: #94a3b8; text-decoration: none; }
-.top a:hover { color: #e2e8f0; }
-.brand { color: #e2e8f0 !important; font-weight: 500; letter-spacing: 0.02em; }
+.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; padding-bottom: 0.9rem; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.top a { color: var(--muted); text-decoration: none; }
+.top a:hover { color: var(--text); }
+.brand { color: var(--text) !important; font-family: var(--serif); font-size: 0.95rem; font-weight: 600; }
 .crumbs ol { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
-.crumbs li + li::before { content: '›'; margin-right: 0.35rem; color: #64748b; }
-.hero { max-width: 48rem; margin: 2.5rem auto 2rem; text-align: center; }
-.hero__glyph { font-size: 4rem; line-height: 1; color: #fde68a; text-shadow: 0 0 22px rgba(252, 211, 77, 0.45); }
-h1 { margin: 0.75rem 0 1rem; font-size: clamp(1.45rem, 5.5vw, 2.1rem); font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: #f8fafc; text-shadow: 0 0 24px rgba(124, 58, 237, 0.35); text-wrap: balance; }
-.answer { margin: 0 auto; max-width: 34rem; font-size: 1.05rem; color: #cbd5e1; }
-.answer strong { color: #fde68a; }
-.cta { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; min-height: 3rem; padding: 0.8rem 1.6rem; border: 1px solid rgba(167, 139, 250, 0.6); border-radius: 0.7rem; background: rgba(124, 58, 237, 0.35); color: #f5f3ff; font-size: 0.95rem; font-weight: 500; letter-spacing: 0.02em; text-decoration: none; box-shadow: 0 0 40px rgba(124, 58, 237, 0.25); transition: background 0.15s ease, border-color 0.15s ease; }
-.cta:hover { background: rgba(124, 58, 237, 0.55); border-color: rgba(167, 139, 250, 0.9); color: #fff; }
-.card { margin: 1.25rem 0; padding: 1.25rem clamp(1rem, 4vw, 1.75rem); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 1rem; background: rgba(13, 8, 30, 0.75); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 18px 50px rgba(0, 0, 0, 0.4); }
-h2 { margin: 0 0 0.85rem; font-size: 1.02rem; font-weight: 500; line-height: 1.4; color: #c4b5fd; }
-p { margin: 0 0 0.85rem; font-size: 0.9rem; color: #cbd5e1; }
+.crumbs li + li::before { content: '/'; margin-right: 0.35rem; color: var(--line-strong); }
+.hero { max-width: 46rem; margin: 3rem auto 2.5rem; text-align: center; }
+.hero__glyph { font-size: 2.5rem; line-height: 1; color: var(--gold); }
+h1 { margin: 1rem 0; font-family: var(--serif); font-size: clamp(1.75rem, 6vw, 2.6rem); font-weight: 500; line-height: 1.2; letter-spacing: -0.015em; color: #fff; text-wrap: balance; }
+.answer { margin: 0 auto; max-width: 36rem; font-size: 1.1rem; color: var(--text-2); }
+.answer strong { color: var(--gold); font-weight: 600; }
+.cta { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1.75rem; min-height: 3rem; padding: 0.75rem 1.5rem; border: 1px solid #e6e8ec; border-radius: 6px; background: #e6e8ec; color: var(--bg); font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: background 0.15s ease, border-color 0.15s ease; }
+.cta:hover { background: #fff; border-color: #fff; color: var(--bg); }
+.card { margin: 1.25rem 0; padding: 1.5rem clamp(1rem, 4vw, 2rem); border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+h2 { margin: 0 0 0.9rem; font-family: var(--serif); font-size: 1.3rem; font-weight: 500; line-height: 1.3; color: #fff; text-wrap: balance; }
+p { margin: 0 0 0.9rem; font-size: 1rem; color: var(--text-2); }
 p:last-child { margin-bottom: 0; }
-.muted { color: #94a3b8; font-size: 0.8rem; }
-.rows { margin: 0 0 0.85rem; padding: 0; list-style: none; }
-.rows li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(148, 163, 184, 0.12); font-size: 0.88rem; }
-.rows li:last-child { border-bottom: 0; }
-.rows .when { color: #cbd5e1; }
+.muted { color: var(--muted); font-size: 0.85rem; }
+.rows { margin: 0 0 0.9rem; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.rows li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.25rem 1rem; padding: 0.65rem 0; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
+.rows .when { font-family: var(--mono); font-size: 0.88rem; color: var(--text-2); }
 .rows .what { font-weight: 500; }
-.rows .main .what a { color: #fde68a; }
-.rows .ok { color: #6ee7b7; font-size: 0.78rem; }
+.rows .main .what a { color: var(--gold); }
+.rows .ok { color: #8fd3b0; font-size: 0.82rem; }
 .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin: 0 0 1rem; }
-.fact { padding: 0.75rem; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 0.7rem; background: rgba(30, 20, 55, 0.45); }
-.fact__label { display: block; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; }
-.fact__value { display: block; margin-top: 0.2rem; font-size: 0.92rem; font-weight: 500; color: #f8fafc; }
-.fact--old .fact__value { color: #94a3b8; text-decoration: line-through; text-decoration-color: rgba(100, 116, 139, 0.8); }
-.fact--gold { border-color: rgba(252, 211, 77, 0.4); background: rgba(251, 191, 36, 0.08); }
-.fact--gold .fact__value { color: #fde68a; }
-.wheel { display: block; width: 100%; max-width: 30rem; height: auto; margin: 0.5rem auto 1rem; }
+.fact { padding: 0.8rem 0.9rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
+.fact__label { display: block; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.fact__value { display: block; margin-top: 0.25rem; font-family: var(--mono); font-size: 0.95rem; font-weight: 500; color: var(--text); }
+.fact--old .fact__value { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+.fact--gold { border-color: rgba(242, 207, 115, 0.45); background: var(--gold-soft); }
+.fact--gold .fact__value { color: var(--gold); }
+.wheel { display: block; width: 100%; max-width: 30rem; height: auto; margin: 0.5rem auto 1rem; font-family: var(--mono); }
 .wheel a { cursor: pointer; }
-.wheel a:hover path { filter: brightness(1.5); }
+.wheel a:hover path { filter: brightness(1.4); }
 .wheel a:focus { outline: none; }
-.wheel a:focus-visible path, .wheel a.is-selected path { stroke: #fde68a; stroke-width: 2.5; }
-.wheel-info { text-align: center; font-size: 0.8rem; color: #94a3b8; }
-.wheel-info.is-filled { padding: 0.7rem 1rem; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 0.7rem; background: rgba(30, 20, 55, 0.45); text-align: left; }
-.wheel-info p { margin: 0 0 0.3rem; font-size: 0.85rem; }
-.wheel-info .wheel-info__title { font-weight: 500; color: #fde68a; }
+.wheel a:focus-visible path, .wheel a.is-selected path { stroke: var(--gold); stroke-width: 2.5; }
+.wheel-info { text-align: center; font-size: 0.85rem; color: var(--muted); }
+.wheel-info.is-filled { padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); text-align: left; }
+.wheel-info p { margin: 0 0 0.3rem; font-size: 0.9rem; }
+.wheel-info .wheel-info__title { font-weight: 600; color: var(--gold); }
 .wheel-info .wheel-info__link { display: inline-block; margin-top: 0.2rem; }
 .aside .cta { display: flex; margin-top: 1rem; }
 .aside-desktop { display: none; }
@@ -152,27 +165,30 @@ p:last-child { margin-bottom: 0; }
 @media (min-width: 64rem) and (min-height: 40rem) {
   .page > .aside, .signs-grid > .wheel-card { position: sticky; top: 1rem; }
 }
-tr.is-selected td { background: rgba(252, 211, 77, 0.1); }
-.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem 1rem; margin: 0 0 0.6rem; font-size: 0.74rem; color: #94a3b8; }
-.legend i { display: inline-block; width: 0.8rem; height: 0.8rem; margin-right: 0.4rem; border-radius: 3px; vertical-align: -0.1rem; }
-.sky { display: block; width: 100%; max-width: 24rem; height: auto; margin: 0 auto 1rem; }
-dl { margin: 0 0 0.85rem; }
-dt { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; }
-dd { margin: 0.15rem 0 0.85rem; font-size: 0.9rem; color: #cbd5e1; }
-.faq h3 { margin: 1.2rem 0 0.4rem; font-size: 0.92rem; font-weight: 500; color: #e9d5ff; }
+tr.is-selected td { background: var(--gold-soft); }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem 1rem; margin: 0 0 0.6rem; font-size: 0.8rem; color: var(--muted); }
+.legend i { display: inline-block; width: 0.8rem; height: 0.8rem; margin-right: 0.4rem; border-radius: 2px; vertical-align: -0.1rem; }
+.sky { display: block; width: 100%; max-width: 24rem; height: auto; margin: 0 auto 1rem; font-family: var(--mono); }
+dl { margin: 0 0 0.9rem; }
+dt { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+dd { margin: 0.15rem 0 0.9rem; font-size: 1rem; color: var(--text-2); }
+.faq h3 { margin: 1.3rem 0 0.4rem; font-size: 1rem; font-weight: 600; color: var(--text); }
 .faq h3:first-of-type { margin-top: 0; }
-.table-wrap { overflow-x: auto; margin: 0 -0.25rem 0.85rem; }
-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-th, td { padding: 0.6rem 0.4rem; border-bottom: 1px solid rgba(148, 163, 184, 0.12); text-align: left; vertical-align: top; }
-th { font-size: 0.66rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; }
+.sources { margin: 0 0 0.9rem; padding-left: 1.1rem; font-size: 0.92rem; color: var(--text-2); }
+.sources li { margin-bottom: 0.4rem; }
+.table-wrap { overflow-x: auto; margin: 0 -0.25rem 0.9rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 0.6rem 0.4rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+td:not(:first-child) { font-family: var(--mono); font-size: 0.85rem; }
+th { font-family: var(--mono); font-size: 0.7rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 td.num, .nw { white-space: nowrap; }
-td.old { color: #94a3b8; }
-tr.star td { background: rgba(251, 191, 36, 0.06); }
-.pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; margin-top: 2rem; font-size: 0.85rem; }
-.pager a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.4rem 0.85rem; border: 1px solid rgba(148, 163, 184, 0.22); border-radius: 0.6rem; background: rgba(30, 20, 55, 0.5); text-decoration: none; }
-.pager a:hover { border-color: rgba(167, 139, 250, 0.6); }
+td.old { color: var(--muted); }
+tr.star td { background: var(--gold-soft); }
+.pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; margin-top: 2rem; font-size: 0.92rem; }
+.pager a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.4rem 0.9rem; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); text-decoration: none; }
+.pager a:hover { border-color: var(--text-2); }
 .pager .all { margin: 0 auto; }
-.foot { margin-top: 2rem; text-align: center; font-size: 0.75rem; color: #64748b; }
+.foot { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line); text-align: center; font-size: 0.8rem; color: var(--muted); }
 @media (max-width: 30rem) {
   .pager { justify-content: center; }
   .pager .all { order: -1; flex-basis: 100%; text-align: center; }
@@ -184,7 +200,7 @@ tr.star td { background: rgba(251, 191, 36, 0.06); }
 const LINK_CSS = ZODIAC_ORDER.map(c => {
   const slug = SIGN_FR[c].slug;
   return `.signs-grid:has(tr[data-sign="${slug}"]:hover) .wheel a[data-sign="${slug}"][data-kind="sky"] path { filter: brightness(1.7); }
-.signs-grid:has(.wheel a[data-sign="${slug}"]:hover) tr[data-sign="${slug}"] td { background: rgba(167, 139, 250, 0.12); }`;
+.signs-grid:has(.wheel a[data-sign="${slug}"]:hover) tr[data-sign="${slug}"] td { background: rgba(169, 184, 245, 0.1); }`;
 }).join('\n');
 
 /**
@@ -282,7 +298,7 @@ function layout({ path, title, description, crumbs, faq, body }: LayoutInput): s
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#060210" />
+    <meta name="theme-color" content="#0b0e14" />
     <title>${esc(title)}</title>
     <meta name="description" content="${esc(description)}" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -305,13 +321,13 @@ function layout({ path, title, description, crumbs, faq, body }: LayoutInput): s
     <script type="application/ld+json">${jsonLd(graph)}</script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet" />
     <style>${CSS}${LINK_CSS}</style>
   </head>
   <body>
     <div class="wrap">
       <header class="top">
-        <a class="brand" href="/">✦ ${SITE_NAME}</a>
+        <a class="brand" href="/">${SITE_NAME}</a>
         <nav class="crumbs" aria-label="Fil d’Ariane"><ol>${crumbsHtml}</ol></nav>
       </header>
       <main>
@@ -334,6 +350,44 @@ function faqSection(faq: Faq[]): string {
 </section>`;
 }
 
+/** How the dates are computed, with sources — what makes the claim credible. */
+function methodSection(): string {
+  return `<section class="card" aria-labelledby="method-title">
+  <h2 id="method-title">Méthode et sources</h2>
+  <p>Pour chaque jour de l’année, on calcule la position du Soleil sur l’écliptique, puis on regarde dans quelle constellation officielle tombe ce point du ciel.</p>
+  <ul class="sources">
+    <li><strong>Frontières des constellations</strong> : tracé officiel de l’Union astronomique internationale, établi par Eugène Delporte en 1930. <a href="https://www.iau.org/public/themes/constellations/" rel="noopener">Les 88 constellations (IAU)</a></li>
+    <li><strong>Position du Soleil</strong> : algorithmes de Jean Meeus, <cite>Astronomical Algorithms</cite> (2ᵉ éd., 1998), précis à environ 0,01° entre 1900 et 2100.</li>
+    <li><strong>Décalage avec l’horoscope</strong> : la <a href="https://fr.wikipedia.org/wiki/Pr%C3%A9cession_des_%C3%A9quinoxes" rel="noopener">précession des équinoxes</a>, un lent pivotement de l’axe de la Terre (un tour en environ 26 000 ans).</li>
+  </ul>
+  <p class="muted">Les dates affichées sont calculées pour ${REFERENCE_YEAR}. Le calculateur, lui, utilise ta date, ton heure et ton lieu de naissance exacts.</p>
+</section>`;
+}
+
+// ─── Line icons (emoji render differently on every OS) ──────────────────────
+
+/** The Earth as a line globe: outline, equator and one meridian. */
+function earthIcon(x: number, y: number, r: number): string {
+  return `<g fill="none" stroke="#9fb4e8" stroke-width="1.2" aria-hidden="true">
+      <circle cx="${x}" cy="${y}" r="${r}" fill="rgba(110,140,210,0.18)"/>
+      <ellipse cx="${x}" cy="${y}" rx="${r}" ry="${(r * 0.38).toFixed(1)}"/>
+      <ellipse cx="${x}" cy="${y}" rx="${(r * 0.42).toFixed(1)}" ry="${r}"/>
+    </g>`;
+}
+
+/** The Sun as a disc with eight short rays. */
+function sunIcon(x: number, y: number, r: number): string {
+  const rays = Array.from({ length: 8 }, (_, k) => {
+    const a = (k * Math.PI) / 4;
+    const p = (d: number) => `${(x + d * Math.cos(a)).toFixed(1)} ${(y + d * Math.sin(a)).toFixed(1)}`;
+    return `M ${p(r + 3)} L ${p(r + 7)}`;
+  }).join(' ');
+  return `<g stroke="#f2cf73" stroke-width="1.3" stroke-linecap="round" aria-hidden="true">
+      <circle cx="${x}" cy="${y}" r="${r}" fill="rgba(242,207,115,0.85)" stroke="none"/>
+      <path d="${rays}" fill="none"/>
+    </g>`;
+}
+
 // ─── Sky alignment diagram (static twin of SkyAlignment in SignReveal.tsx) ──
 
 /** A small generic star pattern drawn around (0, 0). */
@@ -348,24 +402,23 @@ function skyAlignmentSvg(sign: IauConstellation): string {
   const cx = 256;
   const cy = 80;
   const pts = PATTERN.map(([x, y]) => `${cx + x},${cy + y}`).join(' ');
-  const stars = PATTERN.map(([x, y]) => `<circle cx="${cx + x}" cy="${cy + y}" r="1.8" fill="#fef3c7"/>`).join('');
+  const stars = PATTERN.map(([x, y]) => `<circle cx="${cx + x}" cy="${cy + y}" r="1.8" fill="#fbecc0"/>`).join('');
   const label = (c: IauConstellation) => esc(`${SIGN_FR[c].glyph} ${SIGN_FR[c].name}`);
 
   return `<svg class="sky" viewBox="0 0 320 150" role="img" aria-label="${esc(`Depuis la Terre, on voit le Soleil devant la constellation ${SIGN_FR[sign].of}`)}" font-family="inherit">
-    <ellipse cx="128" cy="80" rx="90" ry="30" fill="none" stroke="rgba(100,116,139,0.5)" stroke-dasharray="3 4"/>
-    <line x1="46" y1="80" x2="226" y2="80" stroke="rgba(253,230,138,0.7)" stroke-width="1.2" stroke-dasharray="5 4"/>
-    <path d="M 220 75 L 228 80 L 220 85" fill="none" stroke="rgba(253,230,138,0.7)" stroke-width="1.2"/>
-    <text x="${cx}" y="22" text-anchor="middle" fill="#64748b" font-size="12">${label(prev)}</text>
-    <text x="${cx}" y="146" text-anchor="middle" fill="#64748b" font-size="12">${label(next)}</text>
-    <circle cx="${cx}" cy="${cy}" r="26" fill="rgba(252,211,77,0.1)" stroke="rgba(252,211,77,0.4)"/>
-    <polyline points="${pts}" fill="none" stroke="#fde68a" stroke-width="1"/>
+    <ellipse cx="128" cy="80" rx="90" ry="30" fill="none" stroke="rgba(148,163,184,0.35)" stroke-dasharray="3 4"/>
+    <line x1="46" y1="80" x2="226" y2="80" stroke="rgba(242,207,115,0.6)" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <path d="M 220 75 L 228 80 L 220 85" fill="none" stroke="rgba(242,207,115,0.6)" stroke-width="1.2"/>
+    <text x="${cx}" y="22" text-anchor="middle" fill="#8a93a3" font-size="12">${label(prev)}</text>
+    <text x="${cx}" y="146" text-anchor="middle" fill="#8a93a3" font-size="12">${label(next)}</text>
+    <circle cx="${cx}" cy="${cy}" r="26" fill="rgba(242,207,115,0.08)" stroke="rgba(242,207,115,0.4)"/>
+    <polyline points="${pts}" fill="none" stroke="#f2cf73" stroke-width="1"/>
     ${stars}
-    <text x="${cx}" y="122" text-anchor="middle" fill="#fde68a" font-size="15" font-weight="600">${label(sign)}</text>
-    <circle cx="128" cy="80" r="20" fill="rgba(252,211,77,0.15)"/>
-    <text x="128" y="81" text-anchor="middle" dominant-baseline="central" font-size="26">☀️</text>
-    <text x="128" y="112" text-anchor="middle" fill="#cbd5e1" font-size="12">Soleil</text>
-    <text x="32" y="81" text-anchor="middle" dominant-baseline="central" font-size="20">🌍</text>
-    <text x="32" y="102" text-anchor="middle" fill="#cbd5e1" font-size="12">Terre</text>
+    <text x="${cx}" y="122" text-anchor="middle" fill="#f2cf73" font-size="15" font-weight="500">${label(sign)}</text>
+    ${sunIcon(128, 80, 9)}
+    <text x="128" y="112" text-anchor="middle" fill="#b8bfcc" font-size="12">Soleil</text>
+    ${earthIcon(32, 80, 9)}
+    <text x="32" y="102" text-anchor="middle" fill="#b8bfcc" font-size="12">Terre</text>
   </svg>`;
 }
 
@@ -445,27 +498,27 @@ function zodiacWheelSvg(focus?: WheelFocus): string {
   for (let m = 0; m < 12; m++) {
     const i = TIMELINE.findIndex(d => d.date.getUTCMonth() === m);
     const a = dayAngle(i);
-    parts.push(`<path d="M ${pt(R.horoOut, a)} L ${pt(R.tick, a)}" stroke="rgba(148,163,184,0.5)"/>`);
+    parts.push(`<path d="M ${pt(R.horoOut, a)} L ${pt(R.tick, a)}" stroke="rgba(148,163,184,0.4)"/>`);
     const mid = dayAngle(i + 15);
     const [x, y] = pt(R.month, mid).split(',');
-    parts.push(`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#94a3b8">${MONTH_SHORT[m]}</text>`);
+    parts.push(`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#8a93a3">${MONTH_SHORT[m]}</text>`);
   }
 
   // Focused days: a faint wedge over both rings.
   if (focus) {
     const { start, days } = runSpan(focus.run);
-    parts.push(`<path d="${sectorPath(start, days, R.skyIn - 4, R.horoOut + 2)}" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="4 3"/>`);
+    parts.push(`<path d="${sectorPath(start, days, R.skyIn - 4, R.horoOut + 2)}" fill="rgba(230,232,236,0.06)" stroke="#e6e8ec" stroke-width="1.2" stroke-dasharray="4 3"/>`);
   }
 
   // Outer ring — horoscope, 12 equal signs.
   [...TROPICAL_RUNS.values()].forEach((run, k) => {
     const { start, days } = runSpan(run);
     const on = run.sign === focus?.horoscope;
-    const fill = on ? 'rgba(167,139,250,0.35)' : k % 2 ? 'rgba(148,163,184,0.10)' : 'rgba(148,163,184,0.17)';
+    const fill = on ? 'rgba(230,232,236,0.3)' : k % 2 ? 'rgba(148,163,184,0.08)' : 'rgba(148,163,184,0.14)';
     const label = SIGN_FR[run.sign].glyph;
     const sky = SIGN_FR[majority(splitBy(TIMELINE, run.idx, d => d.constellation)).sign].name;
     const data = segmentData(run.sign, 'horo', frSpan(run), `Dans le vrai ciel à ces dates : surtout ${sky}.`);
-    parts.push(`<a href="${signPath(run.sign)}" ${data} aria-label="${esc(`Horoscope ${SIGN_FR[run.sign].name} : ${frSpan(run)}`)}"><title>${esc(`Horoscope · ${SIGN_FR[run.sign].name} · ${frSpan(run)}`)}</title><path d="${sectorPath(start, days, R.horoIn, R.horoOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.horoIn + R.horoOut) / 2, label, 18, on ? '#f5f3ff' : '#94a3b8')}</a>`);
+    parts.push(`<a href="${signPath(run.sign)}" ${data} aria-label="${esc(`Horoscope ${SIGN_FR[run.sign].name} : ${frSpan(run)}`)}"><title>${esc(`Horoscope · ${SIGN_FR[run.sign].name} · ${frSpan(run)}`)}</title><path d="${sectorPath(start, days, R.horoIn, R.horoOut)}" fill="${fill}" stroke="#0b0e14" stroke-width="1.5"/>${sectorLabel(start, days, (R.horoIn + R.horoOut) / 2, label, 18, on ? '#ffffff' : '#8a93a3')}</a>`);
   });
 
   // Inner ring — real sky, 13 IAU constellations.
@@ -474,20 +527,20 @@ function zodiacWheelSvg(focus?: WheelFocus): string {
     const on = run.sign === focus?.sky;
     const ophiuchus = run.sign === 'Ophiuchus';
     const fill = on
-      ? 'rgba(252,211,77,0.45)'
+      ? 'rgba(242,207,115,0.42)'
       : ophiuchus
-        ? 'rgba(252,211,77,0.22)'
-        : k % 2 ? 'rgba(124,58,237,0.22)' : 'rgba(124,58,237,0.34)';
+        ? 'rgba(242,207,115,0.18)'
+        : k % 2 ? 'rgba(110,140,210,0.2)' : 'rgba(110,140,210,0.32)';
     const size = days < 10 ? 12 : 21;
     const horo = SIGN_FR[majority(splitBy(TIMELINE, run.idx, d => d.tropical)).sign].name;
     const data = segmentData(run.sign, 'sky', `${frSpan(run)} · ${days} jours`, `L’horoscope dit surtout ${horo} à ces dates.`);
-    parts.push(`<a href="${signPath(run.sign)}" ${data} aria-label="${esc(`Vrai ciel ${SIGN_FR[run.sign].name} : ${frSpan(run)}, ${days} jours`)}"><title>${esc(`Vrai ciel · ${SIGN_FR[run.sign].name} · ${frSpan(run)} (${days} j)`)}</title><path d="${sectorPath(start, days, R.skyIn, R.skyOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.skyIn + R.skyOut) / 2, SIGN_FR[run.sign].glyph, size, on || ophiuchus ? '#fde68a' : '#e9d5ff')}</a>`);
+    parts.push(`<a href="${signPath(run.sign)}" ${data} aria-label="${esc(`Vrai ciel ${SIGN_FR[run.sign].name} : ${frSpan(run)}, ${days} jours`)}"><title>${esc(`Vrai ciel · ${SIGN_FR[run.sign].name} · ${frSpan(run)} (${days} j)`)}</title><path d="${sectorPath(start, days, R.skyIn, R.skyOut)}" fill="${fill}" stroke="#0b0e14" stroke-width="1.5"/>${sectorLabel(start, days, (R.skyIn + R.skyOut) / 2, SIGN_FR[run.sign].glyph, size, on || ophiuchus ? '#f2cf73' : '#dbe3f7')}</a>`);
   });
 
   // Center: the Earth, from where we watch the Sun cross the sky.
-  parts.push(`<circle cx="${C}" cy="${C}" r="${R.skyIn - 6}" fill="rgba(13,8,30,0.9)" stroke="rgba(167,139,250,0.2)"/>`);
-  parts.push(`<text x="${C}" y="${C - 6}" text-anchor="middle" dominant-baseline="central" font-size="30">🌍</text>`);
-  parts.push(`<text x="${C}" y="${C + 26}" text-anchor="middle" font-size="12" fill="#cbd5e1">Terre</text>`);
+  parts.push(`<circle cx="${C}" cy="${C}" r="${R.skyIn - 6}" fill="#11151e" stroke="rgba(148,163,184,0.2)"/>`);
+  parts.push(earthIcon(C, C - 8, 17));
+  parts.push(`<text x="${C}" y="${C + 26}" text-anchor="middle" font-size="12" fill="#b8bfcc">Terre</text>`);
 
   const label = focus
     ? `Roue de l’année. ${focus.label} : horoscope ${SIGN_FR[focus.horoscope].name} (anneau extérieur), vrai ciel ${SIGN_FR[focus.sky].name} (anneau intérieur).`
@@ -510,10 +563,10 @@ function wheelBox(focus?: WheelFocus): string {
 function wheelLegend(focus?: WheelFocus): string {
   const items = [
     '<span><i style="background:rgba(148,163,184,0.3)"></i>Horoscope (12)</span>',
-    '<span><i style="background:rgba(124,58,237,0.5)"></i>Vrai ciel (13)</span>',
+    '<span><i style="background:rgba(110,140,210,0.5)"></i>Vrai ciel (13)</span>',
   ];
   if (focus) {
-    items.push(`<span><i style="border:1px dashed #a78bfa"></i>${esc(focus.label)}</span>`);
+    items.push(`<span><i style="border:1px dashed #e6e8ec"></i>${esc(focus.label)}</span>`);
   }
   return `<p class="legend">${items.join('')}</p>`;
 }
@@ -723,6 +776,7 @@ function signPage(sign: IauConstellation): StaticPage {
   ${why}
   ${constellation}
   ${faqSection(faq)}
+  ${methodSection()}
   ${pager}
     </div>
     ${aside}
@@ -783,7 +837,7 @@ function indexPage(): StaticPage {
   ];
 
   const body = `  <section class="hero">
-    <div class="hero__glyph" aria-hidden="true">✦</div>
+    <div class="hero__glyph" aria-hidden="true">☉</div>
     <h1>Les vraies dates des 13 signes astronomiques</h1>
     <p class="answer">Le Soleil traverse <strong>13 constellations</strong>, pas 12. Voici leurs vraies dates, selon les frontières officielles de l’IAU, à côté des dates des horoscopes.</p>
     <a class="cta" href="/">Calcule ton vrai signe →</a>
@@ -810,6 +864,7 @@ function indexPage(): StaticPage {
   </div>
   <div class="narrow">
   ${faqSection(faq)}
+  ${methodSection()}
   </div>`;
 
   return {
