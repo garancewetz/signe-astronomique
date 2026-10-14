@@ -48,9 +48,9 @@ export const fr = {
     sectionLabel: 'Récents',
     listAriaLabel: 'Historique des recherches récentes',
     restoreAriaLabel: (date: string, place: string): string =>
-      `Recalculer le ${date} à ${place}`,
+      place ? `Recalculer le ${date} à ${place}` : `Recalculer le ${date}`,
     removeAriaLabel: (date: string, place: string): string =>
-      `Retirer ${date} à ${place} de l’historique`,
+      place ? `Retirer ${date} à ${place} de l’historique` : `Retirer ${date} de l’historique`,
   },
 
   cityAutocomplete: {
@@ -387,7 +387,6 @@ export const fr = {
   hudFrame: {
     modeNatal: 'CIEL NATAL',
     modeLive: 'CIEL EN DIRECT',
-    placeLabelFallback: 'Ciel natal',
     summaryAriaLabel: (mode: string, main: string): string =>
       `Voir mon vrai signe — ${mode} · ${main}`,
   },

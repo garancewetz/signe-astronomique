@@ -24,7 +24,7 @@ export function computeReadingFromForm({ date, time, city }: NatalFormInput): Ce
     date: localBirthToUtc(date, time || DEFAULT_BIRTH_TIME, city.timezone),
     latitude: city.lat,
     longitude: city.lon,
-    placeLabel: city.label,
+    placeLabel: city.label || undefined,
     timezone: city.timezone,
   });
 }

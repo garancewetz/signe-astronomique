@@ -213,7 +213,7 @@ function SearchHistoryList({ entries, onRestore, onRemove }: SearchHistoryListPr
         {entries.map((entry) => {
           const sig = signatureOf(entry);
           const dateLabel = formatEntryDate(entry.date);
-          const full = `${dateLabel} · ${entry.city.label}`;
+          const full = [dateLabel, entry.city.label].filter(Boolean).join(' · ');
           return (
             <li key={sig} className="min-w-0">
               <div
@@ -232,10 +232,14 @@ function SearchHistoryList({ entries, onRestore, onRemove }: SearchHistoryListPr
                              text-slate-200 hover:text-white text-left"
                 >
                   <span className="shrink-0 text-violet-300/85">{dateLabel}</span>
-                  <span aria-hidden className="shrink-0 text-slate-600">·</span>
-                  <span className="truncate text-slate-400 group-hover:text-slate-200 max-w-28">
-                    {entry.city.label}
-                  </span>
+                  {entry.city.label && (
+                    <>
+                      <span aria-hidden className="shrink-0 text-slate-600">·</span>
+                      <span className="truncate text-slate-400 group-hover:text-slate-200 max-w-28">
+                        {entry.city.label}
+                      </span>
+                    </>
+                  )}
                 </button>
                 {onRemove && (
                   <button

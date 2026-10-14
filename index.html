@@ -298,6 +298,20 @@
         outline: 2px solid #a9b8f5;
         outline-offset: 2px;
       }
+      .seo-splash__today {
+        margin: 1.1rem 0 0;
+        padding: 0.65rem 0.9rem;
+        border: 1px solid rgba(242, 207, 115, 0.35);
+        border-radius: 6px;
+        background: rgba(242, 207, 115, 0.08);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #e6e8ec;
+      }
+      .seo-splash__today strong {
+        font-weight: 600;
+        color: #f2cf73;
+      }
       /* With the React birth form in the card, the CTA has nothing to do. */
       .seo-splash--has-form .seo-splash__cta {
         display: none;
@@ -418,8 +432,11 @@
           font-size: 0.95rem;
           line-height: 1.6;
         }
+        /* The birth form sits right beside the card (see the notch): a
+           second big button that only points at it would compete with the
+           one that computes. */
         .seo-splash__cta {
-          margin-top: 1.1rem;
+          display: none;
         }
       }
       .seo-splash__noscript p {
@@ -480,6 +497,9 @@
             <strong>glissé d'un mois</strong>. Découvre devant quelle
             constellation était vraiment le Soleil à ta naissance.
           </p>
+          <!-- Today's horoscope sign vs the real sky, filled in by main.tsx:
+               the whole idea of the site, proven on the spot. -->
+          <p id="seo-splash-today" class="seo-splash__today" hidden></p>
           <button
             type="button"
             id="seo-splash-enter"

@@ -39,7 +39,8 @@ export function decodeNatalFromParams(params: URLSearchParams): SharedNatal | nu
   const latStr = params.get('lat');
   const lonStr = params.get('lon');
   const label = params.get('label');
-  if (!date || !time || !latStr || !lonStr || !label) return null;
+  // An empty label is valid: the place was left out (time zone only).
+  if (!date || !time || !latStr || !lonStr || label === null) return null;
   if (!DATE_RE.test(date) || !TIME_RE.test(time)) return null;
   const lat = Number(latStr);
   const lon = Number(lonStr);
@@ -71,9 +72,9 @@ export function readNatalFromCurrentUrl(): SharedNatal | null {
  * in the active locale. The date/time strings are the raw form values
  * (`YYYY-MM-DD` / `HH:MM`); parsing them as UTC and formatting with
  * `timeZone: 'UTC'` echoes them back unchanged on the recipient's device,
- * regardless of their runtime timezone. Returns `undefined` for an empty
- * label and falls back to just the label if the date/time strings don't
- * parse cleanly.
+ * regardless of their runtime timezone. Without a place label (place left
+ * out) it is just the date; it falls back to the label alone if the
+ * date/time strings don't parse cleanly.
  */
 export function formatNatalShareText(
   date: string,
@@ -81,14 +82,13 @@ export function formatNatalShareText(
   cityLabel: string,
   intlLocale: string,
 ): string | undefined {
-  if (!cityLabel) return undefined;
   const [y, mo, d] = date.split('-').map(Number);
   const [hh, mm] = time.split(':').map(Number);
   if (
     !Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d) ||
     !Number.isFinite(hh) || !Number.isFinite(mm)
   ) {
-    return cityLabel;
+    return cityLabel || undefined;
   }
   const dt = new Date(Date.UTC(y, mo - 1, d, hh, mm));
   const dateFmt = new Intl.DateTimeFormat(intlLocale, {
@@ -102,7 +102,7 @@ export function formatNatalShareText(
     minute: '2-digit',
     timeZone: 'UTC',
   }).format(dt);
-  return `${cityLabel} — ${dateFmt}, ${timeFmt}`;
+  return cityLabel ? `${cityLabel} — ${dateFmt}, ${timeFmt}` : `${dateFmt}, ${timeFmt}`;
 }
 
 /**
