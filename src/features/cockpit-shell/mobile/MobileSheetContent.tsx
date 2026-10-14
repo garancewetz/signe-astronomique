@@ -1,5 +1,6 @@
 import {
   Globe2,
+  Ruler,
   Satellite,
   Tag,
 } from 'lucide-react';
@@ -92,6 +93,8 @@ function ExploreContent({
     toggleBodyLabels,
     guidesEnabled,
     toggleGuides,
+    zonesEnabled,
+    toggleZones,
     satellitesEnabled,
     toggleSatellites,
   } = useCockpitDisplay();
@@ -127,6 +130,15 @@ function ExploreContent({
         icon={<Tag className="size-4" strokeWidth={1.35} aria-hidden />}
         active={bodyLabelsEnabled}
         onClick={toggleBodyLabels}
+      />
+      <MenuRow
+        kind="toggle"
+        size="lg"
+        label={t.mobile.sheet.display.zones.label}
+        sublabel={t.mobile.sheet.display.zones.sublabel}
+        icon={<Ruler className="size-4" strokeWidth={1.35} aria-hidden />}
+        active={zonesEnabled}
+        onClick={toggleZones}
       />
       <MenuRow
         kind="toggle"

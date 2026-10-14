@@ -32,6 +32,8 @@ export function LegendPanel({
     toggleBodyLabels,
     guidesEnabled,
     toggleGuides,
+    zonesEnabled,
+    toggleZones,
     satellitesEnabled,
     toggleSatellites,
   } = useCockpitDisplay();
@@ -61,6 +63,16 @@ export function LegendPanel({
               name={locale === 'en' ? p.en : p.fr}
             />
           ))}
+        </Section>
+
+        <Section
+          title={t.legend.sections.zones}
+          active={zonesEnabled}
+          onToggle={toggleZones}
+        >
+          <LineRow color="#f2cf73" width={3} label={t.legend.zoneLabels.yours} />
+          <LineRow color="#8a93a3" label={t.legend.zoneLabels.others} />
+          <DotRow color="#f2cf73" label={t.legend.zoneLabels.sun} />
         </Section>
 
         <Section
@@ -200,11 +212,11 @@ function Row({ glyph, color, name }: { glyph: string; color: string; name: strin
   );
 }
 
-function LineRow({ color, label }: { color: string; label: string }) {
+function LineRow({ color, label, width = 1.5 }: { color: string; label: string; width?: number }) {
   return (
     <div className="flex items-center gap-3">
       <svg width="20" height="6" viewBox="0 0 20 6" className="shrink-0">
-        <line x1="0" y1="3" x2="20" y2="3" stroke={color} strokeWidth="1.5" />
+        <line x1="0" y1="3" x2="20" y2="3" stroke={color} strokeWidth={width} />
       </svg>
       <span className="text-slate-300">{label}</span>
     </div>

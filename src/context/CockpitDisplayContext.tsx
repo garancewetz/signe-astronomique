@@ -24,11 +24,13 @@ export function CockpitDisplayProvider({ children, ...value }: ProviderProps) {
     [
       value.bodyLabelsEnabled,
       value.guidesEnabled,
+      value.zonesEnabled,
       value.satellitesEnabled,
       value.sideViewActive,
       value.hasSelectedStar,
       value.toggleBodyLabels,
       value.toggleGuides,
+      value.toggleZones,
       value.toggleSatellites,
       value.toggleSideView,
     ],

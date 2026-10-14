@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import {
   ChevronDown,
   Globe2,
+  Ruler,
   Satellite,
   Tag,
 } from 'lucide-react';
@@ -128,6 +129,8 @@ export function Sidebar(props: SidebarProps) {
     toggleBodyLabels,
     guidesEnabled,
     toggleGuides,
+    zonesEnabled,
+    toggleZones,
     satellitesEnabled,
     toggleSatellites,
   } = useCockpitDisplay();
@@ -158,6 +161,13 @@ export function Sidebar(props: SidebarProps) {
       icon: <Tag className="size-3.5" strokeWidth={1.4} aria-hidden />,
       active: bodyLabelsEnabled,
       onClick: toggleBodyLabels,
+    },
+    {
+      key: 'zones',
+      label: t.sidebar.layers.zones,
+      icon: <Ruler className="size-3.5" strokeWidth={1.4} aria-hidden />,
+      active: zonesEnabled,
+      onClick: toggleZones,
     },
     {
       key: 'guides',

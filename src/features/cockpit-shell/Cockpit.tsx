@@ -57,6 +57,8 @@ export function Cockpit() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [showGuides, setShowGuides] = useState(false);
+  // On by default: the zones are what proves the result in the sky.
+  const [showZones, setShowZones] = useState(true);
   const [bodyLabelsEnabled, setBodyLabelsEnabled] = useState(false);
   const [satellitesEnabled, setSatellitesEnabled] = useState(false);
   const [fullscreenActive, setFullscreenActive] = useState(false);
@@ -215,6 +217,7 @@ export function Cockpit() {
     [],
   );
   const toggleGuides = useCallback(() => setShowGuides((v) => !v), []);
+  const toggleZones = useCallback(() => setShowZones((v) => !v), []);
   const toggleSatellites = useCallback(
     () => setSatellitesEnabled((v) => !v),
     [],
@@ -229,6 +232,7 @@ export function Cockpit() {
         ref={spaceViewRef}
         reading={reading}
         showGuides={showGuides}
+        showZodiacBand={showZones}
         showBodyLabels={bodyLabelsEnabled}
         showSatellites={satellitesEnabled}
         liveLatitude={city.lat}
@@ -249,6 +253,8 @@ export function Cockpit() {
     toggleBodyLabels,
     guidesEnabled: showGuides,
     toggleGuides,
+    zonesEnabled: showZones,
+    toggleZones,
     satellitesEnabled,
     toggleSatellites,
     sideViewActive,

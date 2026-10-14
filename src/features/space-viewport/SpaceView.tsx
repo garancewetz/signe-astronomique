@@ -135,6 +135,8 @@ interface Props {
   reading: CelestialReading | null;
   /** Renders Earth's axis, celestial equator, and ecliptic. */
   showGuides: boolean;
+  /** Natal mode: official IAU areas of the 13 signs along the Sun's path. */
+  showZodiacBand: boolean;
   /** In-scene labels for the Sun / Moon / planets. */
   showBodyLabels: boolean;
   /** Enables the orbital relics layer (historical satellites). */
@@ -215,6 +217,7 @@ function nightAlphaForYear(year: number): number {
 export function SpaceView({
   reading,
   showGuides,
+  showZodiacBand,
   showBodyLabels,
   showSatellites,
   liveLatitude,
@@ -499,6 +502,7 @@ export function SpaceView({
     reading,
     liveReading,
     showGuides,
+    showZodiacBand,
     showBodyLabels,
     sideViewActive,
     bodyNames,
