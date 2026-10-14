@@ -10,6 +10,10 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  # Same as CI: Cesium's engine and widgets require Node >= 22.
+  NODE_VERSION = "22"
+
 # ─── Edge functions ──────────────────────────────────────────────────────────
 # `og-share` rewrites the static index.html to inject payload-aware Open
 # Graph + Twitter metadata when a request to "/" carries natal params, so
