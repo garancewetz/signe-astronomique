@@ -301,6 +301,22 @@
         outline: 2px solid #a78bfa;
         outline-offset: 2px;
       }
+      /* Discreet link to the static /signes/ page (crawlable entry point). */
+      .seo-splash__link {
+        margin: 1rem 0 0;
+        font-size: 0.78rem;
+      }
+      .seo-splash__link a {
+        color: #a5b4fc;
+        text-underline-offset: 3px;
+      }
+      .seo-splash__link a:hover {
+        color: #e2e8f0;
+      }
+      .seo-splash__link a:focus-visible {
+        outline: 2px solid #a78bfa;
+        outline-offset: 2px;
+      }
       /* Long-form copy stays in the HTML for crawlers, folded for humans. */
       .seo-splash__more {
         margin: 1.75rem 0 0;
@@ -455,6 +471,9 @@
           >
             Découvrir mon vrai signe →
           </button>
+          <p class="seo-splash__link">
+            <a href="/signes/" data-en="True dates of every sign">Les vraies dates de chaque signe</a>
+          </p>
 
           <details class="seo-splash__more">
             <summary data-en="Learn more ↓">En savoir plus ↓</summary>

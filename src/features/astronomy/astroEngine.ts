@@ -438,6 +438,23 @@ function eclipticToConstellation(lonTropical: number, jd: number): IauConstellat
   return constellationFromSiderealLongitude(norm360(lonTropical - offset));
 }
 
+/**
+ * Horoscope (tropical) sign and true IAU constellation of the Sun at an
+ * instant — the sign-only core of {@link computeReading}, without the Moon,
+ * planets or debug logging. Used by the static sign pages built at build time.
+ */
+export function sunSigns(date: Date): {
+  tropical: IauConstellation;
+  constellation: IauConstellation;
+} {
+  const jd = toJulianDay(date);
+  const { lambda } = sunApparentLongitude(jd);
+  return {
+    tropical: tropicalSignFromLongitude(lambda),
+    constellation: eclipticToConstellation(lambda, jd),
+  };
+}
+
 // ─── Main entry point ───────────────────────────────────────────────────────
 
 export function computeReading(input: BirthInput): CelestialReading {

@@ -5,6 +5,20 @@ import react from '@vitejs/plugin-react'
 import cesium from 'vite-plugin-cesium'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { buildStaticPages } from './seo/signPages'
+
+/** SHA-256 hashes of every inline <script> body, for `script-src`. */
+function inlineScriptHashes(html: string): string[] {
+  const hashes: string[] = [];
+  const inlineScriptRe = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
+  for (const match of html.matchAll(inlineScriptRe)) {
+    const body = match[1];
+    if (!body.trim()) continue;
+    const hash = createHash('sha256').update(body).digest('base64');
+    hashes.push(`'sha256-${hash}'`);
+  }
+  return hashes;
+}
 
 /**
  * Inject a production-only Content-Security-Policy meta tag into `index.html`.
@@ -26,16 +40,6 @@ function cspMetaTag(): Plugin {
     name: 'inject-csp-meta',
     apply: 'build',
     transformIndexHtml(html) {
-      const scriptHashes: string[] = [];
-      const inlineScriptRe =
-        /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
-      for (const match of html.matchAll(inlineScriptRe)) {
-        const body = match[1];
-        if (!body.trim()) continue;
-        const hash = createHash('sha256').update(body).digest('base64');
-        scriptHashes.push(`'sha256-${hash}'`);
-      }
-
       // Cesium uses `new Function(...)` and WebAssembly internally, so we
       // need 'unsafe-eval' + 'wasm-unsafe-eval'. Cesium also bootstraps
       // its workers via blob: URLs and they then `importScripts(blob:...)`,
@@ -46,7 +50,7 @@ function cspMetaTag(): Plugin {
         "blob:",
         "'unsafe-eval'",
         "'wasm-unsafe-eval'",
-        ...scriptHashes,
+        ...inlineScriptHashes(html),
       ].join(' ');
       // Note: `frame-ancestors` is only enforced when served as an HTTP
       // header, not via <meta>. If clickjacking protection becomes a
@@ -65,6 +69,40 @@ function cspMetaTag(): Plugin {
 
       const tag = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
       return html.replace('<head>', `<head>\n    ${tag}`);
+    },
+  };
+}
+
+/**
+ * Emit the static sign pages (/signe/<slug>/, /signes/) and the sitemap
+ * from seo/signPages.ts. They carry no JS at all, so their CSP is much
+ * stricter than the app's: only the hashed JSON-LD block may "run".
+ */
+function signPagesPlugin(): Plugin {
+  return {
+    name: 'static-sign-pages',
+    apply: 'build',
+    generateBundle() {
+      const lastmod = new Date().toISOString().slice(0, 10);
+      const { pages, sitemap } = buildStaticPages(lastmod);
+      for (const page of pages) {
+        const csp = [
+          "default-src 'self'",
+          "img-src 'self' data:",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          `script-src ${inlineScriptHashes(page.html).join(' ')}`,
+          "base-uri 'self'",
+          "form-action 'none'",
+        ].join('; ');
+        const tag = `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
+        this.emitFile({
+          type: 'asset',
+          fileName: page.fileName,
+          source: page.html.replace('<head>', `<head>\n    ${tag}`),
+        });
+      }
+      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap });
     },
   };
 }
@@ -126,11 +164,13 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,woff2,webmanifest}'],
         globIgnores: ['**/Cesium/**', '**/cesium/**'],
-        navigateFallbackDenylist: [/^\/api\//, /^\/_/],
+        // The static sign pages are real documents, never the SPA shell.
+        navigateFallbackDenylist: [/^\/api\//, /^\/_/, /^\/signes?\//],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         cleanupOutdatedCaches: true,
       },
     }),
     cspMetaTag(),
+    signPagesPlugin(),
   ],
 })
