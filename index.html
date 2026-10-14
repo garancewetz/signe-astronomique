@@ -378,10 +378,14 @@
          is already visible in the sidebar, so nothing needs to be gated.
          Mirrors the inverse of MOBILE_QUERY in src/ui/useMobileLayout.ts. */
       @media (min-width: 1024px), (min-width: 768px) and (pointer: fine) {
+        /* Docked right next to the sidebar birth form, level with its
+           question: the card asks, the field beside it answers — no trip
+           across the screen. --sidebar-w is kept in sync by Cockpit.tsx
+           (340px = SIDEBAR_EXPANDED_PX before React is up). */
         #seo-splash {
-          inset: 3.5rem 1rem auto auto;
+          inset: 3.25rem auto auto calc(var(--sidebar-w, 340px) + 1rem);
           display: block;
-          width: min(26rem, calc(100vw - 2rem));
+          width: min(26rem, calc(100vw - var(--sidebar-w, 340px) - 2rem));
           padding: 0;
           background: none;
           -webkit-backdrop-filter: none;
@@ -390,6 +394,19 @@
         .seo-splash__inner {
           max-height: calc(100dvh - 5rem);
           padding: 0.75rem 1.25rem 1.25rem;
+        }
+        /* Small notch on the left edge, pointing at the date field. */
+        #seo-splash::before {
+          content: '';
+          position: absolute;
+          top: 5.8rem;
+          left: -7px;
+          width: 12px;
+          height: 12px;
+          border-left: 1px solid rgba(148, 163, 184, 0.2);
+          border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+          background: rgb(17, 21, 30);
+          transform: rotate(45deg);
         }
         .seo-splash__top {
           margin-bottom: 0.75rem;

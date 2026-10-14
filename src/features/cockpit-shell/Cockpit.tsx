@@ -211,6 +211,10 @@ export function Cockpit() {
   // canvas as glassmorphism cards, and the analysis modal is centered.
   const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_PX : SIDEBAR_EXPANDED_PX;
   const canvasInsetStyle = { left: `${sidebarWidth}px` };
+  // The desktop welcome card (index.html) docks beside the sidebar.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-w', `${sidebarWidth}px`);
+  }, [sidebarWidth]);
 
   const toggleBodyLabels = useCallback(
     () => setBodyLabelsEnabled((v) => !v),
