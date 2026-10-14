@@ -63,7 +63,7 @@ export function MobileHeader({
           {t.cockpit.brand}
         </span>
         <span className="text-cockpit-xs text-slate-300 truncate flex-1">
-          · {dateLabel} · {city.label}
+          · {dateLabel ? `${dateLabel} · ` : ''}{city.label}
         </span>
         <span
           aria-hidden="true"

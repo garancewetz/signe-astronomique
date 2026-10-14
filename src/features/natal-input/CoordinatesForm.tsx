@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { CalendarDays, ChevronRight, X } from 'lucide-react';
+import { CalendarDays, ChevronRight, Minus, Plus, X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { Field, Input, cn } from '@/ui';
 import type { CelestialReading } from '@/features/astronomy';
@@ -15,7 +15,7 @@ import { useT } from '@/context/useLocale';
 const VISIBLE_HISTORY = 3;
 
 const DEFAULT_FORM_CLASS =
-  'shrink-0 px-3 py-2.5 space-y-2 border-b border-border-hud-faint';
+  'shrink-0 px-4 pt-4 pb-4 space-y-3 border-b border-border-hud-faint';
 
 interface CoordinatesFormProps {
   date: string;
@@ -27,6 +27,12 @@ interface CoordinatesFormProps {
   onJump: (reading: CelestialReading) => void;
   /** Override the outer `<form>` className. */
   className?: string;
+  /** Serif question shown above the fields (sidebar, mobile sheet). */
+  title?: string;
+  /** Focus the date on mount — desktop only, a phone would pop its picker. */
+  autoFocusDate?: boolean;
+  /** Hide the /signes/ link and the history chips (welcome card). */
+  bare?: boolean;
   /** Recent searches surfaced as one-click chips below the form. */
   history?: SearchHistoryEntry[];
   onRecordHistory?: (entry: { date: string; time: string; city: CityResult }) => void;
@@ -34,15 +40,21 @@ interface CoordinatesFormProps {
 }
 
 /**
- * Birth coordinates form (date · time · city) plus the primary CTA. Shared between the desktop sidebar and the mobile
- * coordinates modal — the only thing that varies is the outer wrapper
- * styling, controlled via `className`.
+ * Birth form, date first: the date is the only required field — it alone
+ * decides the Sun's constellation, except on the rare boundary days. Time
+ * and place sit behind a disclosure (noon at the current place when left
+ * out), so nobody gives up for not knowing their birth hour. Shared by the
+ * welcome card, the desktop sidebar and the mobile form; the wrapper
+ * styling varies via `className`.
  */
 export function CoordinatesForm({
   date, time, city,
   onDateChange, onTimeChange, onCityChange,
   onJump,
   className,
+  title,
+  autoFocusDate,
+  bare,
   history,
   onRecordHistory,
   onRemoveHistory,
@@ -50,13 +62,17 @@ export function CoordinatesForm({
   const t = useT();
   const reduceMotion = useReducedMotion();
   const [computing, setComputing] = useState(false);
+  // Open when a time is already known (share link, restored search).
+  const [detailsOpen, setDetailsOpen] = useState(() => time !== '');
   const dateId = useId();
   const timeId = useId();
   const cityId = useId();
+  const detailsId = useId();
+  const titleId = useId();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (computing) return;
+    if (computing || !date) return;
     setComputing(true);
     await new Promise((r) => setTimeout(r, 350));
     onJump(computeReadingFromForm({ date, time, city }));
@@ -68,6 +84,7 @@ export function CoordinatesForm({
     onDateChange(entry.date);
     onTimeChange(entry.time);
     onCityChange(entry.city);
+    if (entry.time) setDetailsOpen(true);
     onJump(computeReadingFromForm(entry));
     // Re-record so the entry bubbles to the top — the user just re-confirmed
     // they care about this moment.
@@ -78,42 +95,67 @@ export function CoordinatesForm({
     <form
       onSubmit={handleSubmit}
       className={cn(className ?? DEFAULT_FORM_CLASS)}
-      aria-label={t.natalForm.ariaLabel}
+      aria-label={title ? undefined : t.natalForm.ariaLabel}
+      aria-labelledby={title ? titleId : undefined}
     >
-      <div className="grid grid-cols-2 gap-2 items-end">
-        <Field label={t.natalForm.dateLabel} htmlFor={dateId}>
-          <Input
-            id={dateId}
-            type="date"
-            value={date}
-            onChange={(e) => onDateChange(e.target.value)}
-            required
-          />
-        </Field>
+      {title && (
+        <h2 id={titleId} className="font-serif text-xl font-medium leading-snug text-white">
+          {title}
+        </h2>
+      )}
 
-        <Field label={t.natalForm.timeLabel} htmlFor={timeId}>
-          <Input
-            id={timeId}
-            type="time"
-            value={time}
-            onChange={(e) => onTimeChange(e.target.value)}
-            required
-          />
-        </Field>
-      </div>
-
-      <Field label={t.natalForm.placeLabel} htmlFor={cityId}>
-        <CityAutocomplete value={city} onSelect={onCityChange} inputId={cityId} />
+      <Field label={t.natalForm.dateLabel} htmlFor={dateId}>
+        <Input
+          id={dateId}
+          type="date"
+          value={date}
+          onChange={(e) => onDateChange(e.target.value)}
+          // Keyboard users land straight in the one field that matters.
+          autoFocus={autoFocusDate}
+          required
+        />
       </Field>
+
+      <div>
+        <button
+          type="button"
+          aria-expanded={detailsOpen}
+          aria-controls={detailsId}
+          onClick={() => setDetailsOpen((v) => !v)}
+          className="cockpit-focus inline-flex min-h-9 items-center gap-1.5 rounded-panel
+                     text-cockpit-lg text-violet-200 hover:text-white transition-colors"
+        >
+          {detailsOpen
+            ? <Minus className="size-3.5" strokeWidth={1.6} aria-hidden />
+            : <Plus className="size-3.5" strokeWidth={1.6} aria-hidden />}
+          {t.natalForm.detailsToggle}
+        </button>
+        {!detailsOpen && (
+          <p className="text-cockpit-md leading-snug text-slate-400">{t.natalForm.detailsHint}</p>
+        )}
+        <div id={detailsId} hidden={!detailsOpen} className="mt-2 space-y-3">
+          <Field label={t.natalForm.timeLabel} htmlFor={timeId}>
+            <Input
+              id={timeId}
+              type="time"
+              value={time}
+              onChange={(e) => onTimeChange(e.target.value)}
+            />
+          </Field>
+          <Field label={t.natalForm.placeLabel} htmlFor={cityId}>
+            <CityAutocomplete value={city} onSelect={onCityChange} inputId={cityId} />
+          </Field>
+        </div>
+      </div>
 
       <motion.button
         type="submit"
         disabled={computing}
-        whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+        whileHover={reduceMotion ? undefined : { scale: 1.01 }}
         whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-        className="cockpit-focus relative w-full mt-1 px-4 py-2 min-h-11 rounded-panel overflow-hidden
+        className="cockpit-focus relative w-full min-h-12 px-4 py-2 rounded-panel overflow-hidden
                    border border-foreground bg-foreground
-                   text-background text-cockpit-lg font-semibold
+                   text-background text-[15px] font-semibold
                    hover:bg-white hover:border-white
                    disabled:opacity-40 disabled:cursor-wait
                    transition-all inline-flex items-center justify-center gap-2"
@@ -121,9 +163,9 @@ export function CoordinatesForm({
         {computing ? t.natalForm.submitBusy : `${t.natalForm.submitIdle} →`}
       </motion.button>
 
-      <AllSignsLink />
+      {!bare && <AllSignsLink />}
 
-      {history && history.length > 0 && (
+      {!bare && history && history.length > 0 && (
         <SearchHistoryList
           entries={history.slice(0, VISIBLE_HISTORY)}
           onRestore={handleRestore}
@@ -231,15 +273,15 @@ function AllSignsLink() {
   return (
     <a
       href="/signes/"
-      className="cockpit-focus flex w-full items-center gap-2 min-h-9 px-3 py-2
-                 rounded-panel border border-amber-300/30 bg-amber-400/6
-                 text-cockpit-sm text-amber-100/90
-                 hover:bg-amber-400/12 hover:border-amber-300/55 hover:text-amber-50
+      className="cockpit-focus flex w-full items-center gap-2 min-h-11 px-3 py-2
+                 rounded-panel border border-border-hud bg-surface-raised/60
+                 text-cockpit-lg text-slate-200
+                 hover:border-border-strong hover:text-white
                  transition-colors"
     >
-      <CalendarDays className="size-4 shrink-0 text-amber-200/80" strokeWidth={1.4} aria-hidden />
+      <CalendarDays className="size-4 shrink-0 text-slate-400" strokeWidth={1.4} aria-hidden />
       <span className="flex-1">{t.natalForm.allSignsLink}</span>
-      <ChevronRight className="size-3.5 shrink-0 text-amber-200/60" strokeWidth={1.6} aria-hidden />
+      <ChevronRight className="size-3.5 shrink-0 text-slate-500" strokeWidth={1.6} aria-hidden />
     </a>
   );
 }

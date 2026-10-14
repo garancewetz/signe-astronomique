@@ -298,6 +298,10 @@
         outline: 2px solid #a9b8f5;
         outline-offset: 2px;
       }
+      /* With the React birth form in the card, the CTA has nothing to do. */
+      .seo-splash--has-form .seo-splash__cta {
+        display: none;
+      }
       /* Discreet link to the static /signes/ page (crawlable entry point). */
       .seo-splash__link {
         margin: 1rem 0 0;
@@ -377,7 +381,7 @@
         #seo-splash {
           inset: 3.5rem 1rem auto auto;
           display: block;
-          width: min(23rem, calc(100vw - 2rem));
+          width: min(26rem, calc(100vw - 2rem));
           padding: 0;
           background: none;
           -webkit-backdrop-filter: none;
@@ -467,6 +471,9 @@
           >
             Calcule ton vrai signe →
           </button>
+          <!-- WelcomeForm (src/features/cockpit-shell) renders the birth form
+               here once React is up; the CTA above is then hidden. -->
+          <div id="seo-splash-form"></div>
           <p class="seo-splash__link">
             <a href="/signes/" data-en="True dates of every sign">Les vraies dates de chaque signe</a>
           </p>

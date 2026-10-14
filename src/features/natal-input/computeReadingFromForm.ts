@@ -2,6 +2,10 @@ import { computeReading, type CelestialReading } from '@/features/astronomy';
 import type { CityResult } from './CityAutocomplete';
 import { localBirthToUtc } from './timezone';
 
+/** Birth time used when the visitor leaves it out: midday is the safest
+ *  guess, at most half a day off the true instant. */
+export const DEFAULT_BIRTH_TIME = '12:00';
+
 export interface NatalFormInput {
   date: string;
   time: string;
@@ -17,7 +21,7 @@ export interface NatalFormInput {
  */
 export function computeReadingFromForm({ date, time, city }: NatalFormInput): CelestialReading {
   return computeReading({
-    date: localBirthToUtc(date, time, city.timezone),
+    date: localBirthToUtc(date, time || DEFAULT_BIRTH_TIME, city.timezone),
     latitude: city.lat,
     longitude: city.lon,
     placeLabel: city.label,

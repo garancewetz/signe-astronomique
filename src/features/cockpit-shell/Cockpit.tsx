@@ -11,6 +11,8 @@ import {
   type SelectedBody,
   type SpaceViewHandle,
 } from '@/features/space-viewport';
+import { WelcomeForm } from './WelcomeForm';
+import { useWelcomeSlot } from './useWelcomeSlot';
 import { HudFrame } from './HudFrame';
 import { BodyInfoHud } from './BodyInfoHud';
 import {
@@ -30,6 +32,7 @@ import { MobileCockpit } from './mobile/MobileCockpit';
 import type { MobileTabKey } from './mobile/MobileTabBar';
 import { loreName, loreShortName, type CelestialReading } from '@/features/astronomy';
 import {
+  DEFAULT_BIRTH_TIME,
   formatNatalShareText,
   useNatalForm,
   useSearchHistory,
@@ -70,6 +73,8 @@ export function Cockpit() {
     setUserCity,
     sharedFromUrl,
   } = useNatalForm();
+  // While the welcome card holds the birth form, the sidebar doesn't repeat it.
+  const welcomeSlot = useWelcomeSlot();
   const {
     entries: searchHistory,
     record: recordSearch,
@@ -170,14 +175,16 @@ export function Cockpit() {
 
   // Pre-formatted body for the native share sheet. Computed here (rather
   // than inside useShareLink) so the hook stays i18n-free.
+  // An unknown birth time is computed at noon — share that same instant.
+  const shareTime = time || DEFAULT_BIRTH_TIME;
   const shareText = useMemo(
-    () => formatNatalShareText(date, time, city.label, t.intlLocale),
-    [city.label, date, time, t.intlLocale],
+    () => formatNatalShareText(date, shareTime, city.label, t.intlLocale),
+    [city.label, date, shareTime, t.intlLocale],
   );
 
   const { handleShareLink, shareCopied, canShareLink } = useShareLink({
     date,
-    time,
+    time: shareTime,
     city,
     hasReading: !!reading,
     shareText,
@@ -261,9 +268,25 @@ export function Cockpit() {
     />
   );
 
+  const welcomeForm = (
+    <WelcomeForm
+      target={welcomeSlot}
+      date={date}
+      time={time}
+      city={city}
+      onDateChange={setDate}
+      onTimeChange={setTime}
+      onCityChange={setUserCity}
+      onJump={handleJump}
+      onRecordHistory={recordSearch}
+      autoFocusDate={!isMobile}
+    />
+  );
+
   if (isMobile) {
     return (
       <CockpitDisplayProvider {...displayValue}>
+        {welcomeForm}
         <MobileCockpit
           date={date}
           time={time}
@@ -307,6 +330,7 @@ export function Cockpit() {
 
   return (
     <CockpitDisplayProvider {...displayValue}>
+    {welcomeForm}
     <div
       ref={cockpitRef}
       id="cockpit-main"
@@ -361,6 +385,7 @@ export function Cockpit() {
         analysisOpen={analysisOpen}
         analysisAttention={analysisAttention}
         onOpenAnalysis={openAnalysis}
+        formHidden={welcomeSlot !== null}
         date={date}
         time={time}
         city={city}

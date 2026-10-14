@@ -42,5 +42,6 @@ export { useShareLink } from './useShareLink';
 
 export {
   computeReadingFromForm,
+  DEFAULT_BIRTH_TIME,
   type NatalFormInput,
 } from './computeReadingFromForm';

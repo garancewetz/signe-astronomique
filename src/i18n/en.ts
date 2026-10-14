@@ -28,9 +28,12 @@ export const en: Copy = {
 
   natalForm: {
     ariaLabel: 'Birth coordinates',
-    dateLabel: 'DATE',
-    timeLabel: 'TIME',
-    placeLabel: 'BIRTHPLACE',
+    title: 'When were you born?',
+    dateLabel: 'Birth date',
+    timeLabel: 'Birth time',
+    placeLabel: 'Birthplace',
+    detailsToggle: 'Add time and place',
+    detailsHint: 'Optional, for more precision. Without them, we use noon.',
     placePlaceholder: 'Birth city…',
     submitIdle: 'Find your true sign',
     submitBusy: 'Computing the sky…',

@@ -19,7 +19,7 @@ export function Field({ label, htmlFor, children, className }: FieldProps) {
     <div className={cn('flex flex-col gap-1', className)}>
       <label
         htmlFor={htmlFor}
-        className="text-[9px] tracking-cockpit-caps text-violet-400"
+        className="text-cockpit-lg font-medium text-slate-300"
       >
         {label}
       </label>
