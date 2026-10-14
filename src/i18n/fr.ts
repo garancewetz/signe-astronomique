@@ -386,7 +386,13 @@ export const fr = {
 
   hudFrame: {
     modeNatal: 'CIEL NATAL',
-    modeLive: 'CIEL EN DIRECT',
+    // Keep in sync with #seo-splash in index.html (crawlers, mobile).
+    liveQuestion: 'Quel est ton vrai signe astronomique ?',
+    todayDiffer: (horoscope: string, sky: string): string =>
+      `Aujourd’hui, l’horoscope dit **${horoscope}**. Le ciel dit **${sky}**.`,
+    todaySame: (sky: string): string =>
+      `Aujourd’hui, le Soleil est devant **${sky}** : pour une fois, l’horoscope a raison.`,
+    why: 'Pourquoi ?',
     summaryAriaLabel: (mode: string, main: string): string =>
       `Voir mon vrai signe — ${mode} · ${main}`,
   },

@@ -377,8 +377,6 @@ export function Cockpit() {
       >
         <HudFrame
           reading={reading}
-          observerLat={city.lat}
-          observerLon={city.lon}
           onOpenSummary={openAnalysis}
         />
       </div>

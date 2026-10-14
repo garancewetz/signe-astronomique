@@ -125,6 +125,9 @@
       }
     </script>
 
+    <!-- Lets the CSS tell JS visitors apart (hashed into the CSP at build). -->
+    <script>document.documentElement.classList.add('js')</script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet" />
@@ -388,39 +391,39 @@
         line-height: 1.65;
         color: #b8bfcc;
       }
-      /* Desktop: a non-blocking card in the top-right corner — the birth form
-         is already visible in the sidebar, so nothing needs to be gated.
-         Mirrors the inverse of MOBILE_QUERY in src/ui/useMobileLayout.ts. */
+      /* Desktop (mirrors the inverse of MOBILE_QUERY in
+         src/ui/useMobileLayout.ts). */
       @media (min-width: 1024px), (min-width: 768px) and (pointer: fine) {
-        /* Docked right next to the sidebar birth form, level with its
-           question: the card asks, the field beside it answers — no trip
-           across the screen. --sidebar-w is kept in sync by Cockpit.tsx
-           (340px = SIDEBAR_EXPANDED_PX before React is up). */
-        #seo-splash {
-          inset: 3.25rem auto auto calc(var(--sidebar-w, 340px) + 1rem);
+        /* Once JS runs, the header carries the question and today's hook
+           (HudFrame); the card is the "Pourquoi ?" explanation, shown on
+           demand under the header, centred on the sky. Hidden from the first
+           paint so it never flashes. Without JS it stays readable. */
+        .js #seo-splash {
+          display: none;
+        }
+        .js #seo-splash.seo-splash--open {
           display: block;
-          width: min(26rem, calc(100vw - var(--sidebar-w, 340px) - 2rem));
+        }
+        /* The header already shows the question and today's line: opened
+           from "Pourquoi ?", the card is only the explanation. */
+        .js #seo-splash .seo-splash__title,
+        .js #seo-splash .seo-splash__today {
+          display: none;
+        }
+        #seo-splash {
+          inset: 4.5rem auto auto
+            calc(var(--sidebar-w, 340px) + (100vw - var(--sidebar-w, 340px)) / 2);
+          transform: translateX(-50%);
+          display: block;
+          width: min(28rem, calc(100vw - var(--sidebar-w, 340px) - 2rem));
           padding: 0;
           background: none;
           -webkit-backdrop-filter: none;
           backdrop-filter: none;
         }
         .seo-splash__inner {
-          max-height: calc(100dvh - 5rem);
+          max-height: calc(100dvh - 6rem);
           padding: 0.75rem 1.25rem 1.25rem;
-        }
-        /* Small notch on the left edge, pointing at the date field. */
-        #seo-splash::before {
-          content: '';
-          position: absolute;
-          top: 5.8rem;
-          left: -7px;
-          width: 12px;
-          height: 12px;
-          border-left: 1px solid rgba(148, 163, 184, 0.2);
-          border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-          background: rgb(17, 21, 30);
-          transform: rotate(45deg);
         }
         .seo-splash__top {
           margin-bottom: 0.75rem;
@@ -432,9 +435,8 @@
           font-size: 0.95rem;
           line-height: 1.6;
         }
-        /* The birth form sits right beside the card (see the notch): a
-           second big button that only points at it would compete with the
-           one that computes. */
+        /* The birth form is in the sidebar: a second big button that only
+           points at it would compete with the one that computes. */
         .seo-splash__cta {
           display: none;
         }

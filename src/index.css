@@ -213,13 +213,6 @@ body {
   animation-delay: calc(var(--rail-index, 0) * 80ms);
 }
 
-/* Points the eye at the birth form when the welcome card's CTA is used. */
-@keyframes form-nudge {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(169 184 245 / 0); }
-  30%, 70% { box-shadow: 0 0 0 2px rgb(169 184 245 / 0.7); }
-}
-.animate-form-nudge { animation: form-nudge 1.4s ease-in-out 2; border-radius: 0.5rem; }
-
 /* Soft outline pulse — CTA Analyse en attente d'ouverture. A ring rather
    than a glow, to keep the sober look while still calling for the click. */
 @keyframes cta-glow {
@@ -232,7 +225,6 @@ body {
   .animate-shimmer,
   .animate-rail-breathe,
   .animate-rail-unlock,
-  .animate-form-nudge,
   .animate-cta-glow {
     animation: none;
     opacity: 0.85;

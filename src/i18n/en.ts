@@ -381,7 +381,13 @@ export const en: Copy = {
 
   hudFrame: {
     modeNatal: 'NATAL SKY',
-    modeLive: 'LIVE SKY',
+    // Keep in sync with #seo-splash in index.html (crawlers, mobile).
+    liveQuestion: 'What’s your true astronomical sign?',
+    todayDiffer: (horoscope: string, sky: string): string =>
+      `Today, horoscopes say **${horoscope}**. The sky says **${sky}**.`,
+    todaySame: (sky: string): string =>
+      `Today the Sun is in front of **${sky}**: for once, horoscopes are right.`,
+    why: 'Why?',
     summaryAriaLabel: (mode: string, main: string): string =>
       `See my true sign — ${mode} · ${main}`,
   },
