@@ -10,6 +10,7 @@ export {
   precessionOffset,
   zodiacDriftDegrees,
   computeReading,
+  sunSigns,
   formatRA,
   PLANETS_META,
   type CelestialBody,

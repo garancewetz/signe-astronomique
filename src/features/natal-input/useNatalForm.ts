@@ -4,8 +4,10 @@ import { useGeolocation } from './useGeolocation';
 import { readNatalFromCurrentUrl, type SharedNatal } from './shareLink';
 import { timezoneFromLatLon } from './timezone';
 
+// Fallback places carry no label: they only stand in for the time zone when
+// the visitor left the place out, so nothing may present them as a birthplace.
 const DEFAULT_CITY: CityResult = {
-  label: 'Paris, France',
+  label: '',
   lat: 48.8566,
   lon: 2.3522,
   timezone: timezoneFromLatLon(48.8566, 2.3522),
@@ -51,7 +53,7 @@ export function useNatalForm(): NatalFormState {
   const geoCity = useMemo<CityResult | null>(() => {
     if (geolocation.status !== 'resolved') return null;
     return {
-      label: 'Position actuelle',
+      label: '',
       lat: geolocation.lat,
       lon: geolocation.lon,
       timezone: timezoneFromLatLon(geolocation.lat, geolocation.lon),

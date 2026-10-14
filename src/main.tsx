@@ -8,6 +8,7 @@ import { LocaleProvider } from './context/LocaleContext'
 import { MOBILE_QUERY } from './ui/useMobileLayout'
 import { WELCOME_EVENTS } from '@/features/cockpit-shell/welcomeEvents'
 import { LOCALE_STORAGE_KEY } from './context/localeContextInternal'
+import { loreShortName, sunSigns } from '@/features/astronomy'
 
 registerSW({ immediate: true })
 
@@ -99,6 +100,7 @@ function wireWelcomeOverlay() {
   })
   document.addEventListener('keydown', onKeydown)
 
+  fillToday()
   wireLanguageToggle(el)
 
   // On mobile the card is a real modal: move focus into it so keyboard /
@@ -119,6 +121,25 @@ function nudgeBirthForm() {
     () => form.classList.remove('animate-form-nudge'),
     { once: true },
   )
+}
+
+// Today's horoscope sign vs the constellation really behind the Sun — the
+// site's claim, proven on today's date before anyone types theirs. Filled
+// before wireLanguageToggle caches the French markup, with the English in
+// data-en like the rest of the card. Names come from our own lore table.
+function fillToday() {
+  const p = document.getElementById('seo-splash-today')
+  if (!p) return
+  const { tropical, constellation } = sunSigns(new Date())
+  const name = (lang: 'fr' | 'en', c: typeof tropical) => `<strong>${loreShortName(c, lang)}</strong>`
+  if (tropical === constellation) {
+    p.innerHTML = `Aujourd’hui, le Soleil est devant ${name('fr', constellation)} : pour une fois, l’horoscope a raison.`
+    p.dataset.en = `Today the Sun is in front of ${name('en', constellation)}: for once, horoscopes are right.`
+  } else {
+    p.innerHTML = `Aujourd’hui, l’horoscope dit ${name('fr', tropical)}. Le ciel dit ${name('fr', constellation)}.`
+    p.dataset.en = `Today, horoscopes say ${name('en', tropical)}. The sky says ${name('en', constellation)}.`
+  }
+  p.hidden = false
 }
 
 // FR is the raw-HTML default; this lets a visitor flip the overlay to English

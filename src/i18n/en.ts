@@ -44,9 +44,9 @@ export const en: Copy = {
     sectionLabel: 'Recent',
     listAriaLabel: 'Recent searches history',
     restoreAriaLabel: (date: string, place: string): string =>
-      `Recompute ${date} in ${place}`,
+      place ? `Recompute ${date} in ${place}` : `Recompute ${date}`,
     removeAriaLabel: (date: string, place: string): string =>
-      `Remove ${date} in ${place} from history`,
+      place ? `Remove ${date} in ${place} from history` : `Remove ${date} from history`,
   },
 
   cityAutocomplete: {
@@ -399,7 +399,6 @@ export const en: Copy = {
   hudFrame: {
     modeNatal: 'NATAL SKY',
     modeLive: 'LIVE SKY',
-    placeLabelFallback: 'Natal sky',
     summaryAriaLabel: (mode: string, main: string): string =>
       `See my true sign — ${mode} · ${main}`,
   },

@@ -63,7 +63,9 @@ export const HudFrame = memo(function HudFrame({
     : null;
 
   const sub = reading
-    ? `${reading.input.placeLabel ?? t.hudFrame.placeLabelFallback} · ${formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale)}`
+    ? [reading.input.placeLabel, formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale)]
+        .filter(Boolean)
+        .join(' · ')
     : (() => {
         const latStr = `${Math.abs(observerLat).toFixed(2)}°${observerLat >= 0 ? 'N' : 'S'}`;
         const lonStr = `${Math.abs(observerLon).toFixed(2)}°${observerLon >= 0 ? 'E' : 'W'}`;
