@@ -93,7 +93,7 @@ export function mountExplodedConstellation(
         },
         label: {
           text: `${star.bayer} ${star.name}\n${formatLightYears(star.distance_ly)}`,
-          font: "10px 'JetBrains Mono', monospace",
+          font: "10px 'IBM Plex Mono', monospace",
           fillColor: tint.withAlpha(0.9),
           style: LabelStyle.FILL,
           verticalOrigin: labelOffset.y < 0 ? VerticalOrigin.BOTTOM : VerticalOrigin.TOP,
@@ -140,7 +140,7 @@ export function mountExplodedConstellation(
         position: positions[brightest],
         label: {
           text: labelText,
-          font: "700 14px 'JetBrains Mono', monospace",
+          font: "700 14px 'IBM Plex Mono', monospace",
           fillColor: Color.fromCssColorString('#e0f2fe'),
           style: LabelStyle.FILL,
           verticalOrigin: VerticalOrigin.BOTTOM,

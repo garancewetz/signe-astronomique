@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#060210" />
+    <meta name="theme-color" content="#0b0e14" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -26,7 +26,7 @@
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
-    <link rel="mask-icon" href="/favicon.svg" color="#7c3aed" />
+    <link rel="mask-icon" href="/favicon.svg" color="#f2cf73" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -127,7 +127,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet" />
 
     <!--
       Styles for the welcome overlay above #root. Inline so they apply before
@@ -146,12 +146,12 @@
         justify-content: center;
         padding: 2.5rem 1.25rem;
         /* Light veil + soft blur so the cockpit stays clearly guessable. */
-        background: rgba(6, 2, 16, 0.28);
+        background: rgba(11, 14, 20, 0.35);
         -webkit-backdrop-filter: blur(5px);
         backdrop-filter: blur(5px);
-        color: #e2e8f0;
-        font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo,
-          monospace;
+        color: #e6e8ec;
+        font-family: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI',
+          sans-serif;
         -webkit-font-smoothing: antialiased;
         opacity: 1;
         transition: opacity 0.45s ease;
@@ -176,13 +176,10 @@
         overflow-y: auto;
         padding: 1rem clamp(1.25rem, 4vw, 2rem) 1.75rem;
         text-align: center;
-        border: 1px solid rgba(167, 139, 250, 0.22);
-        border-radius: 1rem;
-        background: rgba(13, 8, 30, 0.82);
-        box-shadow:
-          0 0 0 1px rgba(0, 0, 0, 0.3),
-          0 24px 70px rgba(0, 0, 0, 0.55),
-          0 0 60px rgba(124, 58, 237, 0.18);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 8px;
+        background: rgba(17, 21, 30, 0.94);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
       }
       /* Language toggle + close share one row so they never overlap the copy. */
       .seo-splash__top {
@@ -196,17 +193,17 @@
         gap: 0.15rem;
         padding: 0.2rem;
         border: 1px solid rgba(148, 163, 184, 0.22);
-        border-radius: 0.55rem;
-        background: rgba(30, 20, 55, 0.55);
+        border-radius: 6px;
+        background: #161b26;
       }
       .seo-splash__lang-btn {
         min-width: 2.2rem;
         min-height: 1.9rem;
         padding: 0.2rem 0.5rem;
         border: 0;
-        border-radius: 0.4rem;
+        border-radius: 4px;
         background: transparent;
-        color: #94a3b8;
+        color: #8a93a3;
         font-family: inherit;
         font-size: 0.72rem;
         font-weight: 600;
@@ -216,14 +213,14 @@
         transition: background 0.15s ease, color 0.15s ease;
       }
       .seo-splash__lang-btn:hover {
-        color: #e2e8f0;
+        color: #e6e8ec;
       }
       .seo-splash__lang-btn.is-active {
-        background: rgba(124, 58, 237, 0.35);
-        color: #f5f3ff;
+        background: rgba(148, 163, 184, 0.22);
+        color: #ffffff;
       }
       .seo-splash__lang-btn:focus-visible {
-        outline: 2px solid #a78bfa;
+        outline: 2px solid #a9b8f5;
         outline-offset: 2px;
       }
       .seo-splash__close {
@@ -235,9 +232,9 @@
         height: 2.75rem;
         padding: 0;
         border: 1px solid rgba(148, 163, 184, 0.25);
-        border-radius: 0.6rem;
-        background: rgba(30, 20, 55, 0.6);
-        color: #cbd5e1;
+        border-radius: 6px;
+        background: #161b26;
+        color: #b8bfcc;
         font-size: 1.25rem;
         line-height: 1;
         cursor: pointer;
@@ -246,75 +243,75 @@
           border-color 0.15s ease;
       }
       .seo-splash__close:hover {
-        background: rgba(124, 58, 237, 0.25);
-        border-color: rgba(167, 139, 250, 0.5);
-        color: #f8fafc;
+        background: #1d2331;
+        border-color: rgba(148, 163, 184, 0.5);
+        color: #ffffff;
       }
       .seo-splash__close:focus-visible {
-        outline: 2px solid #a78bfa;
+        outline: 2px solid #a9b8f5;
         outline-offset: 2px;
       }
       .seo-splash__title {
         margin: 0 0 0.9rem;
-        font-size: clamp(1.6rem, 5vw, 2rem);
-        font-weight: 600;
-        line-height: 1.3;
-        letter-spacing: -0.01em;
-        color: #f8fafc;
-        text-shadow: 0 0 24px rgba(124, 58, 237, 0.35);
+        font-family: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+        font-size: clamp(1.75rem, 6vw, 2.2rem);
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: -0.015em;
+        color: #ffffff;
+        text-wrap: balance;
       }
       .seo-splash__lead {
         margin: 0;
-        font-size: 0.95rem;
-        font-weight: 300;
-        line-height: 1.75;
-        color: #cbd5e1;
+        font-size: 1.02rem;
+        font-weight: 400;
+        line-height: 1.65;
+        color: #b8bfcc;
       }
       .seo-splash__lead strong {
-        font-weight: 500;
-        color: #e9d5ff;
+        font-weight: 600;
+        color: #f2cf73;
       }
       .seo-splash__cta {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         margin: 1.6rem 0 0;
-        min-height: 2.75rem;
-        padding: 0.7rem 1.4rem;
-        border: 1px solid rgba(167, 139, 250, 0.5);
-        border-radius: 0.6rem;
-        background: rgba(124, 58, 237, 0.25);
-        color: #f5f3ff;
+        min-height: 3rem;
+        padding: 0.75rem 1.5rem;
+        border: 1px solid #e6e8ec;
+        border-radius: 6px;
+        background: #e6e8ec;
+        color: #0b0e14;
         font-family: inherit;
-        font-size: 0.85rem;
-        font-weight: 500;
-        letter-spacing: 0.03em;
+        font-size: 0.95rem;
+        font-weight: 600;
         cursor: pointer;
         touch-action: manipulation;
         transition: background 0.15s ease, border-color 0.15s ease;
       }
       .seo-splash__cta:hover {
-        background: rgba(124, 58, 237, 0.45);
-        border-color: rgba(167, 139, 250, 0.8);
+        background: #ffffff;
+        border-color: #ffffff;
       }
       .seo-splash__cta:focus-visible {
-        outline: 2px solid #a78bfa;
+        outline: 2px solid #a9b8f5;
         outline-offset: 2px;
       }
       /* Discreet link to the static /signes/ page (crawlable entry point). */
       .seo-splash__link {
         margin: 1rem 0 0;
-        font-size: 0.78rem;
+        font-size: 0.88rem;
       }
       .seo-splash__link a {
-        color: #a5b4fc;
+        color: #a9b8f5;
         text-underline-offset: 3px;
       }
       .seo-splash__link a:hover {
-        color: #e2e8f0;
+        color: #e6e8ec;
       }
       .seo-splash__link a:focus-visible {
-        outline: 2px solid #a78bfa;
+        outline: 2px solid #a9b8f5;
         outline-offset: 2px;
       }
       /* Long-form copy stays in the HTML for crawlers, folded for humans. */
@@ -325,18 +322,18 @@
       .seo-splash__more summary {
         cursor: pointer;
         text-align: center;
-        font-size: 0.78rem;
-        color: #94a3b8;
+        font-size: 0.85rem;
+        color: #8a93a3;
         list-style: none;
       }
       .seo-splash__more summary::-webkit-details-marker {
         display: none;
       }
       .seo-splash__more summary:hover {
-        color: #e2e8f0;
+        color: #e6e8ec;
       }
       .seo-splash__more summary:focus-visible {
-        outline: 2px solid #a78bfa;
+        outline: 2px solid #a9b8f5;
         outline-offset: 2px;
       }
       .seo-splash__more[open] summary {
@@ -344,14 +341,13 @@
       }
       .seo-splash__more > p {
         margin: 0;
-        font-size: 0.83rem;
-        font-weight: 300;
-        line-height: 1.7;
-        color: #94a3b8;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        color: #b8bfcc;
       }
       .seo-splash__more strong {
-        font-weight: 500;
-        color: #c4b5fd;
+        font-weight: 600;
+        color: #e6e8ec;
       }
       .seo-splash__faq {
         margin: 1.5rem 0 0;
@@ -360,19 +356,19 @@
       }
       .seo-splash__faq h2 {
         margin: 1.6rem 0 0.5rem;
-        font-size: 0.92rem;
+        font-family: 'IBM Plex Serif', Georgia, serif;
+        font-size: 1.05rem;
         font-weight: 500;
-        color: #c4b5fd;
+        color: #ffffff;
       }
       .seo-splash__faq h2:first-of-type {
         margin-top: 0;
       }
       .seo-splash__faq p {
         margin: 0;
-        font-size: 0.83rem;
-        font-weight: 300;
-        line-height: 1.7;
-        color: #94a3b8;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        color: #b8bfcc;
       }
       /* Desktop: a non-blocking card in the top-right corner — the birth form
          is already visible in the sidebar, so nothing needs to be gated.
@@ -395,11 +391,11 @@
           margin-bottom: 0.75rem;
         }
         .seo-splash__title {
-          font-size: 1.3rem;
+          font-size: 1.5rem;
         }
         .seo-splash__lead {
-          font-size: 0.85rem;
-          line-height: 1.65;
+          font-size: 0.95rem;
+          line-height: 1.6;
         }
         .seo-splash__cta {
           margin-top: 1.1rem;
@@ -467,9 +463,9 @@
             type="button"
             id="seo-splash-enter"
             class="seo-splash__cta"
-            data-en="Find my true sign →"
+            data-en="Find your true sign →"
           >
-            Découvrir mon vrai signe →
+            Calcule ton vrai signe →
           </button>
           <p class="seo-splash__link">
             <a href="/signes/" data-en="True dates of every sign">Les vraies dates de chaque signe</a>

@@ -164,8 +164,8 @@ export function mountStarsLayer(viewer: Viewer, opts: MountOptions): () => void 
             label: {
               text: labelText,
               font: native
-                ? "600 13px 'JetBrains Mono', monospace"
-                : "11px 'JetBrains Mono', monospace",
+                ? "600 13px 'IBM Plex Mono', monospace"
+                : "11px 'IBM Plex Mono', monospace",
               fillColor: labelColor,
               style: LabelStyle.FILL,
               verticalOrigin: VerticalOrigin.BOTTOM,

@@ -103,7 +103,7 @@ function wireWelcomeOverlay() {
   if (!isDesktop) document.getElementById('seo-splash-close')?.focus()
 }
 
-// Focus the birth date and briefly glow the form, so "Find my true sign"
+// Focus the birth date and briefly glow the form, so "Find your true sign"
 // leads somewhere instead of just closing the card.
 function nudgeBirthForm() {
   const form = document.querySelector<HTMLFormElement>('#cockpit-main form')

@@ -59,12 +59,7 @@ export function MobileHeader({
                    hover:bg-violet-500/10 active:bg-violet-500/15
                    transition-colors text-left"
       >
-        <span
-          aria-hidden="true"
-          className="inline-block size-1.5 rounded-full bg-cyan-300
-                     shadow-[0_0_8px_2px_rgba(103,232,249,0.55)]"
-        />
-        <span className="text-cockpit-sm tracking-cockpit-hud text-accent-title uppercase shrink-0">
+        <span className="font-serif text-[15px] font-semibold text-accent-title shrink-0">
           {t.cockpit.brand}
         </span>
         <span className="text-cockpit-xs text-slate-300 truncate flex-1">

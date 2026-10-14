@@ -56,11 +56,11 @@ export function SignReveal({
       <div className="text-center space-y-1">
         <div
           aria-hidden="true"
-          className="text-6xl leading-none text-amber-200 drop-shadow-[0_0_18px_rgba(252,211,77,0.45)]"
+          className="text-5xl leading-none text-amber-200"
         >
           {SIGN_GLYPH[trueSign]}
         </div>
-        <p className="text-4xl font-semibold tracking-tight text-amber-200 text-balance">
+        <p className="font-serif text-4xl font-medium tracking-tight text-amber-200 text-balance">
           {trueName}
         </p>
         <p className="text-cockpit-lg text-slate-400">
@@ -116,7 +116,6 @@ export function SignReveal({
           onClick={onRevealConstellation}
           className="w-full text-cockpit-lg tracking-normal"
         >
-          <span aria-hidden className="text-amber-200 leading-none">✦</span>
           {t.signReveal.revealCta(trueName)}
         </Button>
       )}
@@ -180,7 +179,7 @@ function SignVerdict({
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-cockpit-md tracking-cockpit-caps uppercase text-accent-label">
+    <h3 className="font-serif text-lg font-medium leading-snug text-white">
       {children}
     </h3>
   );
@@ -193,6 +192,13 @@ const ZODIAC_ORDER: readonly IauConstellation[] = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra',
   'Scorpio', 'Ophiuchus', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
 ];
+
+/** Eight short rays around the Sun disc at (128, 80). */
+const SUN_RAYS = Array.from({ length: 8 }, (_, k) => {
+  const a = (k * Math.PI) / 4;
+  const p = (d: number) => `${(128 + d * Math.cos(a)).toFixed(1)} ${(80 + d * Math.sin(a)).toFixed(1)}`;
+  return `M ${p(12)} L ${p(16)}`;
+}).join(' ');
 
 /** A small generic star pattern drawn around (0, 0). */
 const PATTERN: ReadonlyArray<[number, number]> = [
@@ -213,7 +219,7 @@ function SkyAlignment({ sign }: { sign: IauConstellation }) {
   return (
     <svg
       viewBox="0 0 320 150"
-      className="w-full max-w-sm mx-auto h-auto"
+      className="w-full max-w-sm mx-auto h-auto font-mono"
       role="img"
       aria-label={t.signReveal.alignmentAriaLabel(name)}
     >
@@ -244,15 +250,19 @@ function SkyAlignment({ sign }: { sign: IauConstellation }) {
         {SIGN_GLYPH[sign]} {name}
       </text>
 
-      {/* Sun */}
-      <circle cx="128" cy="80" r="20" className="fill-amber-300/15" />
-      <text x="128" y="81" textAnchor="middle" dominantBaseline="central" className="text-[26px]">☀️</text>
+      {/* Sun — line icons, same as the static pages (emoji differ per OS) */}
+      <circle cx="128" cy="80" r="9" className="fill-amber-200/85" />
+      <path d={SUN_RAYS} fill="none" className="stroke-amber-200" strokeWidth="1.3" strokeLinecap="round" />
       <text x="128" y="112" textAnchor="middle" className="fill-slate-300 text-[12px]">
         {t.signReveal.sun}
       </text>
 
       {/* Earth */}
-      <text x="32" y="81" textAnchor="middle" dominantBaseline="central" className="text-[20px]">🌍</text>
+      <g fill="none" stroke="#9fb4e8" strokeWidth="1.2">
+        <circle cx="32" cy="80" r="9" fill="rgba(110,140,210,0.18)" />
+        <ellipse cx="32" cy="80" rx="9" ry="3.4" />
+        <ellipse cx="32" cy="80" rx="3.8" ry="9" />
+      </g>
       <text x="32" y="102" textAnchor="middle" className="fill-slate-300 text-[12px]">
         {t.signReveal.earth}
       </text>

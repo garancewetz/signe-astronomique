@@ -1,76 +1,101 @@
 @import "tailwindcss";
 
 @theme {
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  /* Same type family as the static sign pages (seo/signPages.ts):
+     serif for titles, sans for reading, mono for data and HUD readouts. */
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+
+  /*
+   * The cockpit used to be violet. Tailwind's violet scale is remapped to a
+   * muted periwinkle so every `*-violet-*` utility follows the sober night
+   * palette shared with the static pages, without renaming each class.
+   */
+  --color-violet-50: #f2f4fb;
+  --color-violet-100: #e3e8f6;
+  --color-violet-200: #c9d2ef;
+  --color-violet-300: #a9b8e6;
+  --color-violet-400: #8597d4;
+  --color-violet-500: #6878bf;
+  --color-violet-600: #5161a6;
+  --color-violet-700: #424f88;
+  --color-violet-800: #363f6a;
+  --color-violet-900: #2a3150;
+  --color-violet-950: #171b2c;
+  /* Gold is reserved for the true sign, same tone as the static pages. */
+  --color-amber-200: #f2cf73;
 
   /* Structure cockpit */
-  --color-background: #060210;
-  --color-foreground: #ede9fe;
-  --color-surface: #0d0820;
-  --color-surface-raised: #100828;
-  --color-surface-console: #09031a;
-  --color-overlay: #030014;
-  --color-hud-bar: #0d0825;
+  --color-background: #0b0e14;
+  --color-foreground: #e6e8ec;
+  --color-surface: #11151e;
+  --color-surface-raised: #161b26;
+  --color-surface-console: #0e121a;
+  --color-overlay: #07090e;
+  --color-hud-bar: #11151e;
 
-  /* Accents HUD (remplace la grille violet-* dispersée) */
-  --color-accent-title: #f5f3ff;
-  --color-accent-label: #c4b5fd;
-  --color-accent-muted: rgb(167 139 250 / 0.85);
-  --color-border-hud: rgb(167 139 250 / 0.25);
-  --color-border-hud-strong: rgb(167 139 250 / 0.35);
-  --color-border-hud-muted: rgb(167 139 250 / 0.15);
-  --color-border-hud-subtle: rgb(167 139 250 / 0.2);
-  --color-border-hud-faint: rgb(167 139 250 / 0.1);
-  --color-border-hud-hairline: rgb(167 139 250 / 0.08);
-  --color-border-control: rgb(167 139 250 / 0.3);
+  /* Accents HUD */
+  --color-accent-title: #ffffff;
+  --color-accent-label: #a9b8e6;
+  --color-accent-muted: rgb(169 184 230 / 0.85);
+  --color-border-hud: rgb(148 163 184 / 0.25);
+  --color-border-hud-strong: rgb(148 163 184 / 0.35);
+  --color-border-hud-muted: rgb(148 163 184 / 0.15);
+  --color-border-hud-subtle: rgb(148 163 184 / 0.2);
+  --color-border-hud-faint: rgb(148 163 184 / 0.1);
+  --color-border-hud-hairline: rgb(148 163 184 / 0.08);
+  --color-border-control: rgb(148 163 184 / 0.3);
 
   /* Glyphes barre caméra */
-  --color-glyph-sun: #fcd34d;
+  --color-glyph-sun: #f2cf73;
   --color-glyph-moon: #e2e8f0;
-  --color-glyph-earth: #7dd3fc;
+  --color-glyph-earth: #9fb4e8;
 
   /* Anneaux / bordures formulaires (CSS global) */
-  --color-ring: #c4b5fd;
-  --color-border-strong: rgb(167 139 250 / 0.55);
-  --color-border-input: rgb(109 40 217 / 0.3);
-  --color-input-focus-border: rgb(139 92 246 / 0.65);
-  --color-input-focus-glow: rgb(139 92 246 / 0.18);
-  --color-input-focus-visible-border: rgb(196 181 253 / 0.85);
-  --color-input-focus-visible-glow: rgb(167 139 250 / 0.45);
-  --color-scrollbar-thumb: rgb(109 40 217 / 0.3);
-  --color-scrollbar-thumb-hover: rgb(139 92 246 / 0.5);
+  --color-ring: #a9b8f5;
+  --color-border-strong: rgb(148 163 184 / 0.55);
+  --color-border-input: rgb(148 163 184 / 0.28);
+  --color-input-focus-border: rgb(169 184 245 / 0.65);
+  --color-input-focus-glow: rgb(169 184 245 / 0.18);
+  --color-input-focus-visible-border: rgb(169 184 245 / 0.85);
+  --color-input-focus-visible-glow: rgb(169 184 245 / 0.4);
+  --color-scrollbar-thumb: rgb(148 163 184 / 0.3);
+  --color-scrollbar-thumb-hover: rgb(148 163 184 / 0.5);
 
-  /* Rayons */
-  --radius-cockpit: 3px;
-  --radius-panel: 2px;
-  --radius-console: 0.75rem;
+  /* Rayons — same 6px as the static pages' buttons and tiles */
+  --radius-cockpit: 6px;
+  --radius-panel: 6px;
+  --radius-console: 0.5rem;
 
   /*
    * Échelle typo cockpit (6 niveaux + glyphes).
    * xs/sm = dense HUD · md = corps & formulaires · lg = titres panneaux · xl = lecture longue.
+   * Nothing under 10px: the audience reads on phones.
    */
-  --text-cockpit-xs: 8px;
-  --text-cockpit-sm: 10px;
-  --text-cockpit-md: 11px;
-  --text-cockpit-lg: 12px;
-  --text-cockpit-xl: 13px;
-  --text-cockpit-glyph: 15px;
+  --text-cockpit-xs: 10px;
+  --text-cockpit-sm: 11px;
+  --text-cockpit-md: 12px;
+  --text-cockpit-lg: 13px;
+  --text-cockpit-xl: 15px;
+  --text-cockpit-glyph: 16px;
   --text-cockpit-input: var(--text-cockpit-md);
 
-  --tracking-cockpit-tight: 0.14em;
-  --tracking-cockpit: 0.2em;
-  --tracking-cockpit-wide: 0.22em;
-  --tracking-cockpit-label: 0.28em;
-  --tracking-cockpit-caps: 0.3em;
-  --tracking-cockpit-hud: 0.35em;
+  /* Light tracking: wide-spaced caps read as "sci-fi", not as a reference. */
+  --tracking-cockpit-tight: 0.04em;
+  --tracking-cockpit: 0.06em;
+  --tracking-cockpit-wide: 0.07em;
+  --tracking-cockpit-label: 0.08em;
+  --tracking-cockpit-caps: 0.08em;
+  --tracking-cockpit-hud: 0.1em;
 
   /* Ombres */
-  --shadow-cockpit-panel: 0 8px 40px rgb(0 0 0 / 0.7);
-  --shadow-cockpit-dock: 0 4px 24px rgb(0 0 0 / 0.45);
-  --shadow-cockpit-modal: 0 12px 44px rgb(0 0 0 / 0.75);
-  --shadow-cockpit-sheet: 0 12px 48px rgb(0 0 0 / 0.85);
-  --shadow-cockpit-bar: 0 8px 30px rgb(0 0 0 / 0.35);
-  --shadow-cockpit-lift: 0 -10px 30px rgb(0 0 0 / 0.55);
+  --shadow-cockpit-panel: 0 8px 32px rgb(0 0 0 / 0.5);
+  --shadow-cockpit-dock: 0 4px 20px rgb(0 0 0 / 0.4);
+  --shadow-cockpit-modal: 0 12px 40px rgb(0 0 0 / 0.6);
+  --shadow-cockpit-sheet: 0 12px 40px rgb(0 0 0 / 0.65);
+  --shadow-cockpit-bar: 0 8px 24px rgb(0 0 0 / 0.3);
+  --shadow-cockpit-lift: 0 -10px 30px rgb(0 0 0 / 0.45);
 }
 
 html,
@@ -92,7 +117,7 @@ body,
 }
 
 body {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -120,7 +145,7 @@ body {
   border-radius: var(--radius-cockpit);
   font-family: var(--font-mono);
   font-size: var(--text-cockpit-input);
-  letter-spacing: 0.07em;
+  letter-spacing: 0.02em;
   outline: none;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
@@ -155,7 +180,7 @@ body {
   outline-offset: 2px;
 }
 .cockpit-input::-webkit-calendar-picker-indicator {
-  filter: invert(0.5) sepia(1) saturate(6) hue-rotate(240deg);
+  filter: invert(0.75);
   opacity: 0.6;
 }
 
@@ -189,7 +214,7 @@ body {
   0%   { opacity: 0.55; filter: blur(0.5px); }
   60%  {
     opacity: 1;
-    filter: blur(0) drop-shadow(0 0 6px rgb(103 232 249 / 0.6));
+    filter: blur(0) drop-shadow(0 0 4px rgb(169 184 245 / 0.45));
   }
   100% { opacity: 1; filter: none; }
 }
@@ -200,16 +225,16 @@ body {
 
 /* Points the eye at the birth form when the welcome card's CTA is used. */
 @keyframes form-nudge {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(167 139 250 / 0); }
-  30%, 70% { box-shadow: 0 0 0 2px rgb(167 139 250 / 0.7), 0 0 24px rgb(167 139 250 / 0.35); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(169 184 245 / 0); }
+  30%, 70% { box-shadow: 0 0 0 2px rgb(169 184 245 / 0.7); }
 }
 .animate-form-nudge { animation: form-nudge 1.4s ease-in-out 2; border-radius: 0.5rem; }
 
-/* Halo violet continu — CTA Analyse en attente d'ouverture. Plus marqué
-   que rail-breathe (qui sert à l'état verrouillé) pour appeler le clic. */
+/* Soft outline pulse — CTA Analyse en attente d'ouverture. A ring rather
+   than a glow, to keep the sober look while still calling for the click. */
 @keyframes cta-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(167 139 250 / 0); }
-  50%      { box-shadow: 0 0 14px 2px rgb(167 139 250 / 0.55); }
+  0%, 100% { box-shadow: 0 0 0 0 rgb(169 184 245 / 0); }
+  50%      { box-shadow: 0 0 0 2px rgb(169 184 245 / 0.45); }
 }
 .animate-cta-glow { animation: cta-glow 2.8s ease-in-out infinite; }
 

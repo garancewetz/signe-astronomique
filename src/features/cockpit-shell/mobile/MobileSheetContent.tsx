@@ -51,10 +51,9 @@ function HomeContent({
           variant="solid"
           size="lg"
           onClick={onOpenCoords}
-          className="w-full text-cockpit-sm"
+          className="w-full text-cockpit-lg"
         >
-          <span aria-hidden className="text-violet-200/90 leading-none">✦</span>
-          {t.mobile.sheet.home.ctaCalculate}
+          {`${t.mobile.sheet.home.ctaCalculate} →`}
         </Button>
       )}
 

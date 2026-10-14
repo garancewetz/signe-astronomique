@@ -86,7 +86,7 @@ export function mountReferenceLines(
       position: new Cartesian3(0, 0, SPHERE_RADIUS_M * 0.98),
       label: {
         text: 'POLARIS / NORD CÉLESTE',
-        font: "10px 'JetBrains Mono', monospace",
+        font: "10px 'IBM Plex Mono', monospace",
         fillColor: axisColor,
         style: LabelStyle.FILL,
         verticalOrigin: VerticalOrigin.BOTTOM,
@@ -101,7 +101,7 @@ export function mountReferenceLines(
       position: new Cartesian3(0, 0, -SPHERE_RADIUS_M * 0.98),
       label: {
         text: 'SUD CÉLESTE',
-        font: "10px 'JetBrains Mono', monospace",
+        font: "10px 'IBM Plex Mono', monospace",
         fillColor: axisColor,
         style: LabelStyle.FILL,
         verticalOrigin: VerticalOrigin.TOP,
@@ -137,7 +137,7 @@ export function mountReferenceLines(
       position: raDecToEcef(90, 0, gmstRad, SPHERE_RADIUS_M),
       label: {
         text: 'ÉQUATEUR CÉLESTE',
-        font: "10px 'JetBrains Mono', monospace",
+        font: "10px 'IBM Plex Mono', monospace",
         fillColor: equatorColor,
         style: LabelStyle.FILL,
         verticalOrigin: VerticalOrigin.CENTER,
@@ -200,7 +200,7 @@ export function mountReferenceLines(
       position: summerSolstice,
       label: {
         text: 'ÉCLIPTIQUE',
-        font: "10px 'JetBrains Mono', monospace",
+        font: "10px 'IBM Plex Mono', monospace",
         fillColor: eclipticColor,
         style: LabelStyle.FILL,
         verticalOrigin: VerticalOrigin.BOTTOM,

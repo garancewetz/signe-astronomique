@@ -9,13 +9,10 @@ export {
   zodiacDriftDegrees,
   computeReading,
   formatRA,
-  formatLST,
-  liveTelemetry,
   PLANETS_META,
   type CelestialBody,
   type CelestialReading,
   type IauConstellation,
-  type LiveTelemetry,
   type MoonPhaseKey,
 } from './astroEngine';
 

@@ -14,7 +14,7 @@ export const fr = {
   cockpit: {
     sidebarLabel: 'Console de pilotage',
     skipToMain: 'Aller au contenu principal',
-    brand: 'CIEL RÉEL',
+    brand: 'Signe astronomique',
     srTitle: 'Carte du ciel réel',
   },
 
@@ -36,7 +36,7 @@ export const fr = {
     timeLabel: 'HEURE',
     placeLabel: 'LIEU DE NAISSANCE',
     placePlaceholder: 'Ville de naissance…',
-    submitIdle: 'CALCULER MON SIGNE',
+    submitIdle: 'Calcule ton vrai signe',
     submitBusy: 'Calcul du ciel…',
     allSignsLink: 'Les vraies dates des 13 signes',
   },
@@ -128,7 +128,7 @@ export const fr = {
     sheet: {
       home: {
         eyebrow: 'Console',
-        ctaCalculate: 'CALCULER MON SIGNE',
+        ctaCalculate: 'Calcule ton vrai signe',
         hint:
           'Entre ta date, ton heure et ton lieu de naissance pour découvrir ton vrai signe.',
       },

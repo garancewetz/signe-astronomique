@@ -12,7 +12,7 @@ interface UIButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   solid:
-    'border-border-control bg-violet-600/15 text-white hover:bg-violet-600/25 hover:border-accent-label',
+    'border-foreground bg-foreground font-semibold text-background hover:border-white hover:bg-white',
   outline:
     'border-border-control bg-transparent text-slate-200 hover:border-accent-label hover:bg-violet-500/10 hover:text-white',
   ghost:

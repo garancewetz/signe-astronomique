@@ -171,7 +171,7 @@ export function mountSatellitesLayer(
       },
       label: {
         text: displayName,
-        font: "10px 'JetBrains Mono', monospace",
+        font: "10px 'IBM Plex Mono', monospace",
         fillColor: labelFillColor,
         outlineColor: labelOutlineColor,
         outlineWidth: 2,

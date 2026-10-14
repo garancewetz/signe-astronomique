@@ -575,30 +575,3 @@ export function formatRA(hours: number): string {
   const s = Math.round(((hours - h) * 60 - m) * 60);
   return `${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
 }
-
-// ─── Live telemetry — used by the HUD header in empty state ──────────────────
-
-export interface LiveTelemetry {
-  /** Local Apparent Sidereal Time at the observer, in hours (0–24). */
-  lstHours: number;
-  /** Julian Day for the instant. */
-  julianDay: number;
-}
-
-/**
- * Cheap derivation of LST + JD for the live header. Both are also
- * computed inside `computeReading` for natal mode; keeping a separate
- * call avoids dragging the full-reading engine on every tick.
- */
-export function liveTelemetry(date: Date, longitudeDeg: number): LiveTelemetry {
-  const jd = toJulianDay(date);
-  const gst = greenwichSiderealTime(jd);
-  const lst = norm24(gst + longitudeDeg / 15);
-  return { lstHours: lst, julianDay: jd };
-}
-
-export function formatLST(hours: number): string {
-  const h = Math.floor(hours);
-  const m = Math.floor((hours - h) * 60);
-  return `${h.toString().padStart(2, '0')}h${m.toString().padStart(2, '0')}`;
-}
