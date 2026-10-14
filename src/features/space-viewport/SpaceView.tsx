@@ -46,6 +46,7 @@ import {
   flyToCelestialDirection,
 } from './cesium/cameraDirector';
 import { attachKeyboardNav } from './cesium/viewerKeyboard';
+import { attachTrackpadPinch } from './cesium/trackpadPinch';
 import { useSceneLayerComposition } from './useSceneLayerComposition';
 import { useSatelliteTracker } from './useSatelliteTracker';
 import { useLocale, useT } from '@/context/useLocale';
@@ -450,6 +451,7 @@ export function SpaceView({
     viewer.scene.screenSpaceCameraController.maximumZoomDistance = MAX_CAMERA_DIST_M;
 
     const detachKeyboard = attachKeyboardNav(viewer, { sideViewActiveRef });
+    const detachTrackpadPinch = attachTrackpadPinch(viewer, { sideViewActiveRef });
 
     const removeDistanceListener = attachCameraDistanceListener(viewer, {
       getLocale: () => localeRef.current,
@@ -462,6 +464,7 @@ export function SpaceView({
 
     return () => {
       detachKeyboard();
+      detachTrackpadPinch();
       removeDistanceListener();
       cleanupsRef.current.forEach((c) => c());
       cleanupsRef.current = [];
