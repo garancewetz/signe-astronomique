@@ -41,6 +41,7 @@ import {
 import { attachSideViewTouch } from './cesium/sideViewTouch';
 import { useBodyHover, useBodyPicker, type HoveredBody } from './cesium/useBodyPicker';
 import {
+  flyToArrival,
   flyToOrbital,
   flyToCelestialDirection,
 } from './cesium/cameraDirector';
@@ -230,6 +231,9 @@ export function SpaceView({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
+  // Where the arrival camera looks: the place known at mount (Paris until
+  // geolocation answers). Read once, by the viewer-init effect.
+  const arrivalCenterRef = useRef({ lat: liveLatitude, lon: liveLongitude });
   const nightLayerRef = useRef<ImageryLayer | null>(null);
   const cleanupsRef = useRef<Array<() => void>>([]);
   const previousReadingRef = useRef<CelestialReading | null>(null);
@@ -449,8 +453,9 @@ export function SpaceView({
       onLabel: (label) => onDistanceChangeRef.current?.(label),
     });
 
-    // Default pre-JUMP camera: equatorial orbit looking at Earth.
-    flyToOrbital(viewer, 0);
+    // Default pre-JUMP camera: close over the visitor's region, for an
+    // immersive arrival; the first calculation flies out to the sky.
+    flyToArrival(viewer, arrivalCenterRef.current.lat, arrivalCenterRef.current.lon);
 
     return () => {
       detachKeyboard();
