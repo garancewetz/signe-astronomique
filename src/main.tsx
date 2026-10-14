@@ -82,18 +82,17 @@ function wireWelcomeOverlay() {
     document.removeEventListener('keydown', onKeydown)
   }
 
-  // Desktop shows the card as a non-blocking corner box (index.html media
-  // query): the form sits right beside it, so the CTA hands focus to it.
-  const isDesktop = !window.matchMedia(MOBILE_QUERY).matches
-  if (isDesktop) el.setAttribute('aria-modal', 'false')
+  // Desktop: the header carries the question and today's hook (HudFrame);
+  // the card only opens on demand, from its "Pourquoi ?" link.
+  if (!window.matchMedia(MOBILE_QUERY).matches) {
+    wireDesktopCard(el)
+    return
+  }
 
   document.getElementById('seo-splash-close')?.addEventListener('click', dismiss)
   // The birth form inside the card computed a sign: the card has done its job.
   window.addEventListener(WELCOME_EVENTS.dismiss, dismiss, { once: true })
-  document.getElementById('seo-splash-enter')?.addEventListener('click', () => {
-    dismiss()
-    if (isDesktop) nudgeBirthForm()
-  })
+  document.getElementById('seo-splash-enter')?.addEventListener('click', dismiss)
   // A click on the blurred backdrop (outside the card) also closes.
   el.addEventListener('click', (e) => {
     if (e.target === el) dismiss()
@@ -104,23 +103,30 @@ function wireWelcomeOverlay() {
   wireLanguageToggle(el)
 
   // On mobile the card is a real modal: move focus into it so keyboard /
-  // screen-reader users land on the dismiss control. On desktop it doesn't
-  // block anything, so focus stays where the visitor puts it.
-  if (!isDesktop) document.getElementById('seo-splash-close')?.focus()
+  // screen-reader users land on the dismiss control.
+  document.getElementById('seo-splash-close')?.focus()
 }
 
-// Focus the birth date and briefly glow the form, so "Find your true sign"
-// leads somewhere instead of just closing the card.
-function nudgeBirthForm() {
-  const form = document.querySelector<HTMLFormElement>('#cockpit-main form')
-  if (!form) return
-  form.querySelector<HTMLInputElement>('input[type="date"]')?.focus()
-  form.classList.add('animate-form-nudge')
-  form.addEventListener(
-    'animationend',
-    () => form.classList.remove('animate-form-nudge'),
-    { once: true },
-  )
+// Desktop: hidden at arrival (index.html CSS), shown and hidden on demand —
+// never removed, so "Pourquoi ?" can reopen it as often as wanted.
+function wireDesktopCard(el: HTMLElement) {
+  el.setAttribute('aria-modal', 'false')
+  const closeBtn = document.getElementById('seo-splash-close')
+  const close = () => el.classList.remove('seo-splash--open')
+  window.addEventListener(WELCOME_EVENTS.open, () => {
+    el.classList.add('seo-splash--open')
+    // "Pourquoi ?" asks for the explanation: unfold it straight away.
+    el.querySelector('details')?.setAttribute('open', '')
+    closeBtn?.focus()
+  })
+  // A sign was computed: the explanation can step aside.
+  window.addEventListener(WELCOME_EVENTS.dismiss, close)
+  closeBtn?.addEventListener('click', close)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close()
+  })
+  fillToday()
+  wireLanguageToggle(el)
 }
 
 // Today's horoscope sign vs the constellation really behind the Sun — the

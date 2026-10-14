@@ -1,9 +1,12 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import {
   loreName,
+  loreShortName,
+  sunSigns,
   type CelestialReading,
 } from '@/features/astronomy';
 import { useLocale, useT } from '@/context/useLocale';
+import { WELCOME_EVENTS } from './welcomeEvents';
 
 /** Birth-time formatter pinned to the birth location's timezone. Falls
  *  back to UTC (with a visible suffix) when the timezone is unknown. */
@@ -19,61 +22,67 @@ function formatNatalDate(date: Date, timezone: string | undefined, intlLocale: s
 
 interface HudFrameProps {
   reading: CelestialReading | null;
-  /** Observer latitude (deg N) — used for the live telemetry line. */
-  observerLat: number;
-  /** Observer longitude (deg E) — used for the live telemetry line. */
-  observerLon: number;
   /** Opens the MON SIGNE panel — wired only when a natal reading is active. */
   onOpenSummary?: () => void;
 }
 
 /**
- * Slim status banner — pure mode + live telemetry. Branding lives in the
- * sidebar header and camera fly-to controls now sit in the sidebar's
- * Caméra section, so this bar carries only the centered status block.
+ * Top banner, centred over the sky. Before a calculation it carries the
+ * site's question and today's proof (horoscope sign vs the real sky), with
+ * a "Pourquoi ?" link that opens the welcome card's explanation; after it,
+ * the natal sign, place and date. Branding lives in the sidebar header.
  */
 export const HudFrame = memo(function HudFrame({
   reading,
-  observerLat,
-  observerLon,
   onOpenSummary,
 }: HudFrameProps) {
   const t = useT();
   const { locale } = useLocale();
-  const liveDateFormatter = useMemo(
-    () =>
-      new Intl.DateTimeFormat(t.intlLocale, {
-        dateStyle: 'medium',
-        timeStyle: 'medium',
-      }),
-    [t.intlLocale],
-  );
-  const [liveNow, setLiveNow] = useState(() => new Date());
+  // Once per mount: the Sun changes constellation at most once a day.
+  const today = useMemo(() => sunSigns(new Date()), []);
 
-  useEffect(() => {
-    if (reading) return;
-    const id = window.setInterval(() => setLiveNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, [reading]);
+  if (!reading) {
+    const horoscope = loreShortName(today.tropical, locale);
+    const sky = loreShortName(today.constellation, locale);
+    return (
+      <header
+        role="banner"
+        className="relative h-[4.5rem]
+                   bg-linear-to-b from-hud-bar/95 via-hud-bar/80 to-transparent"
+      >
+        <h1 className="sr-only">{t.cockpit.srTitle}</h1>
+        <div className="flex flex-col items-center justify-center h-full px-4 text-center">
+          <p className="max-w-full truncate font-serif text-xl font-medium leading-tight text-white">
+            {t.hudFrame.liveQuestion}
+          </p>
+          <p className="mt-1 max-w-full truncate text-cockpit-lg text-slate-300">
+            <Bold
+              text={today.tropical === today.constellation
+                ? t.hudFrame.todaySame(sky)
+                : t.hudFrame.todayDiffer(horoscope, sky)}
+            />{' '}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(WELCOME_EVENTS.open))}
+              className="cockpit-focus pointer-events-auto rounded-cockpit
+                         text-violet-200 underline underline-offset-2
+                         decoration-violet-200/40 hover:text-white transition-colors"
+            >
+              {t.hudFrame.why}
+            </button>
+          </p>
+        </div>
+      </header>
+    );
+  }
 
-  const isNatal = !!reading;
-  const mode = isNatal ? t.hudFrame.modeNatal : t.hudFrame.modeLive;
-  const main = reading
-    ? `☉ ${loreName(reading.trueConstellation, locale)}`
-    : null;
+  const mode = t.hudFrame.modeNatal;
+  const main = `☉ ${loreName(reading.trueConstellation, locale)}`;
+  const sub = [reading.input.placeLabel, formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale)]
+    .filter(Boolean)
+    .join(' · ');
 
-  const sub = reading
-    ? [reading.input.placeLabel, formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale)]
-        .filter(Boolean)
-        .join(' · ')
-    : (() => {
-        const latStr = `${Math.abs(observerLat).toFixed(2)}°${observerLat >= 0 ? 'N' : 'S'}`;
-        const lonStr = `${Math.abs(observerLon).toFixed(2)}°${observerLon >= 0 ? 'E' : 'W'}`;
-        // No sidereal time here: jargon for this audience.
-        return `${liveDateFormatter.format(liveNow)} · ${latStr} ${lonStr}`;
-      })();
-
-  const summaryClickable = isNatal && !!onOpenSummary;
+  const summaryClickable = !!onOpenSummary;
 
   const centerInner = (
     <div className="min-w-0 max-w-full text-center leading-tight">
@@ -81,16 +90,11 @@ export const HudFrame = memo(function HudFrame({
         <span className="shrink-0 text-cockpit-sm tracking-cockpit-label uppercase text-accent-label">
           {mode}
         </span>
-        {main && (
-          <span className="text-cockpit-md tracking-wide text-slate-100 truncate min-w-0">
-            {main}
-          </span>
-        )}
+        <span className="text-cockpit-md tracking-wide text-slate-100 truncate min-w-0">
+          {main}
+        </span>
       </div>
-      <div
-        className="text-cockpit-xs tracking-wide text-slate-500 truncate mt-0.5"
-        aria-live={isNatal ? 'off' : 'polite'}
-      >
+      <div className="text-cockpit-xs tracking-wide text-slate-500 truncate mt-0.5">
         {sub}
       </div>
     </div>
@@ -117,7 +121,7 @@ export const HudFrame = memo(function HudFrame({
             onClick={onOpenSummary}
             className="cockpit-focus pointer-events-auto min-w-0 max-w-full inline-block
                        rounded-cockpit transition-opacity hover:opacity-85"
-            aria-label={t.hudFrame.summaryAriaLabel(mode, main ?? '')}
+            aria-label={t.hudFrame.summaryAriaLabel(mode, main)}
           >
             {centerInner}
           </button>
@@ -128,3 +132,14 @@ export const HudFrame = memo(function HudFrame({
     </header>
   );
 });
+
+/** Renders **bold** spans of a copy string as gold strong text. */
+function Bold({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('**').map((part, i) =>
+        i % 2 ? <strong key={i} className="font-semibold text-amber-200">{part}</strong> : part,
+      )}
+    </>
+  );
+}
