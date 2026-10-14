@@ -395,7 +395,12 @@ const PATTERN: ReadonlyArray<[number, number]> = [
   [-14, -9], [-4, -13], [6, -4], [15, 5], [3, 12],
 ];
 
-function skyAlignmentSvg(sign: IauConstellation): string {
+/**
+ * Earth → Sun → the constellation really behind it. `sign` is the true
+ * constellation (gold); `horoscope`, when it is a neighbour, is struck
+ * through — the same "old vs real" code as the date tiles.
+ */
+function skyAlignmentSvg(sign: IauConstellation, horoscope?: IauConstellation): string {
   const i = ZODIAC_ORDER.indexOf(sign);
   const prev = ZODIAC_ORDER[(i - 1 + ZODIAC_ORDER.length) % ZODIAC_ORDER.length];
   const next = ZODIAC_ORDER[(i + 1) % ZODIAC_ORDER.length];
@@ -404,13 +409,17 @@ function skyAlignmentSvg(sign: IauConstellation): string {
   const pts = PATTERN.map(([x, y]) => `${cx + x},${cy + y}`).join(' ');
   const stars = PATTERN.map(([x, y]) => `<circle cx="${cx + x}" cy="${cy + y}" r="1.8" fill="#fbecc0"/>`).join('');
   const label = (c: IauConstellation) => esc(`${SIGN_FR[c].glyph} ${SIGN_FR[c].name}`);
+  const neighbour = (c: IauConstellation, y: number) =>
+    c === horoscope
+      ? `<text x="${cx}" y="${y}" text-anchor="middle" fill="#8a93a3" font-size="12" text-decoration="line-through">${label(c)}</text>`
+      : `<text x="${cx}" y="${y}" text-anchor="middle" fill="#8a93a3" font-size="12">${label(c)}</text>`;
 
   return `<svg class="sky" viewBox="0 0 320 150" role="img" aria-label="${esc(`Depuis la Terre, on voit le Soleil devant la constellation ${SIGN_FR[sign].of}`)}" font-family="inherit">
     <ellipse cx="128" cy="80" rx="90" ry="30" fill="none" stroke="rgba(148,163,184,0.35)" stroke-dasharray="3 4"/>
     <line x1="46" y1="80" x2="226" y2="80" stroke="rgba(242,207,115,0.6)" stroke-width="1.2" stroke-dasharray="5 4"/>
     <path d="M 220 75 L 228 80 L 220 85" fill="none" stroke="rgba(242,207,115,0.6)" stroke-width="1.2"/>
-    <text x="${cx}" y="22" text-anchor="middle" fill="#8a93a3" font-size="12">${label(prev)}</text>
-    <text x="${cx}" y="146" text-anchor="middle" fill="#8a93a3" font-size="12">${label(next)}</text>
+    ${neighbour(prev, 22)}
+    ${neighbour(next, 146)}
     <circle cx="${cx}" cy="${cy}" r="26" fill="rgba(242,207,115,0.08)" stroke="rgba(242,207,115,0.4)"/>
     <polyline points="${pts}" fill="none" stroke="#f2cf73" stroke-width="1"/>
     ${stars}
@@ -703,7 +712,7 @@ function signPage(sign: IauConstellation): StaticPage {
   // Block 4 — why.
   const why = `<section class="card" aria-labelledby="why-title">
     <h2 id="why-title">Pourquoi ?</h2>
-    ${skyAlignmentSvg(sign)}
+    ${skyAlignmentSvg(mainTrue.sign, tropicalRun ? sign : mainHoroscope.sign)}
     <p>Ton signe, c’est la constellation qui se trouve <strong>derrière le Soleil</strong>, vue depuis la Terre, le jour de ta naissance. Les dates des horoscopes ont environ 2 000 ans : depuis, l’axe de la Terre a lentement pivoté (la précession des équinoxes) et <strong>le ciel a glissé d’environ un mois</strong>.</p>
     <p>${
       isOphiuchus
