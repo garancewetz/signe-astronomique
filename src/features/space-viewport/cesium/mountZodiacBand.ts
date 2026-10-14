@@ -20,10 +20,15 @@ const SPHERE_RADIUS_M = CELESTIAL_SPHERE_KM * 1000;
 const DEG = Math.PI / 180;
 /** J2000 obliquity: the boundaries and the star catalogue are both ICRS. */
 const EPS_J2000 = 23.4392911 * DEG;
-/** Half-height of the boundary ticks, in degrees of ecliptic latitude. */
-const TICK_DEG = 4;
-/** Labels sit this far below the ecliptic, clear of the Sun and planets. */
-const LABEL_LAT_DEG = -7;
+/**
+ * The band runs parallel to the ecliptic, just south of it, like a ruler laid
+ * under the Sun's path: on the ecliptic itself it would cover the Sun.
+ */
+const BAND_LAT_DEG = -3.5;
+/** Boundary ticks span the band, in degrees of ecliptic latitude. */
+const TICK_LAT_DEG: [number, number] = [-5.5, -1.5];
+/** Labels sit under the band. */
+const LABEL_LAT_DEG = -8;
 
 const GOLD = Color.fromCssColorString('#f2cf73');
 const GREY = Color.fromCssColorString('#8a93a3');
@@ -32,6 +37,8 @@ interface MountOptions {
   gmstRad: number;
   /** Constellation the Sun is in: its stretch of the ecliptic is drawn gold. */
   trueConstellation: IauConstellation;
+  /** Sun's sidereal (ICRS) ecliptic longitude: marked on the band, under the Sun. */
+  sunLongitude: number;
   /** Locale-aware constellation label. */
   nameOf: (c: IauConstellation) => string;
 }
@@ -53,12 +60,13 @@ function eclipticToEcef(lonDeg: number, latDeg: number, gmstRad: number): Cartes
  * The official territories of the 13 zodiac constellations along the Sun's
  * path. The stick figures only join bright stars; a constellation is a whole
  * area of sky, so a Sun sitting "between two drawings" can look like the
- * wrong sign. This band cuts the ecliptic at the IAU 1930 boundaries, with
- * a tick at each one, and draws the true sign's stretch in gold — so the
- * Sun is visibly inside it, however close to the edge.
+ * wrong sign. This band follows the ecliptic, cut at the IAU 1930
+ * boundaries with a tick at each one, the true sign's stretch in gold and
+ * a dot under the Sun — so the Sun is visibly inside it, however close to
+ * the edge.
  */
 export function mountZodiacBand(viewer: Viewer, opts: MountOptions): () => void {
-  const { gmstRad, trueConstellation, nameOf } = opts;
+  const { gmstRad, trueConstellation, sunLongitude, nameOf } = opts;
   const created: Entity[] = [];
   const boundaries = getIauBoundaries();
 
@@ -69,8 +77,8 @@ export function mountZodiacBand(viewer: Viewer, opts: MountOptions): () => void 
 
     // Stretch of ecliptic inside this constellation.
     const positions: Cartesian3[] = [];
-    for (let lon = b.start; lon < end; lon += 1) positions.push(eclipticToEcef(lon, 0, gmstRad));
-    positions.push(eclipticToEcef(end, 0, gmstRad));
+    for (let lon = b.start; lon < end; lon += 1) positions.push(eclipticToEcef(lon, BAND_LAT_DEG, gmstRad));
+    positions.push(eclipticToEcef(end, BAND_LAT_DEG, gmstRad));
     created.push(
       viewer.entities.add({
         polyline: {
@@ -88,8 +96,8 @@ export function mountZodiacBand(viewer: Viewer, opts: MountOptions): () => void 
       viewer.entities.add({
         polyline: {
           positions: [
-            eclipticToEcef(b.start, -TICK_DEG, gmstRad),
-            eclipticToEcef(b.start, TICK_DEG, gmstRad),
+            eclipticToEcef(b.start, TICK_LAT_DEG[0], gmstRad),
+            eclipticToEcef(b.start, TICK_LAT_DEG[1], gmstRad),
           ],
           width: 1.5,
           arcType: ArcType.NONE,
@@ -116,6 +124,21 @@ export function mountZodiacBand(viewer: Viewer, opts: MountOptions): () => void 
       }),
     );
   });
+
+  // The Sun's foot on the band: links the Sun above to its stretch below.
+  created.push(
+    viewer.entities.add({
+      position: eclipticToEcef(sunLongitude, BAND_LAT_DEG, gmstRad),
+      point: {
+        pixelSize: 8,
+        color: GOLD,
+        outlineColor: Color.fromCssColorString('#0b0e14'),
+        outlineWidth: 2,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      },
+      properties: { kind: 'guide', name: 'Position du Soleil' },
+    }),
+  );
 
   return () => {
     for (const e of created) viewer.entities.remove(e);

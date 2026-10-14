@@ -134,6 +134,7 @@ export function useSceneLayerComposition({
         mountZodiacBand(viewer, {
           gmstRad,
           trueConstellation: reading.trueConstellation,
+          sunLongitude: reading.sunSiderealLongitude,
           nameOf: bodyNames.constellation,
         }),
       );
