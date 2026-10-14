@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { Check, Link2 } from 'lucide-react';
+import { CalendarDays, Check, Link2 } from 'lucide-react';
 import {
   loreName,
   loreShortName,
@@ -136,11 +136,13 @@ export function SignReveal({
       {showAllSignsLink && (
         <a
           href="/signes/"
-          className="cockpit-focus block w-fit mx-auto rounded px-1 py-0.5
-                     text-cockpit-lg text-violet-300/85 hover:text-violet-100
-                     underline underline-offset-4 decoration-violet-400/40
+          className="cockpit-focus flex w-full items-center justify-center gap-2 min-h-11 px-4
+                     rounded-panel border border-violet-400/35 bg-violet-500/10
+                     text-cockpit-lg text-violet-100
+                     hover:bg-violet-500/20 hover:border-violet-300/60
                      transition-colors"
         >
+          <CalendarDays className="size-3.5" strokeWidth={1.5} aria-hidden />
           {t.signReveal.allSignsLink}
         </a>
       )}

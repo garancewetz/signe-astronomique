@@ -34,7 +34,7 @@ export const en: Copy = {
     placePlaceholder: 'Birth city…',
     submitIdle: 'COMPUTE MY SIGN',
     submitBusy: 'Computing the sky…',
-    allSignsLink: 'True dates of every sign →',
+    allSignsLink: 'True dates of the 13 signs',
   },
 
   searchHistory: {
@@ -74,7 +74,7 @@ export const en: Copy = {
     ophiuchus:
       '**Ophiuchus** is the forgotten 13th sign: the Sun crosses it every year, but horoscopes only kept 12.',
     revealCta: (sign: string): string => `See ${sign} in the sky`,
-    allSignsLink: 'True dates of every sign →',
+    allSignsLink: 'True dates of the 13 signs',
   },
 
   analysisCta: {

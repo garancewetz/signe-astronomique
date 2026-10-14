@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { CalendarDays, ChevronRight, X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { Field, Input, cn } from '@/ui';
 import type { CelestialReading } from '@/features/astronomy';
@@ -234,12 +234,15 @@ function AllSignsLink() {
   return (
     <a
       href="/signes/"
-      className="cockpit-focus block w-fit mx-auto rounded px-1 py-0.5
-                 text-cockpit-xs text-violet-300/85 hover:text-violet-100
-                 underline underline-offset-4 decoration-violet-400/40
+      className="cockpit-focus flex w-full items-center gap-2 min-h-9 px-3 py-2
+                 rounded-panel border border-amber-300/30 bg-amber-400/6
+                 text-cockpit-sm text-amber-100/90
+                 hover:bg-amber-400/12 hover:border-amber-300/55 hover:text-amber-50
                  transition-colors"
     >
-      {t.natalForm.allSignsLink}
+      <CalendarDays className="size-4 shrink-0 text-amber-200/80" strokeWidth={1.4} aria-hidden />
+      <span className="flex-1">{t.natalForm.allSignsLink}</span>
+      <ChevronRight className="size-3.5 shrink-0 text-amber-200/60" strokeWidth={1.6} aria-hidden />
     </a>
   );
 }
