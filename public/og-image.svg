@@ -1,73 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
-  <defs>
-    <radialGradient id="og-bg" cx="50%" cy="55%" r="70%">
-      <stop offset="0%" stop-color="#1a0b3d"/>
-      <stop offset="60%" stop-color="#0a0420"/>
-      <stop offset="100%" stop-color="#060210"/>
-    </radialGradient>
-    <radialGradient id="og-glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#fef3c7" stop-opacity=".95"/>
-      <stop offset="45%" stop-color="#fbbf24" stop-opacity=".55"/>
-      <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="og-core" cx="40%" cy="40%" r="65%">
-      <stop offset="0%" stop-color="#fffbeb"/>
-      <stop offset="55%" stop-color="#fbbf24"/>
-      <stop offset="100%" stop-color="#b45309"/>
-    </radialGradient>
-    <radialGradient id="og-halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#7c3aed" stop-opacity=".35"/>
-      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
+  <!-- Source of og-image.png (rendered with IBM Plex loaded). -->
+  <rect width="1200" height="630" fill="#0b0e14"/>
 
-  <rect width="1200" height="630" fill="url(#og-bg)"/>
-
-  <!-- starfield -->
-  <g fill="#ede9fe">
-    <circle cx="80"   cy="90"  r="1.2" opacity=".7"/>
-    <circle cx="180"  cy="40"  r="0.8" opacity=".5"/>
-    <circle cx="260"  cy="120" r="1"   opacity=".6"/>
-    <circle cx="380"  cy="60"  r="0.7" opacity=".4"/>
-    <circle cx="520"  cy="100" r="1.1" opacity=".7"/>
-    <circle cx="700"  cy="50"  r="0.9" opacity=".5"/>
-    <circle cx="900"  cy="110" r="1.3" opacity=".75"/>
-    <circle cx="1080" cy="70"  r="0.8" opacity=".5"/>
-    <circle cx="1140" cy="180" r="1"   opacity=".6"/>
-    <circle cx="60"   cy="320" r="0.9" opacity=".5"/>
-    <circle cx="1130" cy="430" r="1.1" opacity=".7"/>
-    <circle cx="100"  cy="540" r="0.8" opacity=".5"/>
-    <circle cx="280"  cy="580" r="1"   opacity=".6"/>
-    <circle cx="520"  cy="560" r="0.7" opacity=".4"/>
-    <circle cx="780"  cy="590" r="1.1" opacity=".7"/>
-    <circle cx="980"  cy="540" r="0.9" opacity=".55"/>
+  <g fill="#e6e8ec" opacity=".35">
+    <circle cx="90" cy="80" r="1.4"/>
+    <circle cx="1110" cy="70" r="1.2"/>
+    <circle cx="1140" cy="560" r="1.4"/>
+    <circle cx="70" cy="560" r="1.1"/>
+    <circle cx="640" cy="40" r="1"/>
+    <circle cx="980" cy="590" r="1"/>
   </g>
 
-  <!-- ecliptic arc -->
-  <path d="M 60 360 Q 600 220 1140 360"
-        stroke="#7c3aed" stroke-width="1.5" fill="none"
-        stroke-linecap="round" opacity=".4"
-        stroke-dasharray="6 6"/>
+  <!-- ☉ -->
+  <circle cx="250" cy="315" r="112" fill="none" stroke="#f2cf73" stroke-width="16"/>
+  <circle cx="250" cy="315" r="32" fill="#f2cf73"/>
 
-  <!-- Sun + halo -->
-  <g transform="translate(220 315)">
-    <circle r="160" fill="url(#og-halo)"/>
-    <circle r="80"  fill="url(#og-glow)"/>
-    <circle r="34"  fill="url(#og-core)"/>
-  </g>
-
-  <!-- Constellation around the sun -->
-  <g stroke="#a78bfa" stroke-width="1.6" fill="none"
-     stroke-linecap="round" opacity=".75">
-    <line x1="120" y1="220" x2="290" y2="180"/>
-    <line x1="290" y1="180" x2="370" y2="320"/>
-    <line x1="370" y1="320" x2="240" y2="450"/>
-    <line x1="240" y1="450" x2="120" y2="220"/>
-  </g>
-  <g fill="#ede9fe">
-    <circle cx="120" cy="220" r="3.2"/>
-    <circle cx="290" cy="180" r="3.6"/>
-    <circle cx="370" cy="320" r="3"/>
-    <circle cx="240" cy="450" r="2.8"/>
-  </g>
+  <text x="450" y="170" font-family="'IBM Plex Mono', monospace" font-size="24" letter-spacing="3" fill="#a9b8e6">SIGNE ASTRONOMIQUE</text>
+  <text font-family="'IBM Plex Serif', Georgia, serif" font-size="66" font-weight="500" fill="#ffffff">
+    <tspan x="450" y="262">Quel est ton vrai</tspan>
+    <tspan x="450" y="342">signe astronomique ?</tspan>
+  </text>
+  <text x="450" y="420" font-family="'IBM Plex Sans', sans-serif" font-size="30" fill="#b8bfcc">Le Soleil traverse <tspan fill="#f2cf73" font-weight="600">13 constellations</tspan>, pas 12.</text>
+  <text x="450" y="462" font-family="'IBM Plex Sans', sans-serif" font-size="30" fill="#b8bfcc">Ophiuchus compris.</text>
+  <text x="450" y="540" font-family="'IBM Plex Mono', monospace" font-size="22" fill="#8a93a3">signe-astronomique.netlify.app</text>
 </svg>

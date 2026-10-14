@@ -140,8 +140,8 @@ export default defineConfig({
         scope: '/',
         display: 'standalone',
         orientation: 'any',
-        background_color: '#060210',
-        theme_color: '#060210',
+        background_color: '#0b0e14',
+        theme_color: '#0b0e14',
         categories: ['education', 'science', 'utilities'],
         // PNG icons are required for reliable Android home-screen install —
         // SVG manifest icons are accepted inconsistently and Android falls
