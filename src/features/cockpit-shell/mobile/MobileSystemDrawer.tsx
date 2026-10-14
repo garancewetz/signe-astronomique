@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
+  CalendarDays,
   Check,
   Download,
   FileDown,
@@ -168,6 +169,16 @@ export function MobileSystemDrawer({
                     onClose();
                     onOpenExploreSpace();
                   }}
+                />
+              </li>
+              <li>
+                <MenuRow
+                  size="md"
+                  label={t.mobile.systemDrawer.allSigns.label}
+                  sublabel={t.mobile.systemDrawer.allSigns.sublabel}
+                  icon={<CalendarDays className="size-4" strokeWidth={1.4} aria-hidden />}
+                  chevron
+                  onClick={() => window.location.assign('/signes/')}
                 />
               </li>
               <DrawerDivider />

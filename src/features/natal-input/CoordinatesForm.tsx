@@ -124,6 +124,8 @@ export function CoordinatesForm({
         </span>
       </motion.button>
 
+      <AllSignsLink />
+
       {history && history.length > 0 && (
         <SearchHistoryList
           entries={history.slice(0, VISIBLE_HISTORY)}
@@ -223,5 +225,21 @@ function SearchHistoryList({ entries, onRestore, onRemove }: SearchHistoryListPr
         })}
       </ul>
     </section>
+  );
+}
+
+/** Static /signes/ page (true dates of the 13 signs) — always reachable. */
+function AllSignsLink() {
+  const t = useT();
+  return (
+    <a
+      href="/signes/"
+      className="cockpit-focus block w-fit mx-auto rounded px-1 py-0.5
+                 text-cockpit-xs text-violet-300/85 hover:text-violet-100
+                 underline underline-offset-4 decoration-violet-400/40
+                 transition-colors"
+    >
+      {t.natalForm.allSignsLink}
+    </a>
   );
 }
