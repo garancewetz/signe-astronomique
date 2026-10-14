@@ -89,15 +89,15 @@ a { color: #c4b5fd; text-underline-offset: 3px; }
 a:hover { color: #f5f3ff; }
 a:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; border-radius: 4px; }
 strong { font-weight: 500; color: #e9d5ff; }
-.wrap { max-width: 74rem; margin: 0 auto; padding: 1rem 16px 3rem; }
-.narrow { max-width: 44rem; margin-inline: auto; }
+.wrap { max-width: 90rem; margin: 0 auto; padding: 1rem 16px 3rem; }
+.narrow { max-width: 48rem; margin-inline: auto; }
 .top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; font-size: 0.78rem; color: #94a3b8; }
 .top a { color: #94a3b8; text-decoration: none; }
 .top a:hover { color: #e2e8f0; }
 .brand { color: #e2e8f0 !important; font-weight: 500; letter-spacing: 0.02em; }
 .crumbs ol { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
 .crumbs li + li::before { content: '›'; margin-right: 0.35rem; color: #64748b; }
-.hero { max-width: 44rem; margin: 2.5rem auto 2rem; text-align: center; }
+.hero { max-width: 48rem; margin: 2.5rem auto 2rem; text-align: center; }
 .hero__glyph { font-size: 4rem; line-height: 1; color: #fde68a; text-shadow: 0 0 22px rgba(252, 211, 77, 0.45); }
 h1 { margin: 0.75rem 0 1rem; font-size: clamp(1.45rem, 5.5vw, 2.1rem); font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: #f8fafc; text-shadow: 0 0 24px rgba(124, 58, 237, 0.35); text-wrap: balance; }
 .answer { margin: 0 auto; max-width: 34rem; font-size: 1.05rem; color: #cbd5e1; }
@@ -128,30 +128,32 @@ p:last-child { margin-bottom: 0; }
 .wheel a:hover path { filter: brightness(1.5); }
 .wheel a:focus { outline: none; }
 .wheel a:focus-visible path, .wheel a.is-selected path { stroke: #fde68a; stroke-width: 2.5; }
-.wheel-info { min-height: 4.5rem; padding: 0.8rem 1rem; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 0.7rem; background: rgba(30, 20, 55, 0.45); font-size: 0.85rem; }
+.wheel-info { text-align: center; font-size: 0.8rem; color: #94a3b8; }
+.wheel-info.is-filled { padding: 0.7rem 1rem; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 0.7rem; background: rgba(30, 20, 55, 0.45); text-align: left; }
 .wheel-info p { margin: 0 0 0.3rem; font-size: 0.85rem; }
 .wheel-info .wheel-info__title { font-weight: 500; color: #fde68a; }
 .wheel-info .wheel-info__link { display: inline-block; margin-top: 0.2rem; }
-.mini { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1rem; margin: 1rem 0; font-size: 0.85rem; }
-.mini dt { align-self: baseline; }
-.mini dd { margin: 0; font-size: 0.85rem; }
-.mini .gold { color: #fde68a; font-weight: 500; }
-.mini .old { color: #94a3b8; text-decoration: line-through; }
-.aside .cta { display: flex; margin-top: 0.5rem; }
+.aside .cta { display: flex; margin-top: 1rem; }
 .aside-desktop { display: none; }
 .page { display: grid; grid-template-columns: minmax(0, 1fr); }
 .page > .aside { order: -1; }
 .signs-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 64rem) {
-  .page { grid-template-columns: minmax(0, 44rem) 23rem; gap: 0 2.5rem; justify-content: center; align-items: start; }
-  .page > .aside { order: 0; position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; margin-top: 1.25rem; }
-  .page .wheel { max-width: 19rem; margin-top: 0; }
+  .page { grid-template-columns: minmax(0, 48rem) minmax(0, 30rem); gap: 0 3rem; justify-content: center; align-items: start; }
+  .page > .aside { order: 0; margin-top: 1.25rem; }
   .aside-desktop { display: block; }
-  .signs-grid { grid-template-columns: minmax(0, 30rem) minmax(0, 38rem); gap: 0 2rem; justify-content: center; align-items: start; }
-  .signs-grid > .wheel-card { position: sticky; top: 1rem; }
+  .signs-grid { grid-template-columns: minmax(0, 40rem) minmax(0, 46rem); gap: 0 2.5rem; justify-content: center; align-items: start; }
+  /* The wheel shrinks with the screen height so the sticky card always fits
+     (room left for the title, legend, detail panel and CTA). */
+  .page .wheel { max-width: min(26rem, calc(100vh - 22rem)); margin-top: 0; }
+  .signs-grid .wheel { max-width: min(34rem, calc(100vh - 21rem)); }
+}
+/* Sticky only when the card fits on screen — never a scroll box inside. */
+@media (min-width: 64rem) and (min-height: 40rem) {
+  .page > .aside, .signs-grid > .wheel-card { position: sticky; top: 1rem; }
 }
 tr.is-selected td { background: rgba(252, 211, 77, 0.1); }
-.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.2rem; margin: 0 0 0.85rem; font-size: 0.78rem; color: #94a3b8; }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3rem 1rem; margin: 0 0 0.6rem; font-size: 0.74rem; color: #94a3b8; }
 .legend i { display: inline-block; width: 0.8rem; height: 0.8rem; margin-right: 0.4rem; border-radius: 3px; vertical-align: -0.1rem; }
 .sky { display: block; width: 100%; max-width: 24rem; height: auto; margin: 0 auto 1rem; }
 dl { margin: 0 0 0.85rem; }
@@ -209,6 +211,7 @@ const WHEEL_SCRIPT = `(() => {
         return el;
       };
       info.replaceChildren();
+      info.classList.add('is-filled');
       add('p', 'wheel-info__title', a.dataset.title);
       add('p', '', a.dataset.dates);
       add('p', 'muted', a.dataset.note);
@@ -500,14 +503,14 @@ function wheelBox(focus?: WheelFocus): string {
   return `<div class="wheel-box">
     ${zodiacWheelSvg(focus)}
     ${wheelLegend(focus)}
-    <div class="wheel-info" aria-live="polite"><p class="muted">Touche une part de la roue pour voir ses dates.</p></div>
+    <div class="wheel-info" aria-live="polite">Touche la roue pour voir les dates.</div>
   </div>`;
 }
 
 function wheelLegend(focus?: WheelFocus): string {
   const items = [
-    '<span><i style="background:rgba(148,163,184,0.3)"></i>Horoscope : 12 parts égales</span>',
-    '<span><i style="background:rgba(124,58,237,0.5)"></i>Vrai ciel : 13 constellations</span>',
+    '<span><i style="background:rgba(148,163,184,0.3)"></i>Horoscope (12)</span>',
+    '<span><i style="background:rgba(124,58,237,0.5)"></i>Vrai ciel (13)</span>',
   ];
   if (focus) {
     items.push(`<span><i style="border:1px dashed #a78bfa"></i>${esc(focus.label)}</span>`);
@@ -583,8 +586,8 @@ function signPage(sign: IauConstellation): StaticPage {
 
   // Block 2 — the day-by-day mapping, with the wheel.
   const wheelFocus: WheelFocus = tropicalRun
-    ? { run: tropicalRun, horoscope: sign, sky: mainTrue.sign, label: `Dates ${fr.of} de l’horoscope` }
-    : { run: iauRun, horoscope: mainHoroscope.sign, sky: sign, label: `Vraies dates ${fr.of}` };
+    ? { run: tropicalRun, horoscope: sign, sky: mainTrue.sign, label: `${fr.name} (horoscope)` }
+    : { run: iauRun, horoscope: mainHoroscope.sign, sky: sign, label: `${fr.name} (vrai ciel)` };
   let mapping: string;
   if (tropicalRun) {
     const rows = tropicalSplit
@@ -703,11 +706,6 @@ function signPage(sign: IauConstellation): StaticPage {
   const aside = `<aside class="aside card" aria-label="La roue de l’année">
     ${wheelBox(wheelFocus)}
     <div class="aside-desktop">
-      <dl class="mini">
-        <dt>Vraies dates</dt><dd class="gold">${esc(frSpan(iauRun))}</dd>
-        <dt>Durée</dt><dd>${days} jours</dd>
-        <dt>Horoscope</dt><dd${tropicalRun ? ' class="old"' : ''}>${tropicalRun ? esc(frSpan(tropicalRun)) : 'oublié'}</dd>
-      </dl>
       <a class="cta" href="/">Calcule ton vrai signe →</a>
     </div>
   </aside>`;
@@ -793,7 +791,7 @@ function indexPage(): StaticPage {
   <div class="signs-grid">
   <section class="card wheel-card" aria-labelledby="wheel-title">
     <h2 id="wheel-title">La roue des 13 signes</h2>
-    <p>Janvier est en haut. À l’extérieur, l’horoscope : 12 parts égales. À l’intérieur, les 13 vraies constellations, à leur vraie taille. Ton vrai signe est <strong>juste en dessous</strong> de ton signe d’horoscope.</p>
+    <p>Ton vrai signe est <strong>juste en dessous</strong> de ton signe d’horoscope.</p>
     ${wheelBox()}
   </section>
   <section class="card" aria-labelledby="table-title">
