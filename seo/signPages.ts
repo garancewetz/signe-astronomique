@@ -24,6 +24,7 @@ import {
   oppositionIndex,
   shiftDays,
   splitBy,
+  type Run,
 } from './signData';
 
 export const SITE_URL = 'https://signe-astronomique.netlify.app';
@@ -121,6 +122,11 @@ p:last-child { margin-bottom: 0; }
 .fact--old .fact__value { color: #94a3b8; text-decoration: line-through; text-decoration-color: rgba(100, 116, 139, 0.8); }
 .fact--gold { border-color: rgba(252, 211, 77, 0.4); background: rgba(251, 191, 36, 0.08); }
 .fact--gold .fact__value { color: #fde68a; }
+.wheel { display: block; width: 100%; max-width: 30rem; height: auto; margin: 0.5rem auto 1rem; }
+.wheel a:hover path { filter: brightness(1.5); }
+.wheel a:focus-visible path { stroke: #a78bfa; stroke-width: 2; }
+.legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.2rem; margin: 0 0 0.85rem; font-size: 0.78rem; color: #94a3b8; }
+.legend i { display: inline-block; width: 0.8rem; height: 0.8rem; margin-right: 0.4rem; border-radius: 3px; vertical-align: -0.1rem; }
 .sky { display: block; width: 100%; max-width: 24rem; height: auto; margin: 0 auto 1rem; }
 dl { margin: 0 0 0.85rem; }
 dt { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; }
@@ -291,6 +297,129 @@ function skyAlignmentSvg(sign: IauConstellation): string {
   </svg>`;
 }
 
+// ─── Zodiac wheel: horoscope (12 equal parts) vs real sky (13 IAU parts) ────
+
+const MONTH_SHORT = [
+  'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+  'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.',
+];
+
+const W = 420;
+const C = W / 2;
+/** Ring radii: outer = horoscope, inner = real sky. */
+const R = { skyIn: 74, skyOut: 136, horoIn: 140, horoOut: 178, tick: 184, month: 199 };
+
+/** Calendar angle of a day index (Jan 1 at the top, clockwise), radians. */
+const dayAngle = (i: number) => ((i / TIMELINE.length) * 360 - 90) * (Math.PI / 180);
+
+const pt = (r: number, a: number) =>
+  `${(C + r * Math.cos(a)).toFixed(2)},${(C + r * Math.sin(a)).toFixed(2)}`;
+
+/** First day index and length (in days) of a run — handles Dec → Jan wraps. */
+function runSpan(run: { idx: number[] }): { start: number; days: number } {
+  return { start: run.idx[0], days: run.idx.length };
+}
+
+/** Annulus sector from day `start` over `days` days, between radii r0 < r1. */
+function sectorPath(start: number, days: number, r0: number, r1: number): string {
+  const a0 = dayAngle(start);
+  const a1 = dayAngle(start + days);
+  const large = days > TIMELINE.length / 2 ? 1 : 0;
+  return `M ${pt(r1, a0)} A ${r1} ${r1} 0 ${large} 1 ${pt(r1, a1)} L ${pt(r0, a1)} A ${r0} ${r0} 0 ${large} 0 ${pt(r0, a0)} Z`;
+}
+
+function sectorLabel(start: number, days: number, r: number, text: string, size: number, fill: string): string {
+  const a = dayAngle(start + days / 2);
+  const [x, y] = pt(r, a).split(',');
+  return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" fill="${fill}">${esc(text)}</text>`;
+}
+
+/**
+ * Calendar wheel of the year: the outer ring is the horoscope (12 equal
+ * signs), the inner ring the real sky (13 constellations, IAU sizes). Both
+ * share the same calendar, so reading straight inward from a horoscope sign
+ * shows which constellation the Sun is really in on those days.
+ * `focus` (sign pages) outlines a run of days across both rings and lights
+ * up the horoscope sign and the true constellation it is about.
+ */
+interface WheelFocus {
+  /** Days outlined across both rings. */
+  run: Run;
+  /** Horoscope sign lit in the outer ring. */
+  horoscope: IauConstellation;
+  /** True constellation lit in the inner ring. */
+  sky: IauConstellation;
+  /** Legend text for the outline. */
+  label: string;
+}
+
+function zodiacWheelSvg(focus?: WheelFocus): string {
+  const parts: string[] = [];
+
+  // Month ticks and labels.
+  for (let m = 0; m < 12; m++) {
+    const i = TIMELINE.findIndex(d => d.date.getUTCMonth() === m);
+    const a = dayAngle(i);
+    parts.push(`<path d="M ${pt(R.horoOut, a)} L ${pt(R.tick, a)}" stroke="rgba(148,163,184,0.5)"/>`);
+    const mid = dayAngle(i + 15);
+    const [x, y] = pt(R.month, mid).split(',');
+    parts.push(`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#94a3b8">${MONTH_SHORT[m]}</text>`);
+  }
+
+  // Focused days: a faint wedge over both rings.
+  if (focus) {
+    const { start, days } = runSpan(focus.run);
+    parts.push(`<path d="${sectorPath(start, days, R.skyIn - 4, R.horoOut + 2)}" fill="rgba(167,139,250,0.12)" stroke="#a78bfa" stroke-width="1.2" stroke-dasharray="4 3"/>`);
+  }
+
+  // Outer ring — horoscope, 12 equal signs.
+  [...TROPICAL_RUNS.values()].forEach((run, k) => {
+    const { start, days } = runSpan(run);
+    const on = run.sign === focus?.horoscope;
+    const fill = on ? 'rgba(167,139,250,0.35)' : k % 2 ? 'rgba(148,163,184,0.10)' : 'rgba(148,163,184,0.17)';
+    const label = SIGN_FR[run.sign].glyph;
+    parts.push(`<a href="${signPath(run.sign)}" aria-label="${esc(`Horoscope ${SIGN_FR[run.sign].name} : ${frSpan(run)}`)}"><title>${esc(`Horoscope · ${SIGN_FR[run.sign].name} · ${frSpan(run)}`)}</title><path d="${sectorPath(start, days, R.horoIn, R.horoOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.horoIn + R.horoOut) / 2, label, 18, on ? '#f5f3ff' : '#94a3b8')}</a>`);
+  });
+
+  // Inner ring — real sky, 13 IAU constellations.
+  [...IAU_RUNS.values()].forEach((run, k) => {
+    const { start, days } = runSpan(run);
+    const on = run.sign === focus?.sky;
+    const ophiuchus = run.sign === 'Ophiuchus';
+    const fill = on
+      ? 'rgba(252,211,77,0.45)'
+      : ophiuchus
+        ? 'rgba(252,211,77,0.22)'
+        : k % 2 ? 'rgba(124,58,237,0.22)' : 'rgba(124,58,237,0.34)';
+    const size = days < 10 ? 12 : 21;
+    parts.push(`<a href="${signPath(run.sign)}" aria-label="${esc(`Vrai ciel ${SIGN_FR[run.sign].name} : ${frSpan(run)}, ${days} jours`)}"><title>${esc(`Vrai ciel · ${SIGN_FR[run.sign].name} · ${frSpan(run)} (${days} j)`)}</title><path d="${sectorPath(start, days, R.skyIn, R.skyOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.skyIn + R.skyOut) / 2, SIGN_FR[run.sign].glyph, size, on || ophiuchus ? '#fde68a' : '#e9d5ff')}</a>`);
+  });
+
+  // Center: the Earth, from where we watch the Sun cross the sky.
+  parts.push(`<circle cx="${C}" cy="${C}" r="${R.skyIn - 6}" fill="rgba(13,8,30,0.9)" stroke="rgba(167,139,250,0.2)"/>`);
+  parts.push(`<text x="${C}" y="${C - 6}" text-anchor="middle" dominant-baseline="central" font-size="30">🌍</text>`);
+  parts.push(`<text x="${C}" y="${C + 26}" text-anchor="middle" font-size="12" fill="#cbd5e1">Terre</text>`);
+
+  const label = focus
+    ? `Roue de l’année. ${focus.label} : horoscope ${SIGN_FR[focus.horoscope].name} (anneau extérieur), vrai ciel ${SIGN_FR[focus.sky].name} (anneau intérieur).`
+    : 'Roue de l’année : les 12 signes égaux de l’horoscope (anneau extérieur) et les 13 vraies constellations (anneau intérieur).';
+  return `<svg class="wheel" viewBox="0 0 ${W} ${W}" role="group" aria-label="${esc(label)}" font-family="inherit">
+    ${parts.join('\n    ')}
+  </svg>`;
+}
+
+
+function wheelLegend(focus?: WheelFocus): string {
+  const items = [
+    '<span><i style="background:rgba(148,163,184,0.3)"></i>Horoscope : 12 parts égales</span>',
+    '<span><i style="background:rgba(124,58,237,0.5)"></i>Vrai ciel : 13 constellations</span>',
+  ];
+  if (focus) {
+    items.push(`<span><i style="border:1px dashed #a78bfa"></i>${esc(focus.label)}</span>`);
+  }
+  return `<p class="legend">${items.join('')}</p>`;
+}
+
 // ─── One sign page ──────────────────────────────────────────────────────────
 
 /** Rank of the Sun's passage by length, 1 = longest. */
@@ -357,7 +486,10 @@ function signPage(sign: IauConstellation): StaticPage {
     ? `Ophiuchus (le Serpentaire) est le 13ᵉ signe oublié : le Soleil le traverse ${frRange(iauRun)}, pendant ${days} jours. Né·e à ces dates ? Ton horoscope dit ${horoMain.name}, le ciel dit Ophiuchus.`
     : `Tu es ${fr.name} ? ${frRange(mainTrue).replace(/^./, c => c.toUpperCase())}, le Soleil est en réalité devant ${trueMain.the}. Les vraies dates ${fr.of} : ${frSpan(iauRun)} (${days} jours), selon les frontières IAU.`;
 
-  // Block 2 — the day-by-day mapping.
+  // Block 2 — the day-by-day mapping, with the wheel.
+  const wheelFocus: WheelFocus = tropicalRun
+    ? { run: tropicalRun, horoscope: sign, sky: mainTrue.sign, label: `Dates ${fr.of} de l’horoscope` }
+    : { run: iauRun, horoscope: mainHoroscope.sign, sky: sign, label: `Vraies dates ${fr.of}` };
   let mapping: string;
   if (tropicalRun) {
     const rows = tropicalSplit
@@ -370,6 +502,8 @@ function signPage(sign: IauConstellation): StaticPage {
     mapping = `<section class="card" aria-labelledby="map-title">
     <h2 id="map-title">Ton horoscope dit ${esc(fr.name)}, le ciel dit…</h2>
     <p>Les dates ${esc(fr.of)} de l’horoscope vont ${esc(frRange(tropicalRun))}. Voici devant quelle constellation se trouve vraiment le Soleil ces jours-là :</p>
+    ${zodiacWheelSvg(wheelFocus)}
+    ${wheelLegend(wheelFocus)}
     <ul class="rows">
       ${rows}
     </ul>
@@ -385,6 +519,8 @@ function signPage(sign: IauConstellation): StaticPage {
     mapping = `<section class="card" aria-labelledby="map-title">
     <h2 id="map-title">Ton horoscope dit ${esc(horoMain.name)}, le ciel dit Ophiuchus</h2>
     <p>Aucun horoscope ne parle d’Ophiuchus : les astrologues n’ont gardé que 12 signes, un par mois. Pourtant, chaque année, le Soleil passe devant cette constellation :</p>
+    ${zodiacWheelSvg(wheelFocus)}
+    ${wheelLegend(wheelFocus)}
     <ul class="rows">
       ${rows}
     </ul>
@@ -543,6 +679,13 @@ function indexPage(): StaticPage {
     <h1>Les vraies dates des 13 signes astronomiques</h1>
     <p class="answer">Le Soleil traverse <strong>13 constellations</strong>, pas 12. Voici leurs vraies dates, selon les frontières officielles de l’IAU, à côté des dates des horoscopes.</p>
     <a class="cta" href="/">Calcule ton vrai signe →</a>
+  </section>
+  <section class="card" aria-labelledby="wheel-title">
+    <h2 id="wheel-title">La roue des 13 signes</h2>
+    <p>Fais le tour de l’année à partir du haut (janvier). À l’extérieur, l’horoscope découpe l’année en 12 parts égales. À l’intérieur, les 13 vraies constellations que traverse le Soleil, avec leur vraie taille. Pour ta date de naissance, regarde ce qu’il y a <strong>juste en dessous</strong> de ton signe d’horoscope : c’est ton vrai signe.</p>
+    ${zodiacWheelSvg()}
+    ${wheelLegend()}
+    <p class="muted">Touche une part de la roue pour ouvrir la page du signe.</p>
   </section>
   <section class="card" aria-labelledby="table-title">
     <h2 id="table-title">Tous les signes, dans l’ordre du ciel</h2>
