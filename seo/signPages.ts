@@ -89,14 +89,15 @@ a { color: #c4b5fd; text-underline-offset: 3px; }
 a:hover { color: #f5f3ff; }
 a:focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; border-radius: 4px; }
 strong { font-weight: 500; color: #e9d5ff; }
-.wrap { max-width: 44rem; margin: 0 auto; padding: 1rem 16px 3rem; }
+.wrap { max-width: 74rem; margin: 0 auto; padding: 1rem 16px 3rem; }
+.narrow { max-width: 44rem; margin-inline: auto; }
 .top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1rem; font-size: 0.78rem; color: #94a3b8; }
 .top a { color: #94a3b8; text-decoration: none; }
 .top a:hover { color: #e2e8f0; }
 .brand { color: #e2e8f0 !important; font-weight: 500; letter-spacing: 0.02em; }
 .crumbs ol { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
 .crumbs li + li::before { content: '›'; margin-right: 0.35rem; color: #64748b; }
-.hero { margin: 2.5rem 0 2rem; text-align: center; }
+.hero { max-width: 44rem; margin: 2.5rem auto 2rem; text-align: center; }
 .hero__glyph { font-size: 4rem; line-height: 1; color: #fde68a; text-shadow: 0 0 22px rgba(252, 211, 77, 0.45); }
 h1 { margin: 0.75rem 0 1rem; font-size: clamp(1.45rem, 5.5vw, 2.1rem); font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; color: #f8fafc; text-shadow: 0 0 24px rgba(124, 58, 237, 0.35); text-wrap: balance; }
 .answer { margin: 0 auto; max-width: 34rem; font-size: 1.05rem; color: #cbd5e1; }
@@ -123,8 +124,33 @@ p:last-child { margin-bottom: 0; }
 .fact--gold { border-color: rgba(252, 211, 77, 0.4); background: rgba(251, 191, 36, 0.08); }
 .fact--gold .fact__value { color: #fde68a; }
 .wheel { display: block; width: 100%; max-width: 30rem; height: auto; margin: 0.5rem auto 1rem; }
+.wheel a { cursor: pointer; }
 .wheel a:hover path { filter: brightness(1.5); }
-.wheel a:focus-visible path { stroke: #a78bfa; stroke-width: 2; }
+.wheel a:focus { outline: none; }
+.wheel a:focus-visible path, .wheel a.is-selected path { stroke: #fde68a; stroke-width: 2.5; }
+.wheel-info { min-height: 4.5rem; padding: 0.8rem 1rem; border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 0.7rem; background: rgba(30, 20, 55, 0.45); font-size: 0.85rem; }
+.wheel-info p { margin: 0 0 0.3rem; font-size: 0.85rem; }
+.wheel-info .wheel-info__title { font-weight: 500; color: #fde68a; }
+.wheel-info .wheel-info__link { display: inline-block; margin-top: 0.2rem; }
+.mini { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1rem; margin: 1rem 0; font-size: 0.85rem; }
+.mini dt { align-self: baseline; }
+.mini dd { margin: 0; font-size: 0.85rem; }
+.mini .gold { color: #fde68a; font-weight: 500; }
+.mini .old { color: #94a3b8; text-decoration: line-through; }
+.aside .cta { display: flex; margin-top: 0.5rem; }
+.aside-desktop { display: none; }
+.page { display: grid; grid-template-columns: minmax(0, 1fr); }
+.page > .aside { order: -1; }
+.signs-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 64rem) {
+  .page { grid-template-columns: minmax(0, 44rem) 23rem; gap: 0 2.5rem; justify-content: center; align-items: start; }
+  .page > .aside { order: 0; position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; margin-top: 1.25rem; }
+  .page .wheel { max-width: 19rem; margin-top: 0; }
+  .aside-desktop { display: block; }
+  .signs-grid { grid-template-columns: minmax(0, 30rem) minmax(0, 38rem); gap: 0 2rem; justify-content: center; align-items: start; }
+  .signs-grid > .wheel-card { position: sticky; top: 1rem; }
+}
+tr.is-selected td { background: rgba(252, 211, 77, 0.1); }
 .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.2rem; margin: 0 0 0.85rem; font-size: 0.78rem; color: #94a3b8; }
 .legend i { display: inline-block; width: 0.8rem; height: 0.8rem; margin-right: 0.4rem; border-radius: 3px; vertical-align: -0.1rem; }
 .sky { display: block; width: 100%; max-width: 24rem; height: auto; margin: 0 auto 1rem; }
@@ -151,6 +177,48 @@ tr.star td { background: rgba(251, 191, 36, 0.06); }
   .pager .all a { justify-content: center; }
 }
 `;
+
+// Hovering a table row lights its constellation on the wheel, and back.
+const LINK_CSS = ZODIAC_ORDER.map(c => {
+  const slug = SIGN_FR[c].slug;
+  return `.signs-grid:has(tr[data-sign="${slug}"]:hover) .wheel a[data-sign="${slug}"][data-kind="sky"] path { filter: brightness(1.7); }
+.signs-grid:has(.wheel a[data-sign="${slug}"]:hover) tr[data-sign="${slug}"] td { background: rgba(167, 139, 250, 0.12); }`;
+}).join('\n');
+
+/**
+ * Progressive enhancement for the wheel: a click shows the part's dates in
+ * the panel under it instead of navigating (no page reload, no jump to the
+ * top). Without JS the parts stay plain links to the sign pages. Built with
+ * textContent only; the CSP allows it through its build-time hash.
+ */
+const WHEEL_SCRIPT = `(() => {
+  for (const box of document.querySelectorAll('.wheel-box')) {
+    const info = box.querySelector('.wheel-info');
+    box.addEventListener('click', (e) => {
+      const a = e.target.closest('.wheel a');
+      if (!a || !info) return;
+      e.preventDefault();
+      for (const el of document.querySelectorAll('.is-selected')) el.classList.remove('is-selected');
+      a.classList.add('is-selected');
+      document.querySelector('tr[data-sign="' + a.dataset.sign + '"]')?.classList.add('is-selected');
+      const add = (tag, cls, text) => {
+        const el = document.createElement(tag);
+        el.className = cls;
+        el.textContent = text;
+        info.append(el);
+        return el;
+      };
+      info.replaceChildren();
+      add('p', 'wheel-info__title', a.dataset.title);
+      add('p', '', a.dataset.dates);
+      add('p', 'muted', a.dataset.note);
+      const href = a.getAttribute('href');
+      if (href !== location.pathname) {
+        add('a', 'wheel-info__link', 'Voir la page ' + a.dataset.name + ' →').href = href;
+      }
+    });
+  }
+})();`;
 
 interface LayoutInput {
   path: string;
@@ -235,7 +303,7 @@ function layout({ path, title, description, crumbs, faq, body }: LayoutInput): s
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <style>${CSS}</style>
+    <style>${CSS}${LINK_CSS}</style>
   </head>
   <body>
     <div class="wrap">
@@ -250,6 +318,7 @@ ${body}
         Dates calculées pour ${REFERENCE_YEAR} selon les frontières officielles de l’Union astronomique internationale (IAU, 1930).
       </footer>
     </div>
+    <script>${WHEEL_SCRIPT}</script>
   </body>
 </html>
 `;
@@ -353,6 +422,19 @@ interface WheelFocus {
   label: string;
 }
 
+/** Data read by WHEEL_SCRIPT to fill the info panel in place. */
+function segmentData(sign: IauConstellation, kind: 'sky' | 'horo', dates: string, note: string): string {
+  const fr = SIGN_FR[sign];
+  return [
+    `data-sign="${fr.slug}"`,
+    `data-kind="${kind}"`,
+    `data-title="${esc(`${fr.glyph} ${fr.name} · ${kind === 'sky' ? 'vrai ciel' : 'horoscope'}`)}"`,
+    `data-dates="${esc(dates)}"`,
+    `data-note="${esc(note)}"`,
+    `data-name="${esc(fr.name)}"`,
+  ].join(' ');
+}
+
 function zodiacWheelSvg(focus?: WheelFocus): string {
   const parts: string[] = [];
 
@@ -378,7 +460,9 @@ function zodiacWheelSvg(focus?: WheelFocus): string {
     const on = run.sign === focus?.horoscope;
     const fill = on ? 'rgba(167,139,250,0.35)' : k % 2 ? 'rgba(148,163,184,0.10)' : 'rgba(148,163,184,0.17)';
     const label = SIGN_FR[run.sign].glyph;
-    parts.push(`<a href="${signPath(run.sign)}" aria-label="${esc(`Horoscope ${SIGN_FR[run.sign].name} : ${frSpan(run)}`)}"><title>${esc(`Horoscope · ${SIGN_FR[run.sign].name} · ${frSpan(run)}`)}</title><path d="${sectorPath(start, days, R.horoIn, R.horoOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.horoIn + R.horoOut) / 2, label, 18, on ? '#f5f3ff' : '#94a3b8')}</a>`);
+    const sky = SIGN_FR[majority(splitBy(TIMELINE, run.idx, d => d.constellation)).sign].name;
+    const data = segmentData(run.sign, 'horo', frSpan(run), `Dans le vrai ciel à ces dates : surtout ${sky}.`);
+    parts.push(`<a href="${signPath(run.sign)}" ${data} aria-label="${esc(`Horoscope ${SIGN_FR[run.sign].name} : ${frSpan(run)}`)}"><title>${esc(`Horoscope · ${SIGN_FR[run.sign].name} · ${frSpan(run)}`)}</title><path d="${sectorPath(start, days, R.horoIn, R.horoOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.horoIn + R.horoOut) / 2, label, 18, on ? '#f5f3ff' : '#94a3b8')}</a>`);
   });
 
   // Inner ring — real sky, 13 IAU constellations.
@@ -392,7 +476,9 @@ function zodiacWheelSvg(focus?: WheelFocus): string {
         ? 'rgba(252,211,77,0.22)'
         : k % 2 ? 'rgba(124,58,237,0.22)' : 'rgba(124,58,237,0.34)';
     const size = days < 10 ? 12 : 21;
-    parts.push(`<a href="${signPath(run.sign)}" aria-label="${esc(`Vrai ciel ${SIGN_FR[run.sign].name} : ${frSpan(run)}, ${days} jours`)}"><title>${esc(`Vrai ciel · ${SIGN_FR[run.sign].name} · ${frSpan(run)} (${days} j)`)}</title><path d="${sectorPath(start, days, R.skyIn, R.skyOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.skyIn + R.skyOut) / 2, SIGN_FR[run.sign].glyph, size, on || ophiuchus ? '#fde68a' : '#e9d5ff')}</a>`);
+    const horo = SIGN_FR[majority(splitBy(TIMELINE, run.idx, d => d.tropical)).sign].name;
+    const data = segmentData(run.sign, 'sky', `${frSpan(run)} · ${days} jours`, `L’horoscope dit surtout ${horo} à ces dates.`);
+    parts.push(`<a href="${signPath(run.sign)}" ${data} aria-label="${esc(`Vrai ciel ${SIGN_FR[run.sign].name} : ${frSpan(run)}, ${days} jours`)}"><title>${esc(`Vrai ciel · ${SIGN_FR[run.sign].name} · ${frSpan(run)} (${days} j)`)}</title><path d="${sectorPath(start, days, R.skyIn, R.skyOut)}" fill="${fill}" stroke="#060210" stroke-width="1.5"/>${sectorLabel(start, days, (R.skyIn + R.skyOut) / 2, SIGN_FR[run.sign].glyph, size, on || ophiuchus ? '#fde68a' : '#e9d5ff')}</a>`);
   });
 
   // Center: the Earth, from where we watch the Sun cross the sky.
@@ -408,6 +494,15 @@ function zodiacWheelSvg(focus?: WheelFocus): string {
   </svg>`;
 }
 
+
+/** Wheel, legend and the panel a click on the wheel fills in. */
+function wheelBox(focus?: WheelFocus): string {
+  return `<div class="wheel-box">
+    ${zodiacWheelSvg(focus)}
+    ${wheelLegend(focus)}
+    <div class="wheel-info" aria-live="polite"><p class="muted">Touche une part de la roue pour voir ses dates.</p></div>
+  </div>`;
+}
 
 function wheelLegend(focus?: WheelFocus): string {
   const items = [
@@ -502,8 +597,6 @@ function signPage(sign: IauConstellation): StaticPage {
     mapping = `<section class="card" aria-labelledby="map-title">
     <h2 id="map-title">Ton horoscope dit ${esc(fr.name)}, le ciel dit…</h2>
     <p>Les dates ${esc(fr.of)} de l’horoscope vont ${esc(frRange(tropicalRun))}. Voici devant quelle constellation se trouve vraiment le Soleil ces jours-là :</p>
-    ${zodiacWheelSvg(wheelFocus)}
-    ${wheelLegend(wheelFocus)}
     <ul class="rows">
       ${rows}
     </ul>
@@ -519,8 +612,6 @@ function signPage(sign: IauConstellation): StaticPage {
     mapping = `<section class="card" aria-labelledby="map-title">
     <h2 id="map-title">Ton horoscope dit ${esc(horoMain.name)}, le ciel dit Ophiuchus</h2>
     <p>Aucun horoscope ne parle d’Ophiuchus : les astrologues n’ont gardé que 12 signes, un par mois. Pourtant, chaque année, le Soleil passe devant cette constellation :</p>
-    ${zodiacWheelSvg(wheelFocus)}
-    ${wheelLegend(wheelFocus)}
     <ul class="rows">
       ${rows}
     </ul>
@@ -607,18 +698,37 @@ function signPage(sign: IauConstellation): StaticPage {
     <a href="${signPath(next)}" rel="next">${esc(`${SIGN_FR[next].glyph} ${SIGN_FR[next].name}`)} →</a>
   </nav>`;
 
+  // Side panel: sticky beside the text on desktop, right after the hero on
+  // mobile (where the facts and CTA are dropped — the page already has them).
+  const aside = `<aside class="aside card" aria-label="La roue de l’année">
+    ${wheelBox(wheelFocus)}
+    <div class="aside-desktop">
+      <dl class="mini">
+        <dt>Vraies dates</dt><dd class="gold">${esc(frSpan(iauRun))}</dd>
+        <dt>Durée</dt><dd>${days} jours</dd>
+        <dt>Horoscope</dt><dd${tropicalRun ? ' class="old"' : ''}>${tropicalRun ? esc(frSpan(tropicalRun)) : 'oublié'}</dd>
+      </dl>
+      <a class="cta" href="/">Calcule ton vrai signe →</a>
+    </div>
+  </aside>`;
+
   const body = `  <section class="hero">
     <div class="hero__glyph" aria-hidden="true">${fr.glyph}</div>
     <h1>${esc(h1)}</h1>
     <p class="answer">${answer}</p>
     <a class="cta" href="/">Calcule ton vrai signe →</a>
   </section>
+  <div class="page">
+    <div>
   ${mapping}
   ${realDates}
   ${why}
   ${constellation}
   ${faqSection(faq)}
-  ${pager}`;
+  ${pager}
+    </div>
+    ${aside}
+  </div>`;
 
   return {
     fileName: `signe/${fr.slug}/index.html`,
@@ -651,7 +761,7 @@ function indexPage(): StaticPage {
   const rows = ZODIAC_ORDER.map(c => {
     const iau = IAU_RUNS.get(c)!;
     const tropical = TROPICAL_RUNS.get(c);
-    return `<tr${c === 'Ophiuchus' ? ' class="star"' : ''}>
+    return `<tr data-sign="${SIGN_FR[c].slug}"${c === 'Ophiuchus' ? ' class="star"' : ''}>
           <td>${signLink(c)}</td>
           <td>${shortSpan(iau)}</td>
           <td class="num">${iau.idx.length} j</td>
@@ -680,12 +790,11 @@ function indexPage(): StaticPage {
     <p class="answer">Le Soleil traverse <strong>13 constellations</strong>, pas 12. Voici leurs vraies dates, selon les frontières officielles de l’IAU, à côté des dates des horoscopes.</p>
     <a class="cta" href="/">Calcule ton vrai signe →</a>
   </section>
-  <section class="card" aria-labelledby="wheel-title">
+  <div class="signs-grid">
+  <section class="card wheel-card" aria-labelledby="wheel-title">
     <h2 id="wheel-title">La roue des 13 signes</h2>
-    <p>Fais le tour de l’année à partir du haut (janvier). À l’extérieur, l’horoscope découpe l’année en 12 parts égales. À l’intérieur, les 13 vraies constellations que traverse le Soleil, avec leur vraie taille. Pour ta date de naissance, regarde ce qu’il y a <strong>juste en dessous</strong> de ton signe d’horoscope : c’est ton vrai signe.</p>
-    ${zodiacWheelSvg()}
-    ${wheelLegend()}
-    <p class="muted">Touche une part de la roue pour ouvrir la page du signe.</p>
+    <p>Janvier est en haut. À l’extérieur, l’horoscope : 12 parts égales. À l’intérieur, les 13 vraies constellations, à leur vraie taille. Ton vrai signe est <strong>juste en dessous</strong> de ton signe d’horoscope.</p>
+    ${wheelBox()}
   </section>
   <section class="card" aria-labelledby="table-title">
     <h2 id="table-title">Tous les signes, dans l’ordre du ciel</h2>
@@ -700,7 +809,10 @@ function indexPage(): StaticPage {
     <p class="muted">Calculé pour ${REFERENCE_YEAR}. Les jours limites peuvent varier d’un jour selon l’année et l’heure de naissance.</p>
     <p>Ton vrai signe, c’est la constellation qui se trouvait derrière le Soleil le jour de ta naissance. Comme le ciel a glissé d’environ un mois depuis l’invention des horoscopes, il est presque toujours <strong>le signe d’avant</strong> celui de ton horoscope. Et si tu es né·e ${esc(frRange(ophiuchus))}, tu es ${signLink('Ophiuchus', 'Ophiuchus')}, le 13ᵉ signe oublié.</p>
   </section>
-  ${faqSection(faq)}`;
+  </div>
+  <div class="narrow">
+  ${faqSection(faq)}
+  </div>`;
 
   return {
     fileName: 'signes/index.html',
