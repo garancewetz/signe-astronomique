@@ -24,6 +24,8 @@ interface SignRevealProps {
   /** When set, shows a share button under the CTA. */
   onShare?: () => void;
   shareCopied?: boolean;
+  /** Shows the link to the static /signes/ page (off in the PDF export). */
+  showAllSignsLink?: boolean;
 }
 
 /**
@@ -33,6 +35,7 @@ interface SignRevealProps {
  */
 export function SignReveal({
   reading, onRevealConstellation, onShare, shareCopied = false,
+  showAllSignsLink = false,
 }: SignRevealProps) {
   const t = useT();
   const { locale } = useLocale();
@@ -129,6 +132,17 @@ export function SignReveal({
             : <Link2 className="size-3.5" strokeWidth={1.6} aria-hidden />}
           {shareCopied ? t.sidebar.result.shareCopied : t.sidebar.result.share}
         </Button>
+      )}
+      {showAllSignsLink && (
+        <a
+          href="/signes/"
+          className="cockpit-focus block w-fit mx-auto rounded px-1 py-0.5
+                     text-cockpit-lg text-violet-300/85 hover:text-violet-100
+                     underline underline-offset-4 decoration-violet-400/40
+                     transition-colors"
+        >
+          {t.signReveal.allSignsLink}
+        </a>
       )}
     </div>
   );

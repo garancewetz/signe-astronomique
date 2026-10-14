@@ -34,6 +34,7 @@ export const en: Copy = {
     placePlaceholder: 'Birth city…',
     submitIdle: 'COMPUTE MY SIGN',
     submitBusy: 'Computing the sky…',
+    allSignsLink: 'True dates of every sign →',
   },
 
   searchHistory: {
@@ -73,6 +74,7 @@ export const en: Copy = {
     ophiuchus:
       '**Ophiuchus** is the forgotten 13th sign: the Sun crosses it every year, but horoscopes only kept 12.',
     revealCta: (sign: string): string => `See ${sign} in the sky`,
+    allSignsLink: 'True dates of every sign →',
   },
 
   analysisCta: {
@@ -93,6 +95,7 @@ export const en: Copy = {
       openAriaLabel: 'Open the system menu',
       legend: { label: 'Legend', sublabel: 'Symbols · colors · layers' },
       explore: { label: 'Useful links', sublabel: 'Sky maps · ephemerides' },
+      allSigns: { label: 'All signs', sublabel: 'True dates of the 13 signs' },
       share: {
         label: 'Share my sign',
         sublabelReady: 'Direct link — SMS, WhatsApp, mail…',

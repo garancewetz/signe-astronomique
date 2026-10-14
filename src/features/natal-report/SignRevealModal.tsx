@@ -110,6 +110,7 @@ export function SignRevealModal({
                 onRevealConstellation={onRevealConstellation}
                 onShare={onShare}
                 shareCopied={shareCopied}
+                showAllSignsLink
               />
             </div>
           </motion.div>
