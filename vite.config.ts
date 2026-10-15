@@ -75,13 +75,26 @@ function cspMetaTag(): Plugin {
 
 /**
  * Emit the static sign pages (/signe/<slug>/, /signes/) and the sitemap
- * from seo/signPages.ts. They carry no JS at all, so their CSP is much
+ * from seo/signPages.ts, and serve the same pages from the dev server. They carry no JS at all, so their CSP is much
  * stricter than the app's: only the hashed JSON-LD block may "run".
  */
 function signPagesPlugin(): Plugin {
   return {
     name: 'static-sign-pages',
-    apply: 'build',
+    // Dev: these pages only exist as build output, so without this the dev
+    // server answers /signes/ with the SPA shell and the link looks dead.
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const path = (req.url ?? '').split('?')[0];
+        if (!/^\/signes?\//.test(path)) return next();
+        const fileName = `${path.slice(1).replace(/\/?$/, '/')}index.html`;
+        const lastmod = new Date().toISOString().slice(0, 10);
+        const page = buildStaticPages(lastmod).pages.find((p) => p.fileName === fileName);
+        if (!page) return next();
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.end(page.html);
+      });
+    },
     generateBundle() {
       const lastmod = new Date().toISOString().slice(0, 10);
       const { pages, sitemap } = buildStaticPages(lastmod);
