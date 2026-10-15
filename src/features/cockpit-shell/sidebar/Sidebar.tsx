@@ -192,7 +192,9 @@ export function Sidebar(props: SidebarProps) {
       animate={{ width: collapsed ? COLLAPSED_PX : EXPANDED_PX }}
       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
       className={cn(
-        'absolute top-0 bottom-0 left-0 z-30 flex flex-col overflow-hidden',
+        // overflow-clip (not hidden): the aside itself must never scroll when a
+        // focused control sits below the fold — only the inner column does.
+        'absolute top-0 bottom-0 left-0 z-30 flex flex-col overflow-clip',
         surfaceClasses('console'),
         // Surface emits `border` on all sides; the sidebar only wants its
         // right edge visible against the canvas.
@@ -201,39 +203,43 @@ export function Sidebar(props: SidebarProps) {
     >
       <SidebarHeader collapsed={collapsed} onToggleCollapsed={onToggleCollapsed} />
 
-      {!collapsed && (
-        <CoordinatesForm
-          date={date}
-          time={time}
-          city={city}
-          onDateChange={onDateChange}
-          onTimeChange={onTimeChange}
-          onCityChange={onCityChange}
-          onJump={onJump}
-          title={t.natalForm.title}
-          history={searchHistory}
-          onRecordHistory={onRecordSearch}
-          onRemoveHistory={onRemoveSearch}
-        />
-      )}
-
-      {hasReading && signLabel && (
-        <SignResult
-          collapsed={collapsed}
-          signLabel={signLabel}
-          active={analysisOpen}
-          unlocking={unlocking}
-          onOpen={onOpenAnalysis}
-          onShare={onShareLink}
-          shareCopied={shareCopied}
-          canShare={canShareLink}
-        />
-      )}
-
+      {/* One scroll column between header and dock: form, result and the
+          "Explore" section share the height instead of the last one being
+          squeezed into whatever is left on short screens. */}
       <div
+        data-sidebar-scroll
         className="flex-1 min-h-0 overflow-y-auto overscroll-contain
                    [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
+        {!collapsed && (
+          <CoordinatesForm
+            date={date}
+            time={time}
+            city={city}
+            onDateChange={onDateChange}
+            onTimeChange={onTimeChange}
+            onCityChange={onCityChange}
+            onJump={onJump}
+            title={t.natalForm.title}
+            history={searchHistory}
+            onRecordHistory={onRecordSearch}
+            onRemoveHistory={onRemoveSearch}
+          />
+        )}
+
+        {hasReading && signLabel && (
+          <SignResult
+            collapsed={collapsed}
+            signLabel={signLabel}
+            active={analysisOpen}
+            unlocking={unlocking}
+            onOpen={onOpenAnalysis}
+            onShare={onShareLink}
+            shareCopied={shareCopied}
+            canShare={canShareLink}
+          />
+        )}
+
         {collapsed ? (
           <>
             <CollapsedCameraRail
@@ -263,7 +269,7 @@ export function Sidebar(props: SidebarProps) {
               />
             </button>
             {exploreOpen && (
-              <div id="sidebar-explore" className="-mx-3 pt-1">
+              <div id="sidebar-explore" ref={scrollIntoViewOnMount} className="-mx-3 pt-1">
                 <ExpandedCameraSection
                   onFlySun={onFlySun}
                   onFlyMoon={onFlyMoon}
@@ -290,6 +296,18 @@ export function Sidebar(props: SidebarProps) {
       />
     </motion.aside>
   );
+}
+
+/**
+ * Scrolls the sidebar column just enough to reveal a freshly opened
+ * section. Scoped to the column — `scrollIntoView` would also shift the
+ * page and the sidebar header.
+ */
+function scrollIntoViewOnMount(el: HTMLElement | null) {
+  const column = el?.closest<HTMLElement>('[data-sidebar-scroll]');
+  if (!el || !column) return;
+  const hiddenBelow = el.getBoundingClientRect().bottom - column.getBoundingClientRect().bottom;
+  if (hiddenBelow > 0) column.scrollBy({ top: hiddenBelow + 8, behavior: 'smooth' });
 }
 
 /* ── Layer grid (expanded) ─────────────────────────────────────────────── */
