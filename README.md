@@ -19,7 +19,7 @@ Every body is pickable. Selecting one opens a HUD panel and unlocks two compleme
 - **Side view** — camera perpendicular to the Earth → constellation axis, with a graduated distance ruler in light-years.
 - **Depth view** — the constellation "exploded" so each star sits at its real distance, making the depth disparity legible at a glance.
 
-Right after a calculation, a single card answers the only question people come with: **what is my real sign, and why isn't it the one my horoscope gives me?** It shows the true sign in large type, the horoscope sign struck through next to it, a small Earth → Sun → constellation diagram explaining what a sign actually is, and one sentence on the one-month precession shift. A "share this sky" button hands the recipient a self-contained URL — opened via the native Web Share sheet on mobile/Safari, falling back to a clipboard copy elsewhere — and a [Netlify Edge function](netlify/edge-functions/og-share.ts) rewrites the index `<meta og:*>` tags on the fly so the link previews show the actual `Le ciel de {city} — {date}` card in WhatsApp / iMessage / mail. On mobile the cockpit installs as a PWA and the app surfaces a one-tap install hint after the first paint.
+Right after a calculation, a result panel answers the question people come with: **what is my real sign, and why isn't it the one my horoscope gives me?** It sets the true sign in large type with the horoscope sign it replaces, then the whole chart — Sun, Moon, Ascendant and planets — as a table of horoscope sign vs. the constellation really behind each body, then a small Earth → Sun → constellation diagram and one sentence on the one-month precession shift. On desktop it docks on the right, beside the sky; on mobile it is a page of its own above the tab bar. A "share this sky" button hands the recipient a self-contained URL — opened via the native Web Share sheet on mobile/Safari, falling back to a clipboard copy elsewhere — and a [Netlify Edge function](netlify/edge-functions/og-share.ts) rewrites the index `<meta og:*>` tags on the fly so the link previews show the actual `Le ciel de {city} — {date}` card in WhatsApp / iMessage / mail. On mobile the cockpit installs as a PWA and the app surfaces a one-tap install hint after the first paint.
 
 ## Why it matters
 
@@ -65,8 +65,8 @@ src/
 │   │   ├── astroEngine.ts                IAU 1930 boundaries, RA/Dec → constellation projection
 │   │   ├── planetEngine.ts               planetary ephemerides
 │   │   ├── skyCoordinates.ts             ICRS ↔ ECEF, celestial sphere, AU constants
-│   │   ├── constellationLore.ts          FR/EN names, mythology, didactic copy
-│   │   ├── formatDistance.ts             locale-aware km/AU formatter + EARTH_RADIUS_M
+│   │   ├── constellationLore.ts          names, mythology, didactic copy
+│   │   ├── formatDistance.ts             km/UA formatter + EARTH_RADIUS_M
 │   │   ├── data/constellations.json      Hipparcos catalog (stars + pattern lines)
 │   │   ├── data/constellationCatalog.ts  typed JSON loader
 │   │   └── index.ts                      barrel — public API
@@ -78,6 +78,7 @@ src/
 │   │   ├── shareLink.ts                  URL-param encode/decode for shareable links
 │   │   ├── useNatalForm.ts               default city + date/time state (URL-hydrated)
 │   │   ├── useShareLink.ts               clipboard + auto-jump on share-link landing
+│   │   ├── addBirthTime.ts               "add my birth time" request from the result to the form
 │   │   ├── useSearchHistory.ts           localStorage-backed recent natal queries
 │   │   ├── useGeolocation.ts             browser geolocation (graceful fallback)
 │   │   ├── timezone.ts                   tz-lookup → birth time → UTC
@@ -103,6 +104,8 @@ src/
 │   │   │   ├── bodies/                           IAU radii + proportional visual ellipsoid
 │   │   │   ├── sideView.ts                       side ↔ Earth camera toggle
 │   │   │   ├── sideViewTouch.ts                  camera-local touch controls on mobile
+│   │   │   ├── cameraFeel.ts                     calmer spin / inertia (mouse + touch), no pinch-tilt on touch
+│   │   │   ├── mountEarthOutline.ts              ring + "Terre" label around the Earth in the sky view
 │   │   │   ├── skyVector.ts                      RA/Dec → celestial-sphere Cartesian
 │   │   │   ├── useBodyPicker.ts                  click → typed payload, never-exhaustive
 │   │   │   ├── cameraDirector.ts                 flyTo helpers
@@ -111,8 +114,8 @@ src/
 │   │   │   └── viewerKeyboard.ts                 AZERTY-friendly nav, side-view aware
 │   │   └── index.ts                      barrel
 │   ├── natal-report/             true-sign reveal + export pipeline
-│   │   ├── SignReveal.tsx                true sign vs horoscope + alignment diagram + why
-│   │   ├── SignRevealModal.tsx           dialog shown after each calculation
+│   │   ├── SignReveal.tsx                true sign, full chart table, alignment diagram + why
+│   │   ├── SignRevealPanel.tsx           right-docked panel (desktop) / page (mobile) after each calculation
 │   │   ├── ExploreSpacePopover.tsx       sky-reading panel
 │   │   ├── useExportHandlers.ts          PNG + PDF export orchestration
 │   │   ├── exportReport.ts               canvas capture + PDF
@@ -125,16 +128,16 @@ src/
 │       ├── BodyInfoHud.tsx               HUD shown when a body is selected
 │       ├── LegendPanel.tsx               glyphs, colors and layer toggles
 │       ├── KeyboardHintChip.tsx          shortcut legend opener
-│       ├── LanguageSwitcher.tsx          FR | EN toggle
+│       ├── MapKey.tsx                    on-sky key: zone, boundaries, figure, Earth
 │       ├── Tooltip.tsx                   portal tooltip (anti-clipping)
 │       ├── sidebar/                      unified left rail + dockable console
 │       ├── mobile/                       mobile cockpit shell
 │       │   ├── MobileCockpit.tsx                 top-level mobile layout (header + canvas + sheet + tab bar)
 │       │   ├── MobileHeader.tsx                  top chip showing the active natal coords
 │       │   ├── BottomSheet.tsx                   draggable 3-snap sheet, `visible`-via-translate
-│       │   ├── MobileTabBar.tsx                  bottom navigation (display / navigation / my sign)
+│       │   ├── MobileTabBar.tsx                  bottom navigation (birth / my chart / sky / menu)
 │       │   ├── MobileSheetContent.tsx            tab-specific bodies inside the sheet
-│       │   ├── MobileSystemDrawer.tsx            right-hand drawer (export, share, language, …)
+│       │   ├── MobileMenuContent.tsx             Menu tab (share, exports, language, legend, links)
 │       │   └── InstallPwaPrompt.tsx              one-shot install hint (Android prompt + iOS instructions)
 │       └── index.ts                      barrel — exports Cockpit + ErrorBoundary + Fallback
 ├── ui/                           shared primitives + cross-cutting UI hooks
@@ -147,8 +150,8 @@ src/
 │   ├── useBodyScrollLock.ts              lock body scroll while a sheet is open
 │   ├── usePortalTarget.ts                portal mount target with SSR safety
 │   └── useMobileLayout.ts                pointer / viewport breakpoint hook
-├── context/                      global React context (LocaleProvider, CockpitDisplayProvider)
-├── i18n/                         FR (default) + EN copy, structurally pinned by `Copy = typeof fr`
+├── context/                      global React context (CockpitDisplayProvider) + useT()
+├── i18n/                         French UI copy (the site is French only)
 └── types/                        third-party module shims only (tz-lookup) — domain types are colocated
 ```
 
@@ -167,7 +170,7 @@ src/
 
 ## Sidebar and panels
 
-The main UI sits on a unified [`Sidebar`](src/features/cockpit-shell/sidebar/Sidebar.tsx) — a single left aside that hosts the coordinates form, a "My true sign" CTA that reopens the [`SignRevealModal`](src/features/natal-report/SignRevealModal.tsx) (it also opens on its own after each calculation), a flat grid of display-layer chips, and a pinned [`SystemDock`](src/features/cockpit-shell/sidebar/SystemDock.tsx). The Cesium canvas inset shifts with the sidebar's collapsed / expanded width — no camera math, just a viewport change that triggers automatic recentering.
+The main UI sits on a unified [`Sidebar`](src/features/cockpit-shell/sidebar/Sidebar.tsx) — a single left aside that hosts the coordinates form, a "My true sign" CTA that reopens the [`SignRevealPanel`](src/features/natal-report/SignRevealPanel.tsx) (it also opens on its own after each calculation), a flat grid of display-layer chips, and a pinned [`SystemDock`](src/features/cockpit-shell/sidebar/SystemDock.tsx). The Cesium canvas inset shifts with the sidebar's collapsed / expanded width — no camera math, just a viewport change that triggers automatic recentering.
 
 Selecting a body via click opens [`BodyInfoHud`](src/features/cockpit-shell/BodyInfoHud.tsx) as a floating panel. When the selection is a star, the sidebar's **side-view** chip activates — toggling it flips the Cesium camera into the perpendicular side view.
 
@@ -198,8 +201,7 @@ The cockpit is installable as a PWA. [`InstallPwaPrompt`](src/features/cockpit-s
 
 ## Conventions
 
-- **English** identifiers, types, exports, comments. UI copy is routed through `useT()` and stored in [`src/i18n/`](src/i18n/): `fr` is the default locale, `en` is selectable via the [`LanguageSwitcher`](src/features/cockpit-shell/LanguageSwitcher.tsx); the choice persists in `localStorage`.
-- **Strict i18n typing** — `Copy = typeof fr` derives the dictionary shape from the French copy, and `en.ts` pins itself to that type, so adding or removing a key surfaces as a TypeScript error rather than a fallback miss.
+- **English** identifiers, types, exports, comments. The site itself is **French only**: UI copy is routed through `useT()` and stored in [`src/i18n/fr.ts`](src/i18n/fr.ts), so components carry no hard-coded text.
 - **Exact pinned versions** in `package.json` (no `^` / `~`); `.npmrc` enforces `save-exact=true`.
 - **Feature boundaries** — sibling features import only from `@/features/<name>` (the barrel). Deep imports across feature internals are prohibited.
 - No `as` casts, no `eslint-disable`, no stray `console.log` (the dev-tools banner in [`main.tsx`](src/main.tsx) is intentional and labelled as such). `console.warn` / `console.error` reserved for real error paths.

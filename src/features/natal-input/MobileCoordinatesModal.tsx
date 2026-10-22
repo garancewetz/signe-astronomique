@@ -95,10 +95,10 @@ export function MobileCoordinatesModal({
               <ArrowLeft className="size-4" strokeWidth={1.5} aria-hidden />
             </button>
             <div className="min-w-0">
-              <div className="text-cockpit-xs tracking-cockpit-label uppercase text-accent-label/85">
+              <div className="text-cockpit-xs tracking-normal text-accent-label/85">
                 {t.mobile.coordinatesModal.sectionLabel}
               </div>
-              <h2 className="text-cockpit-md tracking-cockpit-tight text-accent-title uppercase truncate">
+              <h2 className="text-cockpit-md tracking-cockpit-tight text-accent-title truncate">
                 {t.mobile.coordinatesModal.title}
               </h2>
             </div>

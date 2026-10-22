@@ -1,11 +1,3 @@
-import { fr } from './fr';
-import { en } from './en';
-import type { Copy } from './fr';
-
-export type Locale = 'fr' | 'en';
-
-export const COPY: Record<Locale, Copy> = { fr, en };
-
-export const LOCALES: readonly Locale[] = ['fr', 'en'];
-
-export type { Copy };
+// The site is French only: one dictionary, imported through useT() so UI
+// copy stays out of the components.
+export { fr as COPY, type Copy } from './fr';

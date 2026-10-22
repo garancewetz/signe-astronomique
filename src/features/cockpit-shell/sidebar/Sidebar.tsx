@@ -19,7 +19,7 @@ import { type CelestialReading } from '@/features/astronomy';
 import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 import { useT } from '@/context/useLocale';
 import { SidebarHeader } from './SidebarHeader';
-import { SignResult } from './SignResult';
+import { SignResult, type KeyPlacement } from './SignResult';
 import { CollapsedCameraRail, ExpandedCameraSection } from './SidebarCamera';
 import { SystemDock } from './SystemDock';
 import type { SidebarPanelKey } from './types';
@@ -58,6 +58,8 @@ interface SidebarProps {
   hasReading: boolean;
   /** Localized true sign once a reading exists — shown as the result card. */
   signLabel: string | null;
+  /** Moon and Ascendant in the real sky, shown under the sign. */
+  keyPlacements: KeyPlacement[];
 
   // Camera fly-to actions — destinations rail above the layer grid.
   onFlySun: () => void;
@@ -109,6 +111,7 @@ export function Sidebar(props: SidebarProps) {
     onRemoveSearch,
     hasReading,
     signLabel,
+    keyPlacements,
     onFlySun,
     onFlyMoon,
     onFlyEarth,
@@ -134,7 +137,8 @@ export function Sidebar(props: SidebarProps) {
     satellitesEnabled,
     toggleSatellites,
   } = useCockpitDisplay();
-  const [exploreOpen, setExploreOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(true);
+  const [exploreToggled, setExploreToggled] = useState(false);
 
   // Pulse the Analyse CTA every time a new reading is computed — both for the
   // initial unlock and for subsequent recomputes (so the user notices fresh
@@ -163,10 +167,14 @@ export function Sidebar(props: SidebarProps) {
       onClick: toggleBodyLabels,
     },
     {
+      // The zones are drawn around the reader's own sign: nothing to show
+      // before a calculation, so the toggle waits for one.
       key: 'zones',
       label: t.sidebar.layers.zones,
       icon: <Ruler className="size-3.5" strokeWidth={1.4} aria-hidden />,
-      active: zonesEnabled,
+      active: zonesEnabled && hasReading,
+      disabled: !hasReading,
+      ariaLabel: hasReading ? undefined : `${t.sidebar.layers.zones} : ${t.sidebar.layers.zonesLocked}`,
       onClick: toggleZones,
     },
     {
@@ -221,6 +229,7 @@ export function Sidebar(props: SidebarProps) {
             onCityChange={onCityChange}
             onJump={onJump}
             title={t.natalForm.title}
+            hideAllSignsLink={hasReading}
             history={searchHistory}
             onRecordHistory={onRecordSearch}
             onRemoveHistory={onRemoveSearch}
@@ -231,6 +240,7 @@ export function Sidebar(props: SidebarProps) {
           <SignResult
             collapsed={collapsed}
             signLabel={signLabel}
+            placements={keyPlacements}
             active={analysisOpen}
             unlocking={unlocking}
             onOpen={onOpenAnalysis}
@@ -254,12 +264,14 @@ export function Sidebar(props: SidebarProps) {
             {/* Disclosure header, not an action — plain button by design. */}
             <button
               type="button"
-              onClick={() => setExploreOpen((v) => !v)}
+              onClick={() => {
+                setExploreToggled(true);
+                setExploreOpen((v) => !v);
+              }}
               aria-expanded={exploreOpen}
               aria-controls="sidebar-explore"
               className="cockpit-focus w-full flex items-center justify-between
-                         px-1 py-1.5 rounded text-cockpit-xs tracking-cockpit-label
-                         uppercase text-slate-400 hover:text-slate-200 transition-colors"
+                         px-1 py-1.5 rounded text-cockpit-xs tracking-normal text-slate-400 hover:text-slate-200 transition-colors"
             >
               {t.sidebar.exploreSectionLabel}
               <ChevronDown
@@ -269,13 +281,22 @@ export function Sidebar(props: SidebarProps) {
               />
             </button>
             {exploreOpen && (
-              <div id="sidebar-explore" ref={scrollIntoViewOnMount} className="-mx-3 pt-1">
+              <div
+                id="sidebar-explore"
+                // Open by default: only scroll to it when the reader opened it,
+                // not on load (that would push the birth form out of view).
+                ref={exploreToggled ? scrollIntoViewOnMount : undefined}
+                className="-mx-3 pt-1"
+              >
                 <ExpandedCameraSection
                   onFlySun={onFlySun}
                   onFlyMoon={onFlyMoon}
                   onFlyEarth={onFlyEarth}
                 />
-                <ExpandedLayerGrid layers={layers} />
+                <ExpandedLayerGrid
+                  layers={layers}
+                  note={hasReading ? undefined : t.sidebar.layers.zonesLocked}
+                />
               </div>
             )}
           </section>
@@ -322,12 +343,12 @@ interface LayerDef {
   onClick: () => void;
 }
 
-function ExpandedLayerGrid({ layers }: { layers: LayerDef[] }) {
+function ExpandedLayerGrid({ layers, note }: { layers: LayerDef[]; note?: string }) {
   const t = useT();
   return (
     <section aria-label={t.sidebar.layersSectionAriaLabel} className="px-3 pt-2 pb-2">
       <div
-        className="px-1 pb-2 text-cockpit-xs tracking-cockpit-label uppercase
+        className="px-1 pb-2 text-cockpit-xs tracking-normal
                    text-slate-500"
       >
         {t.sidebar.layersSectionLabel}
@@ -337,6 +358,7 @@ function ExpandedLayerGrid({ layers }: { layers: LayerDef[] }) {
           <LayerChip key={key} {...chipProps} />
         ))}
       </div>
+      {note && <p className="px-1 pt-2 text-cockpit-sm leading-snug text-slate-400">{note}</p>}
     </section>
   );
 }

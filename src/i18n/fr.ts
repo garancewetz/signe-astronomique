@@ -1,31 +1,30 @@
 /**
- * Centralised French UI copy. The English mirror lives in en.ts — keys
- * must stay in sync. The LocaleContext picks the active dictionary at
- * runtime; components consume it via `useT()`.
+ * Centralised UI copy — the site is French only. Components consume it via
+ * `useT()`.
  *
  * Convention:
  *   - Keys are in English, content is French.
  *   - Functions, not template strings, are used when interpolation is needed.
  *   - Data-derived strings (constellation/planet/satellite names) live next to
- *     the data, but their EN counterpart is wired in the same way.
+ *     the data.
  */
 
 export const fr = {
   cockpit: {
-    sidebarLabel: 'Console de pilotage',
+    sidebarLabel: 'Panneau latéral',
     skipToMain: 'Aller au contenu principal',
     brand: 'Signe astronomique',
     srTitle: 'Carte du ciel réel',
   },
 
   errorBoundary: {
-    fullscreenTitle: 'Le cockpit a perdu le signal.',
+    fullscreenTitle: 'Le site a rencontré une erreur.',
     fullscreenDescription:
-      'Une erreur inattendue est survenue. Recharge la page pour relancer la console — rien n’est enregistré côté serveur, aucune donnée n’est perdue.',
+      'Une erreur inattendue est survenue. Recharge la page pour réessayer. Rien n’est enregistré sur un serveur : aucune donnée n’est perdue.',
     inlineTitle: 'Le rendu 3D a décroché.',
     inlineDescription:
-      'La vue céleste n’a pas pu démarrer. La console reste utilisable — recharge la page pour réessayer.',
-    label: 'ERREUR',
+      'La vue céleste n’a pas pu démarrer. Le reste du site fonctionne : recharge la page pour réessayer.',
+    label: 'Erreur',
     reload: 'Recharger la page',
     retry: 'Réessayer',
   },
@@ -37,7 +36,7 @@ export const fr = {
     timeLabel: 'Heure de naissance',
     placeLabel: 'Lieu de naissance',
     detailsToggle: 'Ajouter l’heure et le lieu',
-    detailsHint: 'Facultatif, pour plus de précision. Sans eux, on calcule à midi.',
+    detailsHint: 'Facultatif pour le signe, nécessaire pour l’ascendant. Sans eux, on calcule à midi.',
     placePlaceholder: 'Ville de naissance…',
     submitIdle: 'Calcule ton vrai signe',
     submitBusy: 'Calcul du ciel…',
@@ -62,27 +61,33 @@ export const fr = {
   },
 
   signReveal: {
-    eyebrow: 'TON VRAI SIGNE',
+    panelTitle: 'Ton thème',
     closeAriaLabel: 'Fermer',
-    horoscopeSays: 'Ton horoscope dit',
-    skySays: 'Le vrai ciel dit',
     whatTitle: 'C’est quoi, ton signe ?',
-    whyTitle: 'Et ton horoscope ?',
     alignmentBody: (sign: string): string =>
       `Le jour de ta naissance, vu depuis la Terre, le Soleil était devant la constellation **${sign}**. Ton signe, c’est simplement ça : la constellation derrière le Soleil.`,
     alignmentAriaLabel: (sign: string): string =>
       `Schéma : la Terre, le Soleil et la constellation ${sign} sont alignés.`,
     sun: 'Soleil',
     earth: 'Terre',
-    sameTitle: 'Horoscope et ciel sont d’accord',
     sameBody: (date: string, sign: string): string =>
       `Les dates des horoscopes ont été fixées il y a 2\u202f000\u00a0ans et le ciel a glissé d’environ un mois depuis. Coup de chance : le ${date} tombe dans la période où les deux disent **${sign}**.`,
     differBody: (date: string, horoscope: string, sky: string): string =>
       `Les dates des horoscopes ont été fixées il y a 2\u202f000\u00a0ans. Depuis, l’axe de la Terre a lentement pivoté (la précession) et le ciel a glissé d’environ un mois : le ${date}, le Soleil n’est plus devant ${horoscope}, mais devant **${sky}**.`,
     ophiuchus:
       '**Ophiuchus** est le 13ᵉ signe oublié : le Soleil le traverse chaque année, mais les horoscopes n’en ont gardé que 12.',
+    ophiuchusWhy: {
+      title: 'Pourquoi Ophiuchus a sa propre zone ?',
+      paragraphs: [
+        'En 1930, l’Union astronomique internationale a découpé tout le ciel en 88 constellations aux frontières officielles, comme des pays sur une carte. Ces frontières suivent les figures d’étoiles traditionnelles, pas les signes des horoscopes.',
+        'Ophiuchus, le Serpentaire, est une figure antique, déjà décrite par Ptolémée il y a près de 2\u202f000\u00a0ans. Ses pieds descendent jusque sur le chemin du Soleil, alors que les étoiles du Scorpion sont surtout plus au sud. Résultat : le Soleil passe à peine une semaine devant le Scorpion, puis près de trois semaines devant Ophiuchus.',
+        'Le Scorpion ne peut pas « reprendre » cette zone : ces étoiles ne font pas partie de sa figure. Le découpage reste une convention, mais c’est la convention officielle.',
+      ],
+      scienceTitle: 'Et les scientifiques ?',
+      science:
+        'Les astronomes n’utilisent pas de signes : l’astrologie n’est pas une science. Pour eux, une constellation est une zone du ciel qui sert à situer les objets. Dans ce sens, oui : le Soleil traverse officiellement 13 constellations, Ophiuchus compris. Les 12 signes égaux de 30° sont une convention bien plus ancienne, venue de Babylone.',
+    },
     revealCta: (sign: string): string => `Voir ${sign} dans le ciel`,
-    edgeTitle: 'Né·e à la frontière',
     edgeLeaving: (days: string, next: string): string =>
       `Tu es né·e à **${days}** d’une frontière : juste après, le Soleil passait dans la constellation voisine, ${next}.`,
     edgeEntered: (days: string, prev: string): string =>
@@ -92,6 +97,46 @@ export const fr = {
     skyBandHint:
       'Dans le ciel, le trait doré sur le chemin du Soleil montre la zone officielle de ta constellation. Les traits bleus, eux, ne relient que ses étoiles les plus brillantes.',
     allSignsLink: 'Les vraies dates des 13 signes',
+    trueSignLabel: 'Ton vrai signe',
+    notHoroscope: (horoscope: string): string => `Et non ${horoscope}, comme le dit ton horoscope.`,
+    sameAsHoroscope: 'Pour une fois, ton horoscope a raison.',
+    timeUnknown: 'heure inconnue',
+    placeUnknown: 'lieu inconnu',
+    chartTitle: 'Ton thème, dans le vrai ciel',
+    chartIntro:
+      'Pour chaque astre, le signe que donne l’horoscope, et la constellation qui était vraiment derrière lui à ta naissance.',
+    chartCols: { body: 'Astre', horoscope: 'Horoscope', sky: 'Vrai ciel' },
+    ascendant: 'Ascendant',
+    ascendantBody: (sign: string): string =>
+      `À l’heure de ta naissance, la constellation qui se levait à l’horizon est était **${sign}** : c’est ton vrai ascendant.`,
+    ascendantAriaLabel: (sign: string): string =>
+      `L’ascendant, ${sign}, se levait à l’horizon est.`,
+    eastShort: 'E',
+    westShort: 'O',
+    horizonLegend: (sign: string): string =>
+      `Horizon à ta naissance. À l’est (E), ce qui se levait : **${sign}**, ton ascendant.`,
+    sunAtBirth: {
+      rising: 'Le Soleil se levait à ce moment-là : il était lui aussi à l’horizon est, c’est pour ça que la ligne de l’horizon et celle du Soleil se superposent.',
+      day: 'Il faisait jour : le Soleil était au-dessus de l’horizon, entre l’est et l’ouest.',
+      setting: 'Le Soleil se couchait à ce moment-là : il était à l’horizon ouest, à l’opposé de l’ascendant.',
+      night: 'Il faisait nuit : le Soleil était sous l’horizon.',
+    },
+    ascendantNeedsTime: 'Ton ascendant dépend de l’heure exacte de ta naissance : sans elle, on ne peut pas le calculer.',
+    addBirthTime: 'Ajouter mon heure de naissance',
+    addBirthTimeShort: 'ajouter l’heure',
+    ascendantNeedsPlace: 'Ton ascendant dépend aussi du lieu de naissance : sans lui, on ne peut pas le calculer.',
+    addBirthPlace: 'Ajouter mon lieu de naissance',
+    addBirthPlaceShort: 'ajouter le lieu',
+    chartNotes: [
+      { term: 'Soleil', text: 'la constellation derrière le Soleil, c’est ton signe.' },
+      { term: 'Lune', text: 'celle devant laquelle se trouvait la Lune. Elle en change tous les deux à trois jours.' },
+      { term: 'Ascendant', text: 'celle qui se levait à l’est à ta naissance. Elle change en moyenne toutes les deux heures.' },
+    ],
+    method:
+      'Méthode : positions calculées avec les algorithmes de Jean Meeus (écart de moins de 0,1°), constellations selon les frontières officielles de l’Union astronomique internationale (1930).',
+    methodLink: 'Sources',
+    moonNeedsTime: 'Sans l’heure, la Lune peut avoir changé de constellation dans la journée.',
+    share: 'Partager',
   },
 
   analysisCta: {
@@ -106,50 +151,45 @@ export const fr = {
       closeAriaLabel: 'Fermer',
       editAriaLabel: 'Modifier mes coordonnées de naissance',
     },
-    systemDrawer: {
-      ariaLabel: 'Menu système',
-      backdropAriaLabel: 'Fermer le menu système',
-      openAriaLabel: 'Ouvrir le menu système',
-      legend: { label: 'Légende', sublabel: 'Symboles · couleurs · calques' },
-      explore: { label: 'Liens utiles', sublabel: 'Cartes du ciel · éphémérides' },
-      allSigns: { label: 'Tous les signes', sublabel: 'Les vraies dates des 13 signes' },
+    menu: {
+      legend: { label: 'Légende' },
+      explore: { label: 'Liens utiles (cartes du ciel, éphémérides)' },
+      allSigns: { label: 'Les vraies dates des 13 signes' },
       share: {
         label: 'Partager mon signe',
-        sublabelReady: 'Lien direct — SMS, WhatsApp, mail…',
-        sublabelCopied: 'Lien copié dans le presse-papier !',
-        sublabelLocked: 'Calcule d’abord ton ciel',
+        sublabelCopied: 'Lien copié !',
+        sublabelLocked: 'Calcule d’abord ton signe',
       },
-      exportView: { label: 'Exporter la vue', sublabel: 'PNG du ciel 3D' },
+      exportView: { label: 'Enregistrer le ciel en image' },
       exportReport: {
-        label: 'Exporter le rapport',
-        sublabelReady: 'PDF — le ciel + ton vrai signe',
-        sublabelLocked: 'Calcule d’abord ton ciel',
+        label: 'Télécharger mon thème (PDF)',
+        sublabelLocked: 'Calcule d’abord ton signe',
       },
-      language: { label: 'Langue', sublabel: 'Français · English' },
     },
     cockpit: {
-      mainAriaLabel: 'Console mobile',
-      navAriaLabel: 'Sections de la console mobile',
+      mainAriaLabel: 'Panneau',
+      navAriaLabel: 'Navigation principale',
     },
     legend: { ariaLabel: 'Légende' },
     tabs: {
-      coords: 'Ma naissance',
-      analysis: 'Mon signe',
-      explore: 'Explorer',
+      coords: 'Naissance',
+      analysis: 'Mon thème',
+      explore: 'Ciel',
+      menu: 'Menu',
     },
     sheet: {
       home: {
-        eyebrow: 'Console',
+        eyebrow: 'Ton vrai signe',
         ctaCalculate: 'Calcule ton vrai signe',
         hint:
           'Entre ta date, ton heure et ton lieu de naissance pour découvrir ton vrai signe.',
       },
       display: {
         eyebrow: 'Afficher',
-        labels: { label: 'Noms et lignes', sublabel: 'Astres · constellations' },
-        zones: { label: 'Zones des signes', sublabel: 'Frontières officielles IAU' },
-        guides: { label: 'Repères du ciel', sublabel: 'Axe · équateur · écliptique' },
-        relics: { label: 'Reliques orbitales', sublabel: 'Satellites historiques' },
+        labels: { label: 'Noms et lignes' },
+        zones: { label: 'Zones des signes' },
+        guides: { label: 'Repères du ciel' },
+        relics: { label: 'Satellites historiques' },
       },
       navigation: {
         eyebrow: 'Caméra',
@@ -159,11 +199,11 @@ export const fr = {
       },
     },
     bottomSheet: {
-      defaultAriaLabel: 'Console',
-      collapseAriaLabel: 'Replier la console',
-      expandAriaLabel: 'Étendre la console',
-      openAriaLabel: 'Ouvrir la console',
-      closeAriaLabel: 'Fermer la console',
+      defaultAriaLabel: 'Panneau',
+      collapseAriaLabel: 'Replier le panneau',
+      expandAriaLabel: 'Étendre le panneau',
+      openAriaLabel: 'Ouvrir le panneau',
+      closeAriaLabel: 'Fermer le panneau',
     },
   },
 
@@ -180,7 +220,7 @@ export const fr = {
 
   keyboardShortcuts: {
     sectionLabel: 'Raccourcis clavier',
-    chipLabel: 'Clavier',
+    chipLabel: 'Raccourcis clavier',
     chipAriaLabel: 'Afficher les raccourcis clavier',
     rows: [
       { keys: '← → ↑ ↓', desc: 'Orbiter autour de la Terre' },
@@ -193,12 +233,12 @@ export const fr = {
   },
 
   sidebar: {
-    expandTooltip: 'Étendre la console',
-    collapseTooltip: 'Réduire la console',
-    expandAriaLabel: 'Étendre la console',
-    collapseAriaLabel: 'Réduire la console',
+    expandTooltip: 'Agrandir le panneau',
+    collapseTooltip: 'Réduire le panneau',
+    expandAriaLabel: 'Agrandir le panneau',
+    collapseAriaLabel: 'Réduire le panneau',
     cameraSectionLabel: 'Caméra',
-    cameraSectionAriaLabel: 'Caméra — destinations rapides',
+    cameraSectionAriaLabel: 'Caméra : destinations rapides',
     layersSectionLabel: 'Calques',
     layersSectionAriaLabel: 'Calques d’affichage',
     cameraDestinations: {
@@ -220,14 +260,15 @@ export const fr = {
     },
     layers: {
       labels: 'Noms',
-      zones: 'Zones',
+      zones: 'Zones des signes',
+      zonesLocked: 'Les zones des signes apparaissent sur la carte une fois ton signe calculé.',
       guides: 'Repères',
-      relics: 'Reliques',
+      relics: 'Satellites',
     },
     exploreSectionLabel: 'Explorer le ciel',
     result: {
       eyebrow: 'Ton vrai signe',
-      why: 'Pourquoi ? →',
+      why: 'Tout mon thème →',
       share: 'Partager mon signe',
       shareCopied: 'Lien copié !',
     },
@@ -236,22 +277,27 @@ export const fr = {
   systemDock: {
     sectionAriaLabel: 'Système',
     explore: {
+      short: 'Liens',
       tooltip: 'Ressources externes : cartes du ciel, éphémérides…',
       ariaLabel: 'Ouvrir la liste de liens utiles',
     },
     legend: {
-      tooltip: 'Légende — symboles, couleurs, calques',
+      short: 'Légende',
+      tooltip: 'Légende : symboles, couleurs, calques',
       ariaLabel: 'Ouvrir la légende',
     },
     fullscreen: {
+      short: 'Plein écran',
       tooltipEnter: 'Passer en plein écran',
       tooltipExit: 'Quitter le plein écran',
     },
     exportView: {
+      short: 'Image',
       tooltip: 'Enregistre la vue 3D actuelle dans un fichier image PNG',
       ariaLabel: 'Exporter la vue 3D en image PNG',
     },
     exportPdf: {
+      short: 'PDF',
       tooltipReady: 'Télécharger le PDF : le ciel + ton vrai signe',
       tooltipGenerating: 'Génération du PDF…',
       tooltipLocked: 'Calcule d’abord un thème natal pour exporter le PDF',
@@ -260,56 +306,57 @@ export const fr = {
   },
 
   bodyInfo: {
+    horoscopeRow: 'Horoscope',
     star: {
-      eyebrowPrefix: 'ÉTOILE',
+      eyebrowPrefix: 'Étoile',
       footer:
         'Bascule sur l’axe pour voir le dessin se disloquer : depuis la Terre, les étoiles semblent alignées ; vues de côté, elles sont séparées par des centaines d’années-lumière.',
-      rows: { distance: 'DISTANCE', magnitude: 'MAGNITUDE', depth: 'PROFONDEUR' },
-      modeToggleLabel: 'PERSPECTIVE AXIALE',
+      rows: { distance: 'Distance', magnitude: 'Éclat (magnitude)', depth: 'Profondeur' },
+      modeToggleLabel: 'Vue de côté',
       closestSelf: 'étoile la plus proche du dessin',
       ratioFarther: (ratio: string, closest: string, distance: string): string =>
         `${ratio}× plus loin que ${closest} (${distance})`,
     },
     sun: {
-      eyebrow: 'ÉTOILE HÔTE',
+      eyebrow: 'Étoile',
       footer:
         'L’étoile la plus proche : 8 minutes-lumière. Sa lumière éclaire le ciel diurne et masque toutes les autres.',
       rows: {
-        constellation: 'CONSTELLATION',
-        distance: 'DISTANCE',
-        raDec: 'RA / DEC',
-        magnitude: 'MAGNITUDE',
+        constellation: 'Constellation (vrai ciel)',
+        distance: 'Distance',
+        raDec: 'Coordonnées célestes',
+        magnitude: 'Éclat (magnitude)',
       },
       magnitudeValue: '−26,7',
     },
     moon: {
-      eyebrow: 'SATELLITE NATUREL',
+      eyebrow: 'Satellite naturel',
       rows: {
-        constellation: 'CONSTELLATION',
-        distance: 'DISTANCE',
-        phase: 'PHASE',
-        raDec: 'RA / DEC',
+        constellation: 'Constellation (vrai ciel)',
+        distance: 'Distance',
+        phase: 'Phase',
+        raDec: 'Coordonnées célestes',
       },
     },
     planet: {
-      eyebrow: 'PLANÈTE',
+      eyebrow: 'Planète',
       rows: {
-        constellation: 'CONSTELLATION',
-        distance: 'DISTANCE',
-        raDec: 'RA / DEC',
+        constellation: 'Constellation (vrai ciel)',
+        distance: 'Distance',
+        raDec: 'Coordonnées célestes',
       },
     },
     satellite: {
-      eyebrow: 'RELIQUE ORBITALE',
-      rows: { launch: 'LANCEMENT' },
+      eyebrow: 'Satellite historique',
+      rows: { launch: 'Lancement' },
     },
   },
 
   exploreSpace: {
-    title: 'CONTINUER À EXPLORER LE CIEL',
+    title: 'Continuer à explorer le ciel',
     subtitle:
       'Si la précession et le ciel réel t’intriguent : observatoires, cartes du ciel interactives, éphémérides, vulgarisation. Sources officielles (NASA, ESA, IAU). Les liens s’ouvrent dans un nouvel onglet.',
-    closeLabel: 'FERMER',
+    closeLabel: 'Fermer',
     closeAriaLabel: 'Fermer',
     footerCredit: 'Conçu par Garance Wetzel',
     githubAriaLabel: 'GitHub de Garance Wetzel',
@@ -323,27 +370,27 @@ export const fr = {
         title: 'NASA',
         links: [
           {
-            label: 'Science — système solaire (missions, données)',
+            label: 'Science : système solaire (missions, données)',
             href: 'https://science.nasa.gov/solar-system/',
           },
           {
-            label: 'Science — univers (galaxies, trous noirs, cosmologie)',
+            label: 'Science : univers (galaxies, trous noirs, cosmologie)',
             href: 'https://science.nasa.gov/universe/',
           },
           { label: 'Image du jour (APOD)', href: 'https://apod.nasa.gov/apod/astropix.html' },
           { label: 'James Webb Space Telescope', href: 'https://webb.nasa.gov/' },
-          { label: 'NASA+ — vidéos et directs', href: 'https://plus.nasa.gov/' },
+          { label: 'NASA+ : vidéos et directs', href: 'https://plus.nasa.gov/' },
         ],
       },
       {
         title: 'ESA & partenaires',
         links: [
           {
-            label: 'ESA — exploration scientifique',
+            label: 'ESA : exploration scientifique',
             href: 'https://www.esa.int/Science_Exploration/Space_Science',
           },
           {
-            label: 'Gaia — carte de milliards d’étoiles',
+            label: 'Gaia : carte de milliards d’étoiles',
             href: 'https://www.cosmos.esa.int/web/gaia',
           },
           { label: 'Hubble / observations', href: 'https://esahubble.org/' },
@@ -352,13 +399,13 @@ export const fr = {
       {
         title: 'Cartes du ciel & éphémérides',
         links: [
-          { label: 'Stellarium Web — ciel interactif', href: 'https://stellarium-web.org/' },
+          { label: 'Stellarium Web : ciel interactif', href: 'https://stellarium-web.org/' },
           {
-            label: 'TheSkyLive — positions planètes et comètes',
+            label: 'TheSkyLive : positions planètes et comètes',
             href: 'https://theskylive.com/',
           },
           {
-            label: 'Heavens-Above — passages ISS et satellites',
+            label: 'Heavens-Above : passages ISS et satellites',
             href: 'https://www.heavens-above.com/',
           },
         ],
@@ -366,25 +413,25 @@ export const fr = {
       {
         title: 'Données & pédagogie',
         links: [
-          { label: 'JPL Horizons — éphémérides précises', href: 'https://ssd.jpl.nasa.gov/horizons/' },
+          { label: 'JPL Horizons : éphémérides précises', href: 'https://ssd.jpl.nasa.gov/horizons/' },
           {
-            label: 'NASA SpacePlace — vulgarisation jeunes publics',
+            label: 'NASA SpacePlace : vulgarisation jeunes publics',
             href: 'https://spaceplace.nasa.gov/',
           },
-          { label: 'IAU — astronomie et nomenclature', href: 'https://www.iau.org/' },
+          { label: 'IAU : astronomie et nomenclature', href: 'https://www.iau.org/' },
         ],
       },
     ],
   },
 
   legend: {
-    title: 'LÉGENDE',
-    subtitle: 'SYMBOLES · COULEURS · CALQUES',
+    title: 'Légende',
+    subtitle: 'Symboles, couleurs, calques',
     sections: {
-      bodies: 'ASTRES',
-      zones: 'ZONES DES SIGNES',
-      guides: 'REPÈRES DU CIEL',
-      relics: 'RELIQUES ORBITALES',
+      bodies: 'Astres',
+      zones: 'Zones des signes',
+      guides: 'Repères du ciel',
+      relics: 'Satellites historiques',
     },
     zoneLabels: {
       yours: 'Ton signe : sa zone officielle (IAU)',
@@ -401,8 +448,22 @@ export const fr = {
     toggleHidden: 'masqué',
   },
 
+  sky: {
+    zonePrefix: 'Zone',
+    loading: 'Chargement du ciel…',
+    key: {
+      ariaLabel: 'Légende de la carte',
+      zone: 'Zone officielle de ton signe (UAI)',
+      boundary: 'Frontière entre deux constellations',
+      figure: 'Figure : les étoiles reliées',
+      earth: 'La Terre, ton point de vue',
+    },
+  },
+
+  distanceFromEarth: (d: string): string => `à ${d} de la Terre`,
+
   hudFrame: {
-    modeNatal: 'CIEL NATAL',
+    modeNatal: 'Ton ciel',
     // Keep in sync with #seo-splash in index.html (crawlers, mobile).
     liveQuestion: 'Quel est ton vrai signe astronomique ?',
     todayDiffer: (horoscope: string, sky: string): string =>
@@ -411,14 +472,7 @@ export const fr = {
       `Aujourd’hui, le Soleil est devant **${sky}** : pour une fois, l’horoscope a raison.`,
     why: 'Pourquoi ?',
     summaryAriaLabel: (mode: string, main: string): string =>
-      `Voir mon vrai signe — ${mode} · ${main}`,
-  },
-
-  languageSwitcher: {
-    ariaLabel: 'Choisir la langue',
-    tooltip: 'Langue',
-    options: { fr: 'Français', en: 'English' },
-    shortOptions: { fr: 'FR', en: 'EN' },
+      `Voir mon vrai signe : ${mode}, ${main}`,
   },
 
   installPwa: {
@@ -453,7 +507,6 @@ export const fr = {
 
   /** IETF locale for `Intl` formatters and the `<html lang>` attribute. */
   intlLocale: 'fr-FR',
-  htmlLang: 'fr',
 };
 
 export type Copy = typeof fr;

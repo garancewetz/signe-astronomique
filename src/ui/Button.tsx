@@ -20,7 +20,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'h-9 px-2.5 text-cockpit-sm tracking-cockpit-wide',
+  sm: 'h-9 px-2.5 text-cockpit-sm tracking-normal',
   md: 'h-10 px-4 text-cockpit-sm tracking-cockpit',
   lg: 'min-h-11 px-6 py-2.5 text-xs tracking-cockpit',
 };

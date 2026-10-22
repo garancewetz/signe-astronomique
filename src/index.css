@@ -71,10 +71,10 @@
   /*
    * Échelle typo cockpit (6 niveaux + glyphes).
    * xs/sm = dense HUD · md = corps & formulaires · lg = titres panneaux · xl = lecture longue.
-   * Nothing under 10px: the audience reads on phones.
+   * Nothing under 11px: the audience reads on phones, often on a dark sky.
    */
-  --text-cockpit-xs: 10px;
-  --text-cockpit-sm: 11px;
+  --text-cockpit-xs: 11px;
+  --text-cockpit-sm: 12px;
   --text-cockpit-md: 12px;
   --text-cockpit-lg: 13px;
   --text-cockpit-xl: 15px;
@@ -213,19 +213,10 @@ body {
   animation-delay: calc(var(--rail-index, 0) * 80ms);
 }
 
-/* Soft outline pulse — CTA Analyse en attente d'ouverture. A ring rather
-   than a glow, to keep the sober look while still calling for the click. */
-@keyframes cta-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(169 184 245 / 0); }
-  50%      { box-shadow: 0 0 0 2px rgb(169 184 245 / 0.45); }
-}
-.animate-cta-glow { animation: cta-glow 2.8s ease-in-out infinite; }
-
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
   .animate-rail-breathe,
-  .animate-rail-unlock,
-  .animate-cta-glow {
+  .animate-rail-unlock {
     animation: none;
     opacity: 0.85;
   }

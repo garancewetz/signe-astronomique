@@ -12,7 +12,7 @@ import {
   Viewer,
   WebMercatorTilingScheme,
 } from 'cesium';
-import { AU_KM, gmstRadians } from '@/features/astronomy';
+import { AU_KM, gmstRadians, signZoneCenter } from '@/features/astronomy';
 import { attachCameraDistanceListener } from './cesium/cameraDistance';
 import {
   MAX_CAMERA_DIST_M,
@@ -47,10 +47,13 @@ import {
 } from './cesium/cameraDirector';
 import { attachKeyboardNav } from './cesium/viewerKeyboard';
 import { attachTrackpadPinch } from './cesium/trackpadPinch';
+import { tuneCameraFeel } from './cesium/cameraFeel';
+import { mountEarthOutline } from './cesium/mountEarthOutline';
+import { cn } from '@/ui';
+import { COPY } from '@/i18n';
 import { useSceneLayerComposition } from './useSceneLayerComposition';
 import { useSatelliteTracker } from './useSatelliteTracker';
-import { useLocale, useT } from '@/context/useLocale';
-import type { Locale } from '@/i18n';
+import { useT } from '@/context/useLocale';
 import { PLANETS_META, loreShortName } from '@/features/astronomy';
 
 export interface SpaceViewHandle {
@@ -62,6 +65,8 @@ export interface SpaceViewHandle {
   captureCanvas: () => HTMLCanvasElement | null;
   /** Reframes the camera onto the Sun (active reading). */
   flyToSun: () => void;
+  /** Frames the whole stretch of the true sign (with the Sun inside it). */
+  flyToSign: () => void;
   /** Reframes the camera onto the Moon (active reading). */
   flyToMoon: () => void;
   /** Resets the camera to the default equatorial orbit (Earth-centered). */
@@ -252,10 +257,9 @@ export function SpaceView({
     sideViewActiveRef.current = sideViewActive;
   }, [sideViewActive]);
 
-  // Live camera distance HUD: locale + the parent's setter are both mirrored
-  // into refs so the preRender listener (installed once in the viewer-init
-  // effect) sees the current values without us having to re-subscribe.
-  const localeRef = useRef<Locale>('fr');
+  // Live camera distance HUD: the parent's setter is mirrored into a ref so
+  // the preRender listener (installed once in the viewer-init effect) sees
+  // the current value without us having to re-subscribe.
   const onDistanceChangeRef = useRef<typeof onDistanceChange>(undefined);
   useEffect(() => {
     onDistanceChangeRef.current = onDistanceChange;
@@ -280,6 +284,19 @@ export function SpaceView({
           raHours: active.sunRA,
           decDeg: active.sunDec,
           gmstRad: activeGmstRef.current,
+          ecliptic: { longitudeDeg: active.sunEclipticLongitude, obliquityDeg: active.obliquity },
+        });
+      },
+      flyToSign: () => {
+        const viewer = viewerRef.current;
+        const active = activeReadingRef.current;
+        if (!viewer || !active) return;
+        const zone = signZoneCenter(active);
+        flyToCelestialDirection(viewer, {
+          raHours: zone.raHours,
+          decDeg: zone.decDeg,
+          gmstRad: activeGmstRef.current,
+          ecliptic: { longitudeDeg: zone.eclipticLongitude, obliquityDeg: active.obliquity },
         });
       },
       flyToMoon: () => {
@@ -290,6 +307,7 @@ export function SpaceView({
           raHours: active.moon.ra,
           decDeg: active.moon.dec,
           gmstRad: activeGmstRef.current,
+          ecliptic: { longitudeDeg: active.moon.eclipticLongitude, obliquityDeg: active.obliquity },
         });
       },
       flyToEarth: () => {
@@ -306,6 +324,9 @@ export function SpaceView({
   // lat/lon only changes the ascendant — we pass them anyway for the
   // semantic consistency of `liveReading.input`.
   const [liveNow, setLiveNow] = useState<Date>(() => new Date());
+  // The globe imagery takes a few seconds: until it lands, say so rather
+  // than show a black void with a lone marker.
+  const [skyReady, setSkyReady] = useState(false);
   useEffect(() => {
     if (reading) return; // no need to tick while a natal reading is set
     const id = window.setInterval(
@@ -452,9 +473,21 @@ export function SpaceView({
 
     const detachKeyboard = attachKeyboardNav(viewer, { sideViewActiveRef });
     const detachTrackpadPinch = attachTrackpadPinch(viewer, { sideViewActiveRef });
+    const removeEarthOutline = mountEarthOutline(viewer, COPY.signReveal.earth);
+    // Ready once the globe's tile queue first drains — or after a few
+    // seconds anyway, so a slow imagery server never leaves the notice up.
+    const markReady = () => setSkyReady(true);
+    const readyTimeout = window.setTimeout(markReady, 8000);
+    const removeReadyListener = viewer.scene.globe.tileLoadProgressEvent.addEventListener(
+      (queued: number) => {
+        if (queued === 0) markReady();
+      },
+    );
+    const untuneCamera = tuneCameraFeel(viewer, {
+      touch: window.matchMedia('(pointer: coarse)').matches,
+    });
 
     const removeDistanceListener = attachCameraDistanceListener(viewer, {
-      getLocale: () => localeRef.current,
       onLabel: (label) => onDistanceChangeRef.current?.(label),
     });
 
@@ -465,6 +498,10 @@ export function SpaceView({
     return () => {
       detachKeyboard();
       detachTrackpadPinch();
+      untuneCamera();
+      removeEarthOutline();
+      removeReadyListener();
+      window.clearTimeout(readyTimeout);
       removeDistanceListener();
       cleanupsRef.current.forEach((c) => c());
       cleanupsRef.current = [];
@@ -475,19 +512,14 @@ export function SpaceView({
   }, []);
 
   const t = useT();
-  const { locale } = useLocale();
-  useEffect(() => {
-    localeRef.current = locale;
-  }, [locale]);
   const bodyNames = useMemo(
     () => ({
       sun: t.bodies.sun,
       moon: t.bodies.moon,
-      planet: (id: PlanetId) =>
-        locale === 'en' ? PLANETS_META[id].en : PLANETS_META[id].fr,
-      constellation: (c: IauConstellation) => loreShortName(c, locale),
+      planet: (id: PlanetId) => PLANETS_META[id].fr,
+      constellation: (c: IauConstellation) => loreShortName(c),
     }),
-    [t, locale],
+    [t],
   );
 
   // Era-appropriate night-side dimming. VIIRS Black Marble is a 2012
@@ -528,7 +560,6 @@ export function SpaceView({
     }
     const cleanup = mountSatellitesLayer(viewer, {
       satellites: trackedSatellites,
-      locale,
       // Natal: frozen date. Live: now, re-evaluated each frame by the
       // layer's internal CallbackProperty.
       getTime: () => reading?.input.date ?? new Date(),
@@ -536,7 +567,7 @@ export function SpaceView({
       fadeInMs: RELICS_FADE_IN_MS,
     });
     return cleanup;
-  }, [showSatellites, trackedSatellites, reading, locale]);
+  }, [showSatellites, trackedSatellites, reading]);
 
   // Toggling relics no longer moves the camera — the layer just renders
   // at the current framing. If the user wants to inspect LEO orbits up
@@ -635,10 +666,9 @@ export function SpaceView({
     const cleanup = mountExplodedConstellation(viewer, {
       constellationAbbr: selectedStar.constellationAbbr,
       gmstRad,
-      locale,
     });
     return cleanup;
-  }, [selectedStar, sideViewActive, reading, liveReading, locale]);
+  }, [selectedStar, sideViewActive, reading, liveReading]);
 
   // Distance ruler along the Earth→constellation axis with calibrated
   // 100 ly ticks. Mounted only in Side View.
@@ -701,6 +731,20 @@ export function SpaceView({
   return (
     <div className="absolute inset-0" aria-label="Vue 3D du ciel natal">
       <div ref={containerRef} className="absolute inset-0" />
+      <div
+        role="status"
+        aria-hidden={skyReady}
+        className={cn(
+          'pointer-events-none absolute inset-0 z-10 grid place-items-center',
+          'transition-opacity duration-700',
+          skyReady ? 'opacity-0' : 'opacity-100',
+        )}
+      >
+        <p className="flex items-center gap-2 text-cockpit-lg text-slate-400">
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-slate-400 animate-pulse" />
+          {t.sky.loading}
+        </p>
+      </div>
       <div
         ref={tooltipRef}
         role="tooltip"

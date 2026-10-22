@@ -351,6 +351,27 @@ function faqSection(faq: Faq[]): string {
 }
 
 /** How the dates are computed, with sources — what makes the claim credible. */
+function ophiuchusSection(): string {
+  const scorpio = IAU_RUNS.get('Scorpio')!.idx.length;
+  const ophiuchus = IAU_RUNS.get('Ophiuchus')!.idx.length;
+  return `<section class="card" aria-labelledby="ophiuchus-title">
+  <h2 id="ophiuchus-title">Pourquoi Ophiuchus a sa propre zone ?</h2>
+  <p>En 1930, l’Union astronomique internationale a découpé tout le ciel en <strong>88 constellations</strong> aux frontières officielles, comme des pays sur une carte (le tracé est de l’astronome belge Eugène Delporte). Ces frontières suivent les figures d’étoiles traditionnelles, pas les signes des horoscopes.</p>
+  <p>${signLink('Ophiuchus', 'Ophiuchus')}, le Serpentaire, est une figure antique, déjà décrite par Ptolémée il y a près de 2\u202f000\u00a0ans. Ses pieds descendent jusque sur le chemin du Soleil, alors que les étoiles du ${signLink('Scorpio', 'Scorpion')} sont surtout plus au sud. Résultat : le Soleil ne passe que <strong>${scorpio} jours</strong> devant le Scorpion, puis <strong>${ophiuchus} jours</strong> devant Ophiuchus.</p>
+  <p>Le Scorpion ne peut pas « reprendre » cette zone : ces étoiles ne font pas partie de sa figure. Le découpage reste une convention, mais c’est la convention officielle.</p>
+  <p><strong>Et les scientifiques ?</strong> Les astronomes n’utilisent pas de signes : l’astrologie n’est pas une science. Pour eux, une constellation est une zone du ciel qui sert à situer les objets. Dans ce sens, oui : le Soleil traverse officiellement 13 constellations, Ophiuchus compris. Les 12 signes égaux de 30° sont une convention bien plus ancienne, venue de Babylone.</p>
+</section>`;
+}
+
+/** FAQ entry shared by /signes/ and the signs around Ophiuchus. */
+const OPHIUCHUS_FAQ: Faq = {
+  q: 'Les astronomes reconnaissent-ils Ophiuchus ?',
+  a: 'Les astronomes n’utilisent pas de signes : l’astrologie n’est pas une science. Mais depuis 1930, l’Union astronomique internationale découpe le ciel en 88 constellations aux frontières officielles, et le chemin du Soleil en traverse 13, dont Ophiuchus, le Serpentaire. Ses pieds débordent sur ce chemin, entre le Scorpion et le Sagittaire.',
+};
+
+/** Signs whose readers ask why Ophiuchus cuts into Scorpius. */
+const NEAR_OPHIUCHUS: ReadonlySet<IauConstellation> = new Set(['Scorpio', 'Ophiuchus', 'Sagittarius']);
+
 function methodSection(): string {
   return `<section class="card" aria-labelledby="method-title">
   <h2 id="method-title">Méthode et sources</h2>
@@ -754,7 +775,7 @@ function signPage(sign: IauConstellation): StaticPage {
       : {
           q: 'Est-ce que ça change mon horoscope ?',
           a: `Non. L’horoscope ${fr.of} reste fondé sur un calendrier symbolique fixé il y a environ 2 000 ans. Ce site ne fait pas d’astrologie : il te montre seulement devant quelle constellation se trouvait vraiment le Soleil à ta naissance. Pour la plupart des personnes nées ${fr.name}, c’est ${trueMain.the}.`,
-        },
+        },    ...(NEAR_OPHIUCHUS.has(sign) ? [OPHIUCHUS_FAQ] : []),
   ];
 
   const pager = `<nav class="pager" aria-label="Autres signes">
@@ -783,6 +804,7 @@ function signPage(sign: IauConstellation): StaticPage {
   ${mapping}
   ${realDates}
   ${why}
+  ${NEAR_OPHIUCHUS.has(sign) ? ophiuchusSection() : ''}
   ${constellation}
   ${faqSection(faq)}
   ${methodSection()}
@@ -842,7 +864,7 @@ function indexPage(): StaticPage {
     {
       q: 'Pourquoi les vraies dates ne sont pas les dates des horoscopes ?',
       a: `Les dates des horoscopes ont environ 2 000 ans. Depuis, la précession des équinoxes a fait glisser le ciel d’environ un mois. Et les vraies constellations n’ont pas toutes la même taille : le Soleil passe ${longest.idx.length} jours dans ${SIGN_FR[longest.sign].the}, mais seulement ${shortest.idx.length} dans ${SIGN_FR[shortest.sign].the}.`,
-    },
+    },    OPHIUCHUS_FAQ,
   ];
 
   const body = `  <section class="hero">
@@ -872,6 +894,7 @@ function indexPage(): StaticPage {
   </section>
   </div>
   <div class="narrow">
+  ${ophiuchusSection()}
   ${faqSection(faq)}
   ${methodSection()}
   </div>`;

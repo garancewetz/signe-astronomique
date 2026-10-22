@@ -7,7 +7,8 @@ import {
 import type { ReactNode } from 'react';
 import { BodyInfoHud } from '../BodyInfoHud';
 import type { SelectedBody } from '@/features/space-viewport';
-import { Button, MenuRow, cn } from '@/ui';
+import type { IauConstellation } from '@/features/astronomy';
+import { Button, cn } from '@/ui';
 import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 import { useT } from '@/context/useLocale';
 import type { MobileTabKey } from './MobileTabBar';
@@ -25,6 +26,7 @@ interface MobileSheetContentProps {
 
   // Selection
   selectedBody: SelectedBody | null;
+  selectedHoroscope?: IauConstellation;
   onCloseSelection: () => void;
 }
 
@@ -67,6 +69,7 @@ function HomeContent({
 
 function SelectionContent({
   selectedBody,
+  selectedHoroscope,
   onCloseSelection,
 }: MobileSheetContentProps) {
   const { sideViewActive, toggleSideView } = useCockpitDisplay();
@@ -75,6 +78,7 @@ function SelectionContent({
     <BodyInfoHud
       variant="inline"
       selected={selectedBody}
+      horoscopeSign={selectedHoroscope}
       sideViewActive={sideViewActive}
       onToggleSideView={toggleSideView}
       onClose={onCloseSelection}
@@ -83,6 +87,7 @@ function SelectionContent({
 }
 
 function ExploreContent({
+  hasReading,
   onFlySun,
   onFlyMoon,
   onFlyEarth,
@@ -103,7 +108,16 @@ function ExploreContent({
     { key: 'moon', glyph: '☾', glyphClass: 'text-glyph-moon', label: t.mobile.sheet.navigation.moon.label, onClick: onFlyMoon },
     { key: 'earth', glyph: '⊕', glyphClass: 'text-glyph-earth', label: t.mobile.sheet.navigation.earth.label, onClick: onFlyEarth },
   ];
+  const layers = [
+    { key: 'labels', icon: Tag, label: t.mobile.sheet.display.labels.label, active: bodyLabelsEnabled, onClick: toggleBodyLabels },
+    // Drawn around the reader's own sign: waits for a calculation.
+    { key: 'zones', icon: Ruler, label: t.mobile.sheet.display.zones.label, active: zonesEnabled && hasReading, onClick: toggleZones, disabled: !hasReading },
+    { key: 'guides', icon: Globe2, label: t.mobile.sheet.display.guides.label, active: guidesEnabled, onClick: toggleGuides },
+    { key: 'relics', icon: Satellite, label: t.mobile.sheet.display.relics.label, active: satellitesEnabled, onClick: toggleSatellites },
+  ];
 
+  // Compact on purpose: the sheet should leave most of the sky visible
+  // while the user plays with it.
   return (
     <SheetSection>
       <SheetEyebrow>{t.mobile.sheet.navigation.eyebrow}</SheetEyebrow>
@@ -113,51 +127,41 @@ function ExploreContent({
             key={d.key}
             variant="outline"
             onClick={d.onClick}
-            className="h-16 flex-col gap-1 tracking-normal"
+            className="h-11 gap-2 tracking-normal"
           >
-            <span aria-hidden className={cn('text-xl leading-none', d.glyphClass)}>{d.glyph}</span>
+            <span aria-hidden className={cn('text-lg leading-none', d.glyphClass)}>{d.glyph}</span>
             <span className="text-cockpit-md text-slate-200">{d.label}</span>
           </Button>
         ))}
       </div>
 
       <SheetEyebrow>{t.mobile.sheet.display.eyebrow}</SheetEyebrow>
-      <MenuRow
-        kind="toggle"
-        size="lg"
-        label={t.mobile.sheet.display.labels.label}
-        sublabel={t.mobile.sheet.display.labels.sublabel}
-        icon={<Tag className="size-4" strokeWidth={1.35} aria-hidden />}
-        active={bodyLabelsEnabled}
-        onClick={toggleBodyLabels}
-      />
-      <MenuRow
-        kind="toggle"
-        size="lg"
-        label={t.mobile.sheet.display.zones.label}
-        sublabel={t.mobile.sheet.display.zones.sublabel}
-        icon={<Ruler className="size-4" strokeWidth={1.35} aria-hidden />}
-        active={zonesEnabled}
-        onClick={toggleZones}
-      />
-      <MenuRow
-        kind="toggle"
-        size="lg"
-        label={t.mobile.sheet.display.guides.label}
-        sublabel={t.mobile.sheet.display.guides.sublabel}
-        icon={<Globe2 className="size-4" strokeWidth={1.35} aria-hidden />}
-        active={guidesEnabled}
-        onClick={toggleGuides}
-      />
-      <MenuRow
-        kind="toggle"
-        size="lg"
-        label={t.mobile.sheet.display.relics.label}
-        sublabel={t.mobile.sheet.display.relics.sublabel}
-        icon={<Satellite className="size-4" strokeWidth={1.4} aria-hidden />}
-        active={satellitesEnabled}
-        onClick={toggleSatellites}
-      />
+      <div className="grid grid-cols-2 gap-2">
+        {layers.map(({ key, icon: Icon, label, active, onClick, disabled }) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={active}
+            onClick={onClick}
+            disabled={disabled}
+            className={cn(
+              'cockpit-focus flex items-center gap-2 min-h-11 px-3 rounded border text-left',
+              'text-cockpit-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed',
+              active
+                ? 'border-slate-300/60 bg-white/8 text-white'
+                : 'border-border-hud-subtle text-slate-400 hover:text-slate-200',
+            )}
+          >
+            <Icon className="size-4 shrink-0" strokeWidth={1.4} aria-hidden />
+            <span className="min-w-0 leading-tight">{label}</span>
+          </button>
+        ))}
+      </div>
+      {!hasReading && (
+        <p className="px-1 pt-2 text-cockpit-sm leading-snug text-slate-400">
+          {t.sidebar.layers.zonesLocked}
+        </p>
+      )}
     </SheetSection>
   );
 }
@@ -168,7 +172,7 @@ function SheetSection({ children }: { children: ReactNode }) {
 
 function SheetEyebrow({ children }: { children: ReactNode }) {
   return (
-    <div className="px-1 pb-2 text-cockpit-xs uppercase tracking-cockpit-label text-violet-300/70">
+    <div className="px-1 pb-2 text-cockpit-xs tracking-normal text-violet-300/70">
       {children}
     </div>
   );

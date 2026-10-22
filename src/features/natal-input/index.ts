@@ -39,6 +39,7 @@ export {
 } from './shareLink';
 
 export { useShareLink } from './useShareLink';
+export { ADD_BIRTH_TIME_EVENT, requestBirthTime } from './addBirthTime';
 
 export {
   computeReadingFromForm,

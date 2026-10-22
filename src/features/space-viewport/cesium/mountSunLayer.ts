@@ -87,7 +87,9 @@ export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
     ),
     point: {
       pixelSize: 28,
-      color: Color.TRANSPARENT,
+      // Not fully transparent: Cesium skips (and so never picks) a point
+      // whose color and outline alphas are both 0. 1/255 is invisible.
+      color: Color.WHITE.withAlpha(1 / 255),
       // Without this the proxy is depth-clipped behind the celestial sphere
       // and the click-pick misses on certain camera angles.
       disableDepthTestDistance: Number.POSITIVE_INFINITY,
@@ -96,7 +98,7 @@ export function mountSunLayer(viewer: Viewer, opts: MountOptions): () => void {
       ? {
           label: {
             text: `☀ ${displayName}`,
-            font: "10px 'IBM Plex Mono', monospace",
+            font: "12px 'IBM Plex Mono', monospace",
             fillColor: Color.fromCssColorString('#fcd34d').withAlpha(0.9),
             style: LabelStyle.FILL,
             verticalOrigin: VerticalOrigin.CENTER,

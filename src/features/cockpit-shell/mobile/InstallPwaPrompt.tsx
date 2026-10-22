@@ -174,7 +174,7 @@ export function InstallPwaPrompt() {
             <Icon className="size-4 text-violet-200" strokeWidth={1.5} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-cockpit-sm tracking-cockpit-hud uppercase text-accent-title">
+            <p className="text-cockpit-sm tracking-normal text-accent-title">
               {copy.title}
             </p>
             <p className="mt-0.5 text-cockpit-xs text-slate-300 leading-snug">

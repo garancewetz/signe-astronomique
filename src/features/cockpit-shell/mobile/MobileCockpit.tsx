@@ -1,20 +1,23 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
+  ADD_BIRTH_TIME_EVENT,
   MobileCoordinatesModal,
   type CityResult,
   type SearchHistoryEntry,
 } from '@/features/natal-input';
-import type { CelestialReading } from '@/features/astronomy';
+import type { CelestialReading, IauConstellation } from '@/features/astronomy';
 import type { SelectedBody } from '@/features/space-viewport';
 import { ExploreSpacePopover } from '@/features/natal-report';
 import { LegendPanel } from '../LegendPanel';
+import { MapKey } from '../MapKey';
+import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 import { InstallPwaPrompt } from './InstallPwaPrompt';
 import { BottomSheet, type SheetSnap } from './BottomSheet';
 import { MobileHeader } from './MobileHeader';
-import { MobileTabBar, type MobileTabKey } from './MobileTabBar';
+import { MOBILE_TAB_BAR_OFFSET, MobileTabBar, type MobileTabKey } from './MobileTabBar';
 import { MobileSheetContent } from './MobileSheetContent';
-import { MobileSystemDrawer } from './MobileSystemDrawer';
+import { MobileMenuContent } from './MobileMenuContent';
 import { useT } from '@/context/useLocale';
 import { DistanceChip } from '@/ui';
 
@@ -26,10 +29,6 @@ const SHEET_MID_RATIO = 0.55;
 // iOS PWA the sheet's top edge ends up under the dynamic island and the
 // drag handle becomes unreachable.
 const SHEET_TOP_RESERVE_PX = 24;
-// Match the tab bar's `pt-1.5 + h-12 + pb-[max(6px, env(...))]` math, so the
-// sheet's lower edge always sits exactly on the tab bar's top edge.
-const SHEET_BOTTOM_OFFSET =
-  'calc(54px + max(0.375rem, env(safe-area-inset-bottom, 0px)))';
 
 interface MobileCockpitProps {
   /** The 3D canvas content (SpaceView). Rendered full-bleed behind the chrome. */
@@ -58,7 +57,15 @@ interface MobileCockpitProps {
    * computed sky lands.
    */
   hasSharedFromUrl: boolean;
+  /**
+   * True while the welcome card is on screen: it already hosts the birth
+   * form, so the coordinates modal must not also open behind it — closing
+   * the card ("explore the sky") has to land on the sky, not a second form.
+   */
+  welcomeOpen: boolean;
   selectedBody: SelectedBody | null;
+  /** Horoscope sign of the picked body, shown on its card. */
+  selectedHoroscope?: IauConstellation;
   onCloseSelection: () => void;
 
   // Camera fly-to
@@ -66,8 +73,10 @@ interface MobileCockpitProps {
   onFlyMoon: () => void;
   onFlyEarth: () => void;
 
-  /** Opens the true-sign reveal (owned by the parent Cockpit). */
+  /** The result page (owned by the parent Cockpit). */
+  signOpen: boolean;
   onOpenSign: () => void;
+  onCloseSign: () => void;
   /** Localized true sign once computed. */
   signLabel: string | null;
 
@@ -75,8 +84,6 @@ interface MobileCockpitProps {
   // in one place across the desktop and mobile cockpits.
   activeTab: MobileTabKey | null;
   onActiveTabChange: (tab: MobileTabKey | null) => void;
-  /** Bumps each time a new reading is computed — pulses the Analyse tab. */
-  analysisAttention: number;
 
   // Share link
   onShareLink: () => void;
@@ -136,12 +143,11 @@ export function MobileCockpit(props: MobileCockpitProps) {
 
   const [snap, setSnap] = useState<SheetSnap>('peek');
   // Auto-open the coordinates modal on first arrival when there's no
-  // reading to display and no share-link in flight — the calc form is the
-  // only meaningful first action, so we surface it directly instead of
-  // making the user hunt for the CTA. The initializer only runs once on
-  // mount, so dismissing the modal will not re-trigger this branch.
+  // reading, no share-link in flight and no welcome card (which carries its
+  // own form). The initializer only runs once on mount, so dismissing the
+  // modal will not re-trigger this branch.
   const [coordsOpen, setCoordsOpen] = useState(
-    () => !reading && !hasSharedFromUrl,
+    () => !reading && !hasSharedFromUrl && !props.welcomeOpen,
   );
   // A sign computed elsewhere (the welcome card's form) answers the modal's
   // question too: close it so the sky shows once the result is dismissed.
@@ -150,10 +156,18 @@ export function MobileCockpit(props: MobileCockpitProps) {
     setPrevReading(reading);
     if (reading) setCoordsOpen(false);
   }
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const vh = useViewportHeight();
+  const { zonesEnabled, sideViewActive } = useCockpitDisplay();
+
+  // "Add my birth time" from the result opens the birth form; the form
+  // itself unfolds the time field when it mounts.
+  useEffect(() => {
+    const open = () => setCoordsOpen(true);
+    window.addEventListener(ADD_BIRTH_TIME_EVENT, open);
+    return () => window.removeEventListener(ADD_BIRTH_TIME_EVENT, open);
+  }, []);
   const reduceMotion = useReducedMotion();
 
   const headerRef = useRef<HTMLElement>(null);
@@ -200,16 +214,20 @@ export function MobileCockpit(props: MobileCockpitProps) {
   }
 
   const handleTabChange = (next: MobileTabKey | null) => {
-    // "Mon signe" and "Ma naissance" have no sheet content — they open
-    // their dialog directly.
+    // "Mon thème" is a page of its own and "Naissance" a dialog: neither
+    // has sheet content. Any other tab takes over from the result page.
     if (next === 'analysis') {
+      onActiveTabChange(null);
+      setSnap('peek');
       props.onOpenSign();
       return;
     }
+    if (props.signOpen) props.onCloseSign();
     if (next === 'coords') {
       setCoordsOpen(true);
       return;
     }
+    if (next === null && props.signOpen) return;
     onActiveTabChange(next);
     if (next !== null && snap === 'peek') {
       setSnap('mid');
@@ -246,14 +264,13 @@ export function MobileCockpit(props: MobileCockpitProps) {
         date={date}
         city={city}
         coordsOpen={coordsOpen}
-        drawerOpen={drawerOpen}
         onOpenCoords={() => setCoordsOpen(true)}
-        onToggleDrawer={() => setDrawerOpen((v) => !v)}
       />
 
       <div className="relative flex-1 min-h-0 select-none touch-manipulation">
         {children}
-        <DistanceChip label={distanceLabel} />
+        <DistanceChip label={distanceLabel && t.distanceFromEarth(distanceLabel)} />
+        {reading && zonesEnabled && !sideViewActive && <MapKey placement="bottom-left" />}
       </div>
 
       <BottomSheet
@@ -262,12 +279,26 @@ export function MobileCockpit(props: MobileCockpitProps) {
         peekPx={peekPx}
         midPx={midPx}
         fullPx={fullPx}
-        bottomOffset={SHEET_BOTTOM_OFFSET}
+        bottomOffset={MOBILE_TAB_BAR_OFFSET}
         visible={showSheet}
         onClose={sheetHasContext ? handleSheetClose : undefined}
         ariaLabel={t.mobile.cockpit.mainAriaLabel}
       >
         <div id="mobile-sheet" className="h-full">
+          {activeTab === 'menu' ? (
+            <MobileMenuContent
+              onOpenLegend={() => setLegendOpen(true)}
+              onOpenExploreSpace={() => setExploreOpen(true)}
+              onShareLink={props.onShareLink}
+              shareCopied={props.shareCopied}
+              canShareLink={props.canShareLink}
+              onExportView={props.onExportView}
+              exportingView={props.exportingView}
+              onExportPdf={props.onExportPdf}
+              exportingPdf={props.exportingPdf}
+              canExportReport={props.canExportReport}
+            />
+          ) : (
           <MobileSheetContent
             activeTab={activeTab}
             hasReading={hasReading}
@@ -276,19 +307,20 @@ export function MobileCockpit(props: MobileCockpitProps) {
             onFlyMoon={props.onFlyMoon}
             onFlyEarth={props.onFlyEarth}
             selectedBody={selectedBody}
+            selectedHoroscope={props.selectedHoroscope}
             onCloseSelection={() => {
               props.onCloseSelection();
               setSnap('peek');
             }}
           />
+          )}
         </div>
       </BottomSheet>
 
       <MobileTabBar
-        activeTab={activeTab}
+        activeTab={props.signOpen ? 'analysis' : activeTab}
         onTabChange={handleTabChange}
         hasReading={hasReading}
-        analysisAttention={props.analysisAttention}
         signLabel={props.signLabel}
       />
 
@@ -305,21 +337,6 @@ export function MobileCockpit(props: MobileCockpitProps) {
         searchHistory={searchHistory}
         onRecordSearch={onRecordSearch}
         onRemoveSearch={onRemoveSearch}
-      />
-
-      <MobileSystemDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onOpenLegend={() => setLegendOpen(true)}
-        onOpenExploreSpace={() => setExploreOpen(true)}
-        onShareLink={props.onShareLink}
-        shareCopied={props.shareCopied}
-        canShareLink={props.canShareLink}
-        onExportView={props.onExportView}
-        exportingView={props.exportingView}
-        onExportPdf={props.onExportPdf}
-        exportingPdf={props.exportingPdf}
-        canExportReport={props.canExportReport}
       />
 
       <AnimatePresence>

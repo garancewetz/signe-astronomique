@@ -612,3 +612,66 @@ export function formatRA(hours: number): string {
   const s = Math.round(((hours - h) * 60 - m) * 60);
   return `${h.toString().padStart(2,'0')}h ${m.toString().padStart(2,'0')}m ${s.toString().padStart(2,'0')}s`;
 }
+
+// ─── Natal chart: each placement, horoscope sign vs. true constellation ─────
+
+export type PlacementId = 'sun' | 'moon' | 'ascendant' | PlanetId;
+
+export interface NatalPlacement {
+  id: PlacementId;
+  glyph: string;
+  /** Sign a horoscope gives (tropical, 30° per sign). */
+  horoscope: IauConstellation;
+  /** Constellation actually behind it in the sky (IAU boundaries). */
+  sky: IauConstellation;
+}
+
+/**
+ * The placements an astrologer reads, in the usual order (Sun, Moon,
+ * Ascendant, then planets), each with the horoscope sign and the real
+ * constellation. Ascendant first needs the birth time — the caller decides
+ * whether to show it.
+ */
+export function natalPlacements(reading: CelestialReading): NatalPlacement[] {
+  const fromBody = (b: CelestialBody): NatalPlacement => ({
+    id: b.id,
+    glyph: b.glyph,
+    horoscope: tropicalSignFromLongitude(b.eclipticLongitude),
+    sky: b.constellation,
+  });
+  const [sun, moon, ...planets] = reading.bodies;
+  return [
+    fromBody(sun),
+    fromBody(moon),
+    {
+      id: 'ascendant',
+      glyph: 'AC',
+      horoscope: tropicalSignFromLongitude(reading.ascendantLongitude),
+      sky: reading.ascendantConstellation,
+    },
+    ...planets.map(fromBody),
+  ];
+}
+
+// ─── Framing: the middle of the true sign's stretch along the ecliptic ─────
+
+/**
+ * Middle of the official stretch of the Sun's constellation, on the
+ * ecliptic (equinox of date). The sky is framed on it rather than on the
+ * Sun: born near a boundary, the Sun sits at one end of the stretch and a
+ * Sun-centred view cuts the other end off.
+ */
+export function signZoneCenter(reading: CelestialReading): {
+  eclipticLongitude: number;
+  raHours: number;
+  decDeg: number;
+} {
+  const i = IAU_BOUNDARIES.findIndex((b) => b.constellation === reading.trueConstellation);
+  const start = IAU_BOUNDARIES[i].start;
+  const nextStart = IAU_BOUNDARIES[(i + 1) % IAU_BOUNDARIES.length].start;
+  const end = nextStart > start ? nextStart : nextStart + 360;
+  // Boundaries are sidereal (J2000): back to the equinox of date.
+  const lon = norm360((start + end) / 2 + precessionOffset(reading.julianDay));
+  const eq = eclipticToEquatorial(lon, 0, reading.obliquity);
+  return { eclipticLongitude: lon, raHours: eq.ra, decDeg: eq.dec };
+}

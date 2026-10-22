@@ -186,7 +186,7 @@ export function mountMoonLayer(viewer: Viewer, opts: MountOptions): () => void {
         position: moonPos,
         label: {
           text: `☾ ${displayName}`,
-          font: "10px 'IBM Plex Mono', monospace",
+          font: "12px 'IBM Plex Mono', monospace",
           fillColor: moonColor.withAlpha(0.95),
           style: LabelStyle.FILL,
           verticalOrigin: VerticalOrigin.CENTER,

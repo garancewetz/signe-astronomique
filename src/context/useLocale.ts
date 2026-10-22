@@ -1,19 +1,6 @@
-import { useContext } from 'react';
-import type { Copy } from '../i18n';
-import {
-  LocaleCtx,
-  type LocaleContextValue,
-} from './localeContextInternal';
+import { COPY, type Copy } from '../i18n';
 
-export function useLocale(): LocaleContextValue {
-  const v = useContext(LocaleCtx);
-  if (!v) {
-    throw new Error('useLocale must be called inside <LocaleProvider>');
-  }
-  return v;
-}
-
-/** Shorthand for the active dictionary. */
+/** The UI copy (French — the only language of the site). */
 export function useT(): Copy {
-  return useLocale().t;
+  return COPY;
 }

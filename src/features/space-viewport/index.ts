@@ -32,7 +32,5 @@ export {
   SPACE_AGE_START_YEAR,
   isSilentEra,
   relicsAvailableOn,
-  satelliteBlurb,
-  satelliteName,
   type SatelliteRelic,
 } from './data/satellitesDB';

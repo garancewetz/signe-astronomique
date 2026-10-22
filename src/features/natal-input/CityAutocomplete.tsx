@@ -313,7 +313,7 @@ export function CityAutocomplete({ value, onSelect, inputId }: Props) {
         aria-live="polite"
         className={
           errorMsg
-            ? 'mt-1 text-cockpit-xs tracking-cockpit-label text-rose-300/90'
+            ? 'mt-1 text-cockpit-xs tracking-normal text-rose-300/90'
             : 'sr-only'
         }
       >

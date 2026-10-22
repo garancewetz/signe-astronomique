@@ -5,13 +5,24 @@ import {
   sunSigns,
   type CelestialReading,
 } from '@/features/astronomy';
-import { useLocale, useT } from '@/context/useLocale';
+import { useT } from '@/context/useLocale';
 import { WELCOME_EVENTS } from './welcomeEvents';
 
-/** Birth-time formatter pinned to the birth location's timezone. Falls
- *  back to UTC (with a visible suffix) when the timezone is unknown. */
-function formatNatalDate(date: Date, timezone: string | undefined, intlLocale: string): string {
+/** Birth date (and time, when given) pinned to the birth location's
+ *  timezone. Falls back to UTC (with a visible suffix) when the timezone
+ *  is unknown. An unknown time is computed at noon: never show "12:00". */
+function formatNatalDate(
+  date: Date,
+  timezone: string | undefined,
+  intlLocale: string,
+  timeKnown: boolean,
+  timeUnknownLabel: string,
+): string {
   const tz = timezone ?? 'UTC';
+  if (!timeKnown) {
+    const day = new Intl.DateTimeFormat(intlLocale, { dateStyle: 'medium', timeZone: tz }).format(date);
+    return `${day}, ${timeUnknownLabel}`;
+  }
   const fmt = new Intl.DateTimeFormat(intlLocale, {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -22,7 +33,9 @@ function formatNatalDate(date: Date, timezone: string | undefined, intlLocale: s
 
 interface HudFrameProps {
   reading: CelestialReading | null;
-  /** Opens the MON SIGNE panel — wired only when a natal reading is active. */
+  /** False when the birth time was left out (computed at noon). */
+  birthTimeKnown: boolean;
+  /** Opens the result panel — wired only when a natal reading is active. */
   onOpenSummary?: () => void;
 }
 
@@ -34,16 +47,16 @@ interface HudFrameProps {
  */
 export const HudFrame = memo(function HudFrame({
   reading,
+  birthTimeKnown,
   onOpenSummary,
 }: HudFrameProps) {
   const t = useT();
-  const { locale } = useLocale();
   // Once per mount: the Sun changes constellation at most once a day.
   const today = useMemo(() => sunSigns(new Date()), []);
 
   if (!reading) {
-    const horoscope = loreShortName(today.tropical, locale);
-    const sky = loreShortName(today.constellation, locale);
+    const horoscope = loreShortName(today.tropical);
+    const sky = loreShortName(today.constellation);
     return (
       <header
         role="banner"
@@ -77,8 +90,8 @@ export const HudFrame = memo(function HudFrame({
   }
 
   const mode = t.hudFrame.modeNatal;
-  const main = `☉ ${loreName(reading.trueConstellation, locale)}`;
-  const sub = [reading.input.placeLabel, formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale)]
+  const main = `☉ ${loreName(reading.trueConstellation)}`;
+  const sub = [reading.input.placeLabel, formatNatalDate(reading.input.date, reading.input.timezone, t.intlLocale, birthTimeKnown, t.signReveal.timeUnknown)]
     .filter(Boolean)
     .join(' · ');
 
@@ -87,14 +100,14 @@ export const HudFrame = memo(function HudFrame({
   const centerInner = (
     <div className="min-w-0 max-w-full text-center leading-tight">
       <div className="flex items-baseline justify-center gap-2.5 min-w-0">
-        <span className="shrink-0 text-cockpit-sm tracking-cockpit-label uppercase text-accent-label">
+        <span className="shrink-0 text-cockpit-sm text-slate-400">
           {mode}
         </span>
         <span className="text-cockpit-md tracking-wide text-slate-100 truncate min-w-0">
           {main}
         </span>
       </div>
-      <div className="text-cockpit-xs tracking-wide text-slate-500 truncate mt-0.5">
+      <div className="text-cockpit-sm text-slate-400 truncate mt-0.5">
         {sub}
       </div>
     </div>

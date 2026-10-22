@@ -13,14 +13,10 @@ import {
 } from 'cesium';
 import { gstime, propagate, type SatRec } from 'satellite.js';
 import type { ParsedRelic } from '../useSatelliteTracker';
-import { satelliteBlurb, satelliteName } from '../data/satellitesDB';
-import type { Locale } from '@/i18n';
 
 interface MountOptions {
   /** Filtered + parsed relics from useSatelliteTracker. */
   satellites: ParsedRelic[];
-  /** Active locale — drives the label and click-payload language. */
-  locale: Locale;
   /**
    * Time source for propagation. Called every frame in live mode, once at
    * mount in fixed mode.
@@ -69,7 +65,7 @@ export function mountSatellitesLayer(
   viewer: Viewer,
   opts: MountOptions,
 ): () => void {
-  const { satellites, locale, getTime, live, fadeInMs = 0, fadeInDelayMs = 0 } = opts;
+  const { satellites, getTime, live, fadeInMs = 0, fadeInDelayMs = 0 } = opts;
   if (satellites.length === 0) return () => {};
 
   const created: Entity[] = [];
@@ -105,8 +101,8 @@ export function mountSatellitesLayer(
 
   for (const sat of satellites) {
     const { relic, satrec } = sat;
-    const displayName = satelliteName(relic, locale);
-    const displayBlurb = satelliteBlurb(relic, locale);
+    const displayName = relic.name;
+    const displayBlurb = relic.blurb;
 
     // Per-satellite cache: the last position SGP4 ever returned successfully.
     // If SGP4 fails (numerical decay, far-from-epoch propagation, …) we
