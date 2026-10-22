@@ -42,7 +42,7 @@ export function CockpitFallback({
       aria-live="assertive"
       className="max-w-md w-full px-6 py-7 rounded-panel text-center space-y-4"
     >
-      <div className="text-cockpit-sm tracking-cockpit-label text-accent-label">
+      <div className="text-cockpit-sm tracking-normal text-accent-label">
         {t.errorBoundary.label}
       </div>
       <h1 className="text-cockpit-xl tracking-cockpit-tight text-accent-title">

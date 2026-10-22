@@ -59,19 +59,19 @@ export function ExpandedCameraSection({ onFlySun, onFlyMoon, onFlyEarth }: Camer
       className="px-3 pt-2 pb-2 border-b border-border-hud-faint"
     >
       <div
-        className="px-1 pb-2 text-cockpit-xs tracking-cockpit-label uppercase
+        className="px-1 pb-2 text-cockpit-xs tracking-normal
                    text-slate-500"
       >
         {t.sidebar.cameraSectionLabel}
       </div>
       <div className="grid grid-cols-3 gap-1.5">
-        {destinations.map(({ key, glyph, glyphClass, tooltip, ariaLabel }) => (
+        {destinations.map(({ key, glyph, glyphClass, label, tooltip, ariaLabel }) => (
           <TooltipWrap key={key} text={tooltip} placement="bottom">
             <IconButton
               size="lg"
               onClick={handlers[key]}
               aria-label={ariaLabel}
-              className="w-full"
+              className="w-full gap-1.5"
             >
               <span
                 aria-hidden="true"
@@ -79,6 +79,7 @@ export function ExpandedCameraSection({ onFlySun, onFlyMoon, onFlyEarth }: Camer
               >
                 {glyph}
               </span>
+              <span aria-hidden="true" className="text-cockpit-md text-slate-300">{label}</span>
             </IconButton>
           </TooltipWrap>
         ))}

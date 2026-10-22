@@ -1,8 +1,8 @@
-// Public API for the natal-report feature: the true-sign reveal, the modal
+// Public API for the natal-report feature: the true-sign reveal, the panel
 // that hosts it, and the export pipeline.
 
 export { SignReveal } from './SignReveal';
-export { SignRevealModal } from './SignRevealModal';
+export { SIGN_PANEL_PX, SignRevealPanel } from './SignRevealPanel';
 export { OffscreenFullReport } from './OffscreenFullReport';
 export { ExploreSpacePopover, InfoCircleIcon } from './ExploreSpacePopover';
 

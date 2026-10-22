@@ -66,7 +66,7 @@ export function PanelShell({
           {subtitle && (
             <div
               className={cn(
-                'text-cockpit-sm tracking-cockpit-label text-accent-label mb-0.5',
+                'text-cockpit-sm tracking-normal text-accent-label mb-0.5',
                 subtitleClassName,
               )}
             >

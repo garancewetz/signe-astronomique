@@ -9,6 +9,7 @@ import {
   type Entity,
   type Viewer,
 } from 'cesium';
+import { COPY } from '@/i18n';
 import {
   CELESTIAL_SPHERE_KM,
   getIauBoundaries,
@@ -39,7 +40,7 @@ interface MountOptions {
   trueConstellation: IauConstellation;
   /** Sun's sidereal (ICRS) ecliptic longitude: marked on the band, under the Sun. */
   sunLongitude: number;
-  /** Locale-aware constellation label. */
+  /** Constellation label. */
   nameOf: (c: IauConstellation) => string;
 }
 
@@ -67,8 +68,21 @@ function eclipticToEcef(lonDeg: number, latDeg: number, gmstRad: number): Cartes
  */
 export function mountZodiacBand(viewer: Viewer, opts: MountOptions): () => void {
   const { gmstRad, trueConstellation, sunLongitude, nameOf } = opts;
+  const zonePrefix = COPY.sky.zonePrefix;
   const created: Entity[] = [];
   const boundaries = getIauBoundaries();
+
+  // The reader's own label goes above the ecliptic (the Earth sits just
+  // below the Sun in the framing) and in the half of the stretch away from
+  // the Sun, so it never lands on the Earth or the Sun. Neighbours keep
+  // the middle, below the band.
+  const labelPosition = (start: number, end: number, isTrue: boolean) => {
+    if (!isTrue) return eclipticToEcef((start + end) / 2, LABEL_LAT_DEG, gmstRad);
+    const sun = sunLongitude < start ? sunLongitude + 360 : sunLongitude;
+    const sunInFirstHalf = sun - start < (end - start) / 2;
+    const lon = start + (end - start) * (sunInFirstHalf ? 0.75 : 0.25);
+    return eclipticToEcef(lon, -LABEL_LAT_DEG, gmstRad);
+  };
 
   boundaries.forEach((b, i) => {
     const next = boundaries[(i + 1) % boundaries.length];
@@ -110,10 +124,12 @@ export function mountZodiacBand(viewer: Viewer, opts: MountOptions): () => void 
     // Name under the middle of the stretch.
     created.push(
       viewer.entities.add({
-        position: eclipticToEcef((b.start + end) / 2, LABEL_LAT_DEG, gmstRad),
+        position: labelPosition(b.start, end, isTrue),
         label: {
-          text: nameOf(b.constellation).toUpperCase(),
-          font: isTrue ? "600 12px 'IBM Plex Mono', monospace" : "11px 'IBM Plex Mono', monospace",
+          // "Zone …" on the reader's stretch: the cyan name next to the star
+          // figure is the drawing, this one is the official area.
+          text: isTrue ? `${zonePrefix} ${nameOf(b.constellation)}` : nameOf(b.constellation),
+          font: isTrue ? "600 13px 'IBM Plex Mono', monospace" : "12px 'IBM Plex Mono', monospace",
           fillColor: isTrue ? GOLD : GREY.withAlpha(0.9),
           style: LabelStyle.FILL,
           verticalOrigin: VerticalOrigin.CENTER,

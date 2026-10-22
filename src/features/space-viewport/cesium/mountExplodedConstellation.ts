@@ -17,7 +17,6 @@ import {
   type CatalogStar,
 } from '@/features/astronomy';
 import { raDecToEcef } from './skyVector';
-import type { Locale } from '@/i18n';
 
 const MAGNITUDE_LIMIT = 6.0;
 
@@ -42,8 +41,6 @@ interface MountOptions {
   constellationAbbr: string;
   /** GMST in radians for the ICRS→ECEF rotation. */
   gmstRad: number;
-  /** Active locale for the constellation label. */
-  locale: Locale;
 }
 
 /**
@@ -133,7 +130,7 @@ export function mountExplodedConstellation(
   if (brightest != null) {
     const localized = abbrToZodiacal(constellation.abbreviation);
     const labelText = localized
-      ? loreName(localized, opts.locale).toUpperCase()
+      ? loreName(localized).toUpperCase()
       : constellation.name.toUpperCase();
     created.push(
       viewer.entities.add({

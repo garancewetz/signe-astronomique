@@ -11,7 +11,7 @@ interface UseRevealSequenceArgs {
 
 export interface RevealSequence {
   /**
-   * Aim the camera at the Sun, force body labels on for ~3 s so the
+   * Frame the true sign's stretch, force body labels on for ~3 s so the
    * constellation name is painted on the sphere, then restore the previous
    * labels value.
    */
@@ -40,7 +40,7 @@ export function useRevealSequence({
     }
     labelsRestoreRef.current = bodyLabelsEnabled;
     setBodyLabelsEnabled(true);
-    spaceViewRef.current?.flyToSun();
+    spaceViewRef.current?.flyToSign();
     labelTimerRef.current = window.setTimeout(() => {
       labelTimerRef.current = null;
       if (labelsRestoreRef.current !== null) {

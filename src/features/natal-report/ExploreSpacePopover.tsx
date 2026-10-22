@@ -95,7 +95,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
           <div>
             <div
               id="explore-space-title"
-              className="text-cockpit-lg tracking-cockpit-label text-accent-label"
+              className="text-cockpit-lg tracking-normal text-accent-label"
             >
               {t.exploreSpace.title}
             </div>
@@ -107,7 +107,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
             type="button"
             onClick={onClose}
             className="cockpit-focus shrink-0 inline-flex items-center gap-2 h-9 px-2.5 rounded-panel border border-border-hud-subtle
-                       text-slate-400 hover:text-white hover:bg-violet-500/15 transition text-cockpit-sm tracking-cockpit-wide"
+                       text-slate-400 hover:text-white hover:bg-violet-500/15 transition text-cockpit-sm tracking-normal"
             aria-label={t.exploreSpace.closeAriaLabel}
           >
             <X className="size-3.5 shrink-0" strokeWidth={1.4} aria-hidden />
@@ -118,7 +118,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-5">
           {t.exploreSpace.sections.map((section) => (
             <section key={section.title}>
-              <h3 className="text-cockpit-xs tracking-cockpit-hud text-accent-label/75 mb-2">
+              <h3 className="text-cockpit-xs tracking-normal text-accent-label/75 mb-2">
                 {section.title}
               </h3>
               <ul className="space-y-1.5">
@@ -149,7 +149,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
           className="shrink-0 flex items-center justify-between gap-3
                      px-4 py-2.5 border-t border-border-hud-muted"
         >
-          <span className="text-cockpit-xs tracking-cockpit-hud uppercase text-slate-500">
+          <span className="text-cockpit-xs tracking-normal text-slate-500">
             {t.exploreSpace.footerCredit}
           </span>
           <div className="flex items-center gap-1">
@@ -194,7 +194,7 @@ export function ExploreSpacePopover({ onClose }: Props) {
                   className="pointer-events-none absolute bottom-full right-0 mb-1.5
                              whitespace-nowrap rounded border border-border-hud-subtle
                              bg-surface-raised/95 px-1.5 py-0.5
-                             text-cockpit-xs tracking-cockpit-hud uppercase text-violet-200
+                             text-cockpit-xs tracking-normal text-violet-200
                              shadow-cockpit-sheet"
                 >
                   {t.exploreSpace.emailCopiedBadge}

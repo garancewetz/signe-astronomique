@@ -10,6 +10,8 @@ export {
   precessionOffset,
   zodiacDriftDegrees,
   computeReading,
+  natalPlacements,
+  signZoneCenter,
   sunSigns,
   formatRA,
   PLANETS_META,
@@ -17,6 +19,8 @@ export {
   type CelestialReading,
   type IauConstellation,
   type MoonPhaseKey,
+  type NatalPlacement,
+  type PlacementId,
 } from './astroEngine';
 
 export {

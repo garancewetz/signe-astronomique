@@ -123,7 +123,7 @@ export const MenuRow = forwardRef<HTMLButtonElement, MenuRowProps>(
             {label}
           </span>
           {sublabel && (
-            <span className="block truncate text-cockpit-xs tracking-cockpit-tight uppercase text-slate-500">
+            <span className="block truncate text-cockpit-xs tracking-cockpit-tight text-slate-500">
               {sublabel}
             </span>
           )}

@@ -4,10 +4,8 @@ import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 import App from './App.tsx'
 import { CockpitFallback, ErrorBoundary } from '@/features/cockpit-shell'
-import { LocaleProvider } from './context/LocaleContext'
 import { MOBILE_QUERY } from './ui/useMobileLayout'
 import { WELCOME_EVENTS } from '@/features/cockpit-shell/welcomeEvents'
-import { LOCALE_STORAGE_KEY } from './context/localeContextInternal'
 import { loreShortName, sunSigns } from '@/features/astronomy'
 
 registerSW({ immediate: true })
@@ -39,11 +37,9 @@ console.log(
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <LocaleProvider>
-      <ErrorBoundary fallback={<CockpitFallback />}>
-        <App />
-      </ErrorBoundary>
-    </LocaleProvider>
+    <ErrorBoundary fallback={<CockpitFallback />}>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )
 
@@ -100,7 +96,6 @@ function wireWelcomeOverlay() {
   document.addEventListener('keydown', onKeydown)
 
   fillToday()
-  wireLanguageToggle(el)
 
   // On mobile the card is a real modal: move focus into it so keyboard /
   // screen-reader users land on the dismiss control.
@@ -126,79 +121,20 @@ function wireDesktopCard(el: HTMLElement) {
     if (e.key === 'Escape') close()
   })
   fillToday()
-  wireLanguageToggle(el)
 }
 
 // Today's horoscope sign vs the constellation really behind the Sun — the
-// site's claim, proven on today's date before anyone types theirs. Filled
-// before wireLanguageToggle caches the French markup, with the English in
-// data-en like the rest of the card. Names come from our own lore table.
+// site's claim, proven on today's date before anyone types theirs. Names
+// come from our own lore table.
 function fillToday() {
   const p = document.getElementById('seo-splash-today')
   if (!p) return
   const { tropical, constellation } = sunSigns(new Date())
-  const name = (lang: 'fr' | 'en', c: typeof tropical) => `<strong>${loreShortName(c, lang)}</strong>`
-  if (tropical === constellation) {
-    p.innerHTML = `Aujourd’hui, le Soleil est devant ${name('fr', constellation)} : pour une fois, l’horoscope a raison.`
-    p.dataset.en = `Today the Sun is in front of ${name('en', constellation)}: for once, horoscopes are right.`
-  } else {
-    p.innerHTML = `Aujourd’hui, l’horoscope dit ${name('fr', tropical)}. Le ciel dit ${name('fr', constellation)}.`
-    p.dataset.en = `Today, horoscopes say ${name('en', tropical)}. The sky says ${name('en', constellation)}.`
-  }
+  const name = (c: typeof tropical) => `<strong>${loreShortName(c)}</strong>`
+  p.innerHTML = tropical === constellation
+    ? `Aujourd’hui, le Soleil est devant ${name(constellation)} : pour une fois, l’horoscope a raison.`
+    : `Aujourd’hui, l’horoscope dit ${name(tropical)}. Le ciel dit ${name(constellation)}.`
   p.hidden = false
-}
-
-// FR is the raw-HTML default; this lets a visitor flip the overlay to English
-// on demand. The EN copy lives in data-en attributes (and data-en-aria for the
-// close button) so it never ships as indexable French page text — we only swap
-// it into the DOM when EN is picked. App-wide language stays controlled by the
-// in-cockpit switcher too; this toggle also drives it via WELCOME_EVENTS.lang.
-function wireLanguageToggle(root: HTMLElement) {
-  const frBtn = document.getElementById('seo-lang-fr')
-  const enBtn = document.getElementById('seo-lang-en')
-  const closeBtn = document.getElementById('seo-splash-close')
-  if (!frBtn || !enBtn) return
-
-  const content = root.querySelector<HTMLElement>('.seo-splash__inner')
-  const nodes = root.querySelectorAll<HTMLElement>('[data-en]')
-  // Cache the original French markup so EN ↔ FR is reversible.
-  nodes.forEach((n) => {
-    n.dataset.fr = n.innerHTML
-  })
-  const frAria = closeBtn?.getAttribute('aria-label') ?? ''
-
-  const setLang = (lang: 'fr' | 'en') => {
-    nodes.forEach((n) => {
-      const next = lang === 'en' ? n.dataset.en : n.dataset.fr
-      if (next != null) n.innerHTML = next
-    })
-    if (closeBtn) {
-      const aria = lang === 'en' ? closeBtn.dataset.enAria : frAria
-      if (aria) closeBtn.setAttribute('aria-label', aria)
-    }
-    // Mark the content's language so assistive tech reads it correctly — the
-    // <main> carries lang="fr" in the raw HTML, so update it there.
-    content?.setAttribute('lang', lang)
-    frBtn.classList.toggle('is-active', lang === 'fr')
-    enBtn.classList.toggle('is-active', lang === 'en')
-    frBtn.setAttribute('aria-pressed', String(lang === 'fr'))
-    enBtn.setAttribute('aria-pressed', String(lang === 'en'))
-  }
-  // The card now holds the React birth form: keep both in the same language.
-  const pick = (lang: 'fr' | 'en') => {
-    setLang(lang)
-    window.dispatchEvent(new CustomEvent(WELCOME_EVENTS.lang, { detail: lang }))
-  }
-
-  frBtn.addEventListener('click', () => pick('fr'))
-  enBtn.addEventListener('click', () => pick('en'))
-
-  // Returning English visitors: open the card in English too.
-  try {
-    if (window.localStorage.getItem(LOCALE_STORAGE_KEY) === 'en') setLang('en')
-  } catch {
-    // Storage blocked (private mode): stay on the French default.
-  }
 }
 
 wireWelcomeOverlay()

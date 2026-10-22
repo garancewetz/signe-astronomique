@@ -55,6 +55,7 @@ export function SystemDock({
         )}
       >
         <SystemButton
+          label={collapsed ? undefined : t.systemDock.legend.short}
           tooltip={t.systemDock.legend.tooltip}
           ariaLabel={t.systemDock.legend.ariaLabel}
           active={legendActive}
@@ -64,6 +65,7 @@ export function SystemDock({
           <List className="size-4" strokeWidth={1.4} aria-hidden />
         </SystemButton>
         <SystemButton
+          label={collapsed ? undefined : t.systemDock.explore.short}
           tooltip={t.systemDock.explore.tooltip}
           ariaLabel={t.systemDock.explore.ariaLabel}
           active={exploreOpen}
@@ -73,6 +75,7 @@ export function SystemDock({
           <InfoCircleIcon />
         </SystemButton>
         <SystemButton
+          label={collapsed ? undefined : t.systemDock.fullscreen.short}
           tooltip={fullscreenActive ? t.systemDock.fullscreen.tooltipExit : t.systemDock.fullscreen.tooltipEnter}
           ariaLabel={fullscreenActive ? t.systemDock.fullscreen.tooltipExit : t.systemDock.fullscreen.tooltipEnter}
           active={fullscreenActive}
@@ -86,6 +89,7 @@ export function SystemDock({
           )}
         </SystemButton>
         <SystemButton
+          label={collapsed ? undefined : t.systemDock.exportView.short}
           tooltip={t.systemDock.exportView.tooltip}
           ariaLabel={t.systemDock.exportView.ariaLabel}
           onClick={onExportView}
@@ -98,6 +102,7 @@ export function SystemDock({
           )}
         </SystemButton>
         <SystemButton
+          label={collapsed ? undefined : t.systemDock.exportPdf.short}
           tooltip={
             canExportReport
               ? exportingPdf
@@ -128,6 +133,8 @@ export function SystemDock({
 
 interface SystemButtonProps {
   children: ReactNode;
+  /** Short visible caption under the icon (expanded sidebar only). */
+  label?: string;
   tooltip: string;
   ariaLabel: string;
   onClick: () => void;
@@ -138,6 +145,7 @@ interface SystemButtonProps {
 
 function SystemButton({
   children,
+  label,
   tooltip,
   ariaLabel,
   onClick,
@@ -155,9 +163,14 @@ function SystemButton({
         aria-label={ariaLabel}
         {...(active !== undefined && { 'aria-pressed': active })}
         disabled={disabled}
-        className="w-full duration-200"
+        className={cn('w-full duration-200', label && 'h-auto py-1.5 flex-col gap-1')}
       >
         {children}
+        {label && (
+          <span aria-hidden="true" className="text-cockpit-xs leading-none text-slate-400">
+            {label}
+          </span>
+        )}
       </IconButton>
     </TooltipWrap>
   );

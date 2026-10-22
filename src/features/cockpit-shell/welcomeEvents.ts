@@ -9,6 +9,4 @@ export const WELCOME_EVENTS = {
   removed: 'seo-splash:removed',
   /** React → card (desktop): show it on demand, from the header's "Pourquoi ?". */
   open: 'seo-splash:open',
-  /** Card → React: the card's FR/EN toggle was used (detail: 'fr' | 'en'). */
-  lang: 'seo-splash:lang',
 } as const;

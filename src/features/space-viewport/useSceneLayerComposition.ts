@@ -2,7 +2,7 @@ import { useEffect, type MutableRefObject } from 'react';
 import { JulianDate, type Viewer } from 'cesium';
 import type { CelestialReading } from '@/features/astronomy';
 import type { IauConstellation, PlanetId } from '@/features/astronomy';
-import { gmstRadians } from '@/features/astronomy';
+import { gmstRadians, signZoneCenter } from '@/features/astronomy';
 import { mountStarsLayer } from './cesium/mountStarsLayer';
 import { mountSunLayer } from './cesium/mountSunLayer';
 import { mountMoonLayer } from './cesium/mountMoonLayer';
@@ -154,11 +154,15 @@ export function useSceneLayerComposition({
     // Camera animation: only when a natal reading arrives or its date
     // changes. Minute-by-minute "live" ticks must not touch the camera,
     // otherwise it would jump every minute.
+    // Framed on the middle of the sign's stretch, not the Sun: born near a
+    // boundary, a Sun-centred view would cut the other end of the stretch.
     if (isFirstJump || isReadingChange) {
+      const zone = signZoneCenter(active);
       flyToCelestialDirection(viewer, {
-        raHours: active.sunRA,
-        decDeg: active.sunDec,
+        raHours: zone.raHours,
+        decDeg: zone.decDeg,
         gmstRad,
+        ecliptic: { longitudeDeg: zone.eclipticLongitude, obliquityDeg: active.obliquity },
       });
     }
 

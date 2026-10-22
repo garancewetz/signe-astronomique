@@ -1,14 +1,7 @@
 import { Cartesian3, type Viewer } from 'cesium';
-import type { Locale } from '@/i18n';
 import { EARTH_RADIUS_M, formatDistanceKmOrAU } from '@/features/astronomy';
 
 interface AttachOptions {
-  /**
-   * Read the current locale on every tick. Implemented as a getter rather
-   * than a static value because the listener is installed once for the
-   * viewer's lifetime and must observe locale switches without resubscribing.
-   */
-  getLocale: () => Locale;
   /**
    * Fired only when the *displayed* label changes — the caller can use this
    * to drive React state without paying a re-render per frame.
@@ -26,13 +19,13 @@ interface AttachOptions {
  */
 export function attachCameraDistanceListener(
   viewer: Viewer,
-  { getLocale, onLabel }: AttachOptions,
+  { onLabel }: AttachOptions,
 ): () => void {
   let lastLabel: string | null = null;
   return viewer.scene.preRender.addEventListener(() => {
     const geocentricM = Cartesian3.magnitude(viewer.camera.position);
     const altKm = Math.max(0, geocentricM - EARTH_RADIUS_M) / 1000;
-    const label = formatDistanceKmOrAU(altKm, getLocale());
+    const label = formatDistanceKmOrAU(altKm);
     if (label !== lastLabel) {
       lastLabel = label;
       onLabel(label);

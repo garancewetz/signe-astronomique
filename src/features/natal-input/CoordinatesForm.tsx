@@ -1,10 +1,11 @@
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { CalendarDays, ChevronRight, Minus, Plus, X } from 'lucide-react';
 import { CityAutocomplete, type CityResult } from './CityAutocomplete';
 import { Field, Input, cn } from '@/ui';
 import type { CelestialReading } from '@/features/astronomy';
 import { computeReadingFromForm } from './computeReadingFromForm';
+import { ADD_BIRTH_TIME_EVENT, takeBirthTimeRequest } from './addBirthTime';
 import {
   signatureOf,
   type SearchHistoryEntry,
@@ -31,6 +32,8 @@ interface CoordinatesFormProps {
   title?: string;
   /** Hide the /signes/ link and the history chips (welcome card). */
   bare?: boolean;
+  /** Hide the /signes/ link only (the result panel already links to it). */
+  hideAllSignsLink?: boolean;
   /** Recent searches surfaced as one-click chips below the form. */
   history?: SearchHistoryEntry[];
   onRecordHistory?: (entry: { date: string; time: string; city: CityResult }) => void;
@@ -52,6 +55,7 @@ export function CoordinatesForm({
   className,
   title,
   bare,
+  hideAllSignsLink,
   history,
   onRecordHistory,
   onRemoveHistory,
@@ -66,6 +70,28 @@ export function CoordinatesForm({
   const cityId = useId();
   const detailsId = useId();
   const titleId = useId();
+
+  // "Add my birth time / place" from the result: unfold the details and put
+  // the caret in the missing field (time first, then place) — on mount
+  // (mobile modal) or live (sidebar).
+  const timeRef = useRef(time);
+  useEffect(() => {
+    timeRef.current = time;
+  }, [time]);
+  useEffect(() => {
+    const open = () => {
+      if (!takeBirthTimeRequest()) return;
+      setDetailsOpen(true);
+      requestAnimationFrame(() => {
+        const input = document.getElementById(timeRef.current ? cityId : timeId);
+        input?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        input?.focus({ preventScroll: true });
+      });
+    };
+    open();
+    window.addEventListener(ADD_BIRTH_TIME_EVENT, open);
+    return () => window.removeEventListener(ADD_BIRTH_TIME_EVENT, open);
+  }, [timeId, cityId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +184,7 @@ export function CoordinatesForm({
         {computing ? t.natalForm.submitBusy : `${t.natalForm.submitIdle} →`}
       </motion.button>
 
-      {!bare && <AllSignsLink />}
+      {!bare && !hideAllSignsLink && <AllSignsLink />}
 
       {!bare && history && history.length > 0 && (
         <SearchHistoryList
@@ -204,7 +230,7 @@ function SearchHistoryList({ entries, onRestore, onRemove }: SearchHistoryListPr
       className="pt-2 space-y-1"
     >
       <div
-        className="px-0.5 text-cockpit-xs tracking-cockpit-label uppercase
+        className="px-0.5 text-cockpit-xs tracking-normal
                    text-slate-500"
       >
         {t.searchHistory.sectionLabel}

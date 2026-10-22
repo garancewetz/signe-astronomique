@@ -1,10 +1,7 @@
 import { PLANETS_META } from '@/features/astronomy';
-import {
-  SATELLITE_RELICS,
-  satelliteName,
-} from '@/features/space-viewport';
+import { SATELLITE_RELICS } from '@/features/space-viewport';
 import { cn, HudCard, type HudCardVariant } from '@/ui';
-import { useLocale, useT } from '@/context/useLocale';
+import { useT } from '@/context/useLocale';
 import { useCockpitDisplay } from '@/context/useCockpitDisplay';
 
 interface LegendPanelProps {
@@ -26,7 +23,6 @@ export function LegendPanel({
   sidebarWidth = 0,
 }: LegendPanelProps) {
   const t = useT();
-  const { locale } = useLocale();
   const {
     bodyLabelsEnabled,
     toggleBodyLabels,
@@ -60,7 +56,7 @@ export function LegendPanel({
               key={p.id}
               glyph={p.glyph}
               color={p.color}
-              name={locale === 'en' ? p.en : p.fr}
+              name={p.fr}
             />
           ))}
         </Section>
@@ -94,7 +90,7 @@ export function LegendPanel({
             <DotRow
               key={r.id}
               color={r.glowColor}
-              label={satelliteName(r, locale)}
+              label={r.name}
               year={new Date(r.launchDate).getUTCFullYear()}
             />
           ))}
@@ -113,12 +109,12 @@ function KeyboardSection() {
       <div
         className={cn(
           'flex items-center gap-2 w-full mb-1.5',
-          'text-cockpit-xs tracking-cockpit-caps uppercase',
+          'text-cockpit-xs tracking-normal',
           'text-accent-label/75',
         )}
       >
         <span className="flex-1 text-left truncate">
-          {t.keyboardShortcuts.sectionLabel.toUpperCase()}
+          {t.keyboardShortcuts.sectionLabel}
         </span>
       </div>
       <ul className="space-y-1 text-cockpit-sm">
@@ -167,7 +163,7 @@ function Section({
         onClick={onToggle}
         className={cn(
           'cockpit-focus group flex items-center gap-2 w-full mb-1.5',
-          'text-cockpit-xs tracking-cockpit-caps uppercase',
+          'text-cockpit-xs tracking-normal',
           'transition-colors',
           active
             ? 'text-cyan-100 hover:text-cyan-50'

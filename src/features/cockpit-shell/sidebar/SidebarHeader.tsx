@@ -1,7 +1,6 @@
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { TooltipWrap } from '../Tooltip';
 import { IconButton } from '@/ui';
-import { LanguageSwitcher } from '../LanguageSwitcher';
 import { useT } from '@/context/useLocale';
 
 interface SidebarHeaderProps {
@@ -31,7 +30,6 @@ export function SidebarHeader({
         </div>
       )}
       <div className="flex items-center gap-1 shrink-0">
-        {!collapsed && <LanguageSwitcher />}
         <TooltipWrap
           text={collapsed ? t.sidebar.expandTooltip : t.sidebar.collapseTooltip}
           placement="right"

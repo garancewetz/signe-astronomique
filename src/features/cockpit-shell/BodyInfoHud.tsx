@@ -1,4 +1,4 @@
-import { memo, useMemo, type ReactNode } from 'react';
+import { memo, useEffect, useMemo, type ReactNode } from 'react';
 import {
   AU_KM,
   CONSTELLATION_CATALOG,
@@ -8,6 +8,7 @@ import {
   loreName,
   type CatalogConstellation,
   type CatalogStar,
+  type IauConstellation,
   type MoonPhaseKey,
 } from '@/features/astronomy';
 import type {
@@ -19,9 +20,8 @@ import type {
   SelectedSun,
 } from '@/features/space-viewport';
 import { Button, HudCard, type HudCardVariant, cn } from '@/ui';
-import { useLocale, useT } from '@/context/useLocale';
+import { useT } from '@/context/useLocale';
 import type { Copy } from '@/i18n/fr';
-import type { Locale } from '@/i18n';
 
 interface Props {
   selected: SelectedBody | null;
@@ -37,6 +37,8 @@ interface Props {
    * sheet) — same chrome, no positioning, no animation.
    */
   variant?: 'floating' | 'inline';
+  /** What a horoscope says for this body (Sun, Moon, planets of the chart). */
+  horoscopeSign?: IauConstellation;
 }
 
 interface InfoRow {
@@ -57,10 +59,20 @@ export const BodyInfoHud = memo(function BodyInfoHud({
   onToggleSideView,
   onClose,
   variant = 'floating',
+  horoscopeSign,
 }: Props) {
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected, onClose]);
+
   if (!selected) return null;
 
-  const shellProps = { sidebarWidth, variant } as const;
+  const shellProps = { sidebarWidth, variant, horoscopeSign } as const;
   switch (selected.kind) {
     case 'star':
       return (
@@ -119,19 +131,19 @@ function StarCard({
 }: {
   selected: SelectedStar;
   sidebarWidth: number;
+  horoscopeSign?: IauConstellation;
   variant: HudCardVariant;
   sideViewActive: boolean;
   onToggleSideView: () => void;
   onClose: () => void;
 }) {
   const t = useT();
-  const { locale } = useLocale();
   const resolved = useMemo(() => resolveStar(selected), [selected]);
   if (!resolved) return null;
   const { star, constellation, closest, ratio } = resolved;
   const localizedName = (() => {
     const zodiacal = abbrToZodiacal(constellation.abbreviation);
-    return zodiacal ? loreName(zodiacal, locale) : constellation.name;
+    return zodiacal ? loreName(zodiacal) : constellation.name;
   })();
   const isClosestSelf = star === closest;
   const ratioText = isClosestSelf
@@ -139,7 +151,7 @@ function StarCard({
     : t.bodyInfo.star.ratioFarther(
         ratio < 10 ? ratio.toFixed(1) : Math.round(ratio).toString(),
         closest.name,
-        formatLightYears(closest.distance_ly, locale),
+        formatLightYears(closest.distance_ly),
       );
 
   return (
@@ -165,7 +177,7 @@ function StarCard({
     >
       <InfoGrid
         rows={[
-          { label: t.bodyInfo.star.rows.distance, value: formatLightYears(star.distance_ly, locale) },
+          { label: t.bodyInfo.star.rows.distance, value: formatLightYears(star.distance_ly) },
           { label: t.bodyInfo.star.rows.magnitude, value: star.mag.toFixed(2) },
           { label: t.bodyInfo.star.rows.depth, value: ratioText },
         ]}
@@ -184,17 +196,18 @@ function StarCard({
 function SunCard({
   selected,
   sidebarWidth,
+  horoscopeSign,
   variant,
   onClose,
 }: {
   selected: SelectedSun;
   sidebarWidth: number;
+  horoscopeSign?: IauConstellation;
   variant: HudCardVariant;
   onClose: () => void;
 }) {
   const t = useT();
-  const { locale } = useLocale();
-  const constellationLabel = loreName(selected.constellation, locale);
+  const constellationLabel = loreName(selected.constellation);
   return (
     <HudCard
       variant={variant}
@@ -216,11 +229,9 @@ function SunCard({
     >
       <InfoGrid
         rows={[
-          {
-            label: t.bodyInfo.sun.rows.constellation,
-            value: `${constellationLabel} (${selected.constellation})`,
-          },
-          { label: t.bodyInfo.sun.rows.distance, value: formatAU(1, locale) },
+          { label: t.bodyInfo.sun.rows.constellation, value: constellationLabel },
+          ...horoscopeRow(horoscopeSign, t),
+          { label: t.bodyInfo.sun.rows.distance, value: formatAU(1) },
           { label: t.bodyInfo.sun.rows.raDec, value: formatRaDec(selected.raHours, selected.decDeg) },
           { label: t.bodyInfo.sun.rows.magnitude, value: t.bodyInfo.sun.magnitudeValue },
         ]}
@@ -234,17 +245,18 @@ function SunCard({
 function MoonCard({
   selected,
   sidebarWidth,
+  horoscopeSign,
   variant,
   onClose,
 }: {
   selected: SelectedMoon;
   sidebarWidth: number;
+  horoscopeSign?: IauConstellation;
   variant: HudCardVariant;
   onClose: () => void;
 }) {
   const t = useT();
-  const { locale } = useLocale();
-  const constellationLabel = loreName(selected.constellation, locale);
+  const constellationLabel = loreName(selected.constellation);
   const illumPct = `${Math.round(selected.illumination * 100)} %`;
   const phaseLabel = t.moonPhases[selected.phaseKey as MoonPhaseKey] ?? selected.phaseKey;
   return (
@@ -263,11 +275,9 @@ function MoonCard({
     >
       <InfoGrid
         rows={[
-          {
-            label: t.bodyInfo.moon.rows.constellation,
-            value: `${constellationLabel} (${selected.constellation})`,
-          },
-          { label: t.bodyInfo.moon.rows.distance, value: formatKm(selected.distanceKm, locale) },
+          { label: t.bodyInfo.moon.rows.constellation, value: constellationLabel },
+          ...horoscopeRow(horoscopeSign, t),
+          { label: t.bodyInfo.moon.rows.distance, value: formatKm(selected.distanceKm) },
           { label: t.bodyInfo.moon.rows.phase, value: `${phaseLabel} · ${illumPct}` },
           { label: t.bodyInfo.moon.rows.raDec, value: formatRaDec(selected.raHours, selected.decDeg) },
         ]}
@@ -281,19 +291,20 @@ function MoonCard({
 function PlanetCard({
   selected,
   sidebarWidth,
+  horoscopeSign,
   variant,
   onClose,
 }: {
   selected: SelectedPlanet;
   sidebarWidth: number;
+  horoscopeSign?: IauConstellation;
   variant: HudCardVariant;
   onClose: () => void;
 }) {
   const t = useT();
-  const { locale } = useLocale();
-  const constellationLabel = loreName(selected.constellation, locale);
+  const constellationLabel = loreName(selected.constellation);
   const planetName =
-    locale === 'en' ? PLANETS_META[selected.id].en : PLANETS_META[selected.id].fr;
+    PLANETS_META[selected.id].fr;
   return (
     <HudCard
       variant={variant}
@@ -312,11 +323,9 @@ function PlanetCard({
     >
       <InfoGrid
         rows={[
-          {
-            label: t.bodyInfo.planet.rows.constellation,
-            value: `${constellationLabel} (${selected.constellation})`,
-          },
-          { label: t.bodyInfo.planet.rows.distance, value: formatAU(selected.distanceAU, locale) },
+          { label: t.bodyInfo.planet.rows.constellation, value: constellationLabel },
+          ...horoscopeRow(horoscopeSign, t),
+          { label: t.bodyInfo.planet.rows.distance, value: formatAU(selected.distanceAU) },
           { label: t.bodyInfo.planet.rows.raDec, value: formatRaDec(selected.raHours, selected.decDeg) },
         ]}
       />
@@ -334,6 +343,7 @@ function SatelliteCard({
 }: {
   selected: SelectedSatellite;
   sidebarWidth: number;
+  horoscopeSign?: IauConstellation;
   variant: HudCardVariant;
   onClose: () => void;
 }) {
@@ -437,26 +447,27 @@ function SwitchKnob({ active }: { active: boolean }) {
   );
 }
 
+/** "Horoscope: Taureau" — ties the body back to the reader's chart. */
+function horoscopeRow(sign: IauConstellation | undefined, t: Copy): InfoRow[] {
+  return sign ? [{ label: t.bodyInfo.horoscopeRow, value: loreName(sign) }] : [];
+}
+
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
-function formatLightYears(ly: number, locale: Locale): string {
-  const intl = locale === 'en' ? 'en-US' : 'fr-FR';
-  // "al" (année-lumière) in FR, "ly" in EN.
-  const unit = locale === 'en' ? 'ly' : 'al';
-  const kiloUnit = locale === 'en' ? 'kly' : 'kal';
-  if (ly >= 1000) return `${(ly / 1000).toFixed(1)} ${kiloUnit}`;
-  if (ly >= 100) return `${Math.round(ly).toLocaleString(intl)} ${unit}`;
-  if (ly >= 10) return `${ly.toFixed(0)} ${unit}`;
-  return `${ly.toFixed(1)} ${unit}`;
+/** "al" = année-lumière, "kal" = kilo-années-lumière. */
+function formatLightYears(ly: number): string {
+  if (ly >= 1000) return `${(ly / 1000).toFixed(1)} kal`;
+  if (ly >= 100) return `${Math.round(ly).toLocaleString('fr-FR')} al`;
+  if (ly >= 10) return `${ly.toFixed(0)} al`;
+  return `${ly.toFixed(1)} al`;
 }
 
-function formatAU(au: number, locale: Locale): string {
-  return formatDistanceKmOrAU(au * AU_KM, locale);
+function formatAU(au: number): string {
+  return formatDistanceKmOrAU(au * AU_KM);
 }
 
-function formatKm(km: number, locale: Locale): string {
-  const intl = locale === 'en' ? 'en-US' : 'fr-FR';
-  return `${km.toLocaleString(intl, { maximumFractionDigits: 0 })} km`;
+function formatKm(km: number): string {
+  return `${km.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} km`;
 }
 
 function formatLaunchDate(iso: string, t: Copy): string {

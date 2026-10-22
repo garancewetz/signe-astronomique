@@ -9,8 +9,8 @@ import { SignReveal } from './SignReveal';
  */
 export const OffscreenFullReport = forwardRef<
   HTMLDivElement,
-  { reading: CelestialReading }
->(function OffscreenFullReport({ reading }, ref) {
+  { reading: CelestialReading; birthTimeKnown: boolean }
+>(function OffscreenFullReport({ reading, birthTimeKnown }, ref) {
   return (
     <div
       aria-hidden="true"
@@ -19,7 +19,7 @@ export const OffscreenFullReport = forwardRef<
       ref={ref}
     >
       <div className="px-5 py-5">
-        <SignReveal reading={reading} />
+        <SignReveal reading={reading} birthTimeKnown={birthTimeKnown} />
       </div>
     </div>
   );

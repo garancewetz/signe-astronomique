@@ -59,7 +59,7 @@ export function SidebarSection({
         className={cn(
           'cockpit-focus group w-full',
           'flex items-center gap-2.5 h-9 px-2 rounded',
-          'text-cockpit-sm tracking-cockpit-label uppercase',
+          'text-cockpit-sm tracking-normal',
           'transition-colors',
           expanded
             ? 'text-accent-title bg-violet-500/8'

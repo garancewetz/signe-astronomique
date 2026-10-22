@@ -3,8 +3,9 @@ import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './ErrorBoundary';
 import { CockpitFallback } from './CockpitFallback';
 import { KeyboardHintChip } from './KeyboardHintChip';
+import { MapKey } from './MapKey';
 import { DistanceChip } from '@/ui';
-import { useLocale, useT } from '@/context/useLocale';
+import { useT } from '@/context/useLocale';
 import {
   SpaceView,
   useRevealSequence,
@@ -24,17 +25,24 @@ import {
 } from './sidebar';
 import {
   OffscreenFullReport,
-  SignRevealModal,
+  SIGN_PANEL_PX,
+  SignRevealPanel,
   useExportHandlers,
 } from '@/features/natal-report';
 import { LegendPanel } from './LegendPanel';
 import { useMobileLayout } from '@/ui/useMobileLayout';
 import { MobileCockpit } from './mobile/MobileCockpit';
-import type { MobileTabKey } from './mobile/MobileTabBar';
-import { loreName, loreShortName, type CelestialReading } from '@/features/astronomy';
+import { MOBILE_TAB_BAR_OFFSET, type MobileTabKey } from './mobile/MobileTabBar';
+import {
+  loreName,
+  loreShortName,
+  natalPlacements,
+  type CelestialReading,
+} from '@/features/astronomy';
 import {
   DEFAULT_BIRTH_TIME,
   formatNatalShareText,
+  requestBirthTime,
   useNatalForm,
   useSearchHistory,
   useShareLink,
@@ -44,13 +52,12 @@ import { CockpitDisplayProvider } from '@/context/CockpitDisplayContext';
 export function Cockpit() {
   const isMobile = useMobileLayout();
   const t = useT();
-  const { locale } = useLocale();
 
   const [reading, setReading] = useState<CelestialReading | null>(null);
 
   // The natal form lives at the top of the sidebar (always visible).
   // Only floating panels (body picker, legend) live in activePanel — the
-  // true-sign reveal is a centered modal shared by desktop and mobile.
+  // result is its own panel, docked right on desktop, a page on mobile.
   const [activePanel, setActivePanel] = useState<SidebarPanelKey | null>(null);
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [analysisAttention, setAnalysisAttention] = useState(0);
@@ -117,8 +124,6 @@ export function Cockpit() {
     [],
   );
 
-  const openLegend = useCallback(() => setActivePanel('legend'), []);
-
   const closePanel = useCallback(() => setActivePanel(null), []);
 
   const closeAnalysis = useCallback(() => setAnalysisOpen(false), []);
@@ -145,10 +150,16 @@ export function Cockpit() {
   const flyToSun = useCallback(() => spaceViewRef.current?.flyToSun(), []);
   const flyToMoon = useCallback(() => spaceViewRef.current?.flyToMoon(), []);
   const flyToEarth = useCallback(() => spaceViewRef.current?.flyToEarth(), []);
-  const handleRevealFromModal = useCallback(() => {
+  const handleRevealFromPanel = useCallback(() => {
     closeAnalysis();
     revealConstellation();
   }, [closeAnalysis, revealConstellation]);
+  // The ascendant needs the birth time: open the form on that field. On
+  // mobile the form is a modal, so the result page steps aside first.
+  const handleAddBirthTime = useCallback(() => {
+    if (isMobile) closeAnalysis();
+    requestBirthTime();
+  }, [isMobile, closeAnalysis]);
   const toggleSidebarCollapsed = useCallback(
     () => setSidebarCollapsed((v) => !v),
     [],
@@ -207,10 +218,12 @@ export function Cockpit() {
     else void el.requestFullscreen();
   }, []);
 
-  // Canvas left inset: sidebar width only — body/legend float over the
-  // canvas as glassmorphism cards, and the analysis modal is centered.
+  // Canvas insets: the sidebar on the left and, while it is open, the result
+  // panel on the right — the sky shrinks beside it instead of hiding under
+  // it. Body/legend cards still float over the canvas.
   const sidebarWidth = sidebarCollapsed ? SIDEBAR_COLLAPSED_PX : SIDEBAR_EXPANDED_PX;
-  const canvasInsetStyle = { left: `${sidebarWidth}px` };
+  const resultWidth = analysisOpen && reading ? SIGN_PANEL_PX : 0;
+  const canvasInsetStyle = { left: `${sidebarWidth}px`, right: `${resultWidth}px` };
   // The desktop welcome card (index.html) docks beside the sidebar.
   useEffect(() => {
     document.documentElement.style.setProperty('--sidebar-w', `${sidebarWidth}px`);
@@ -266,21 +279,45 @@ export function Cockpit() {
     hasSelectedStar,
   };
 
-  const signLabel = reading ? loreName(reading.trueConstellation, locale) : null;
+  const signLabel = reading ? loreName(reading.trueConstellation) : null;
+  const birthTimeKnown = time !== '';
+  // The horoscope sign of the picked body, so its card ties back to the chart.
+  const selectedHoroscope = useMemo(() => {
+    if (!reading || !selectedBody) return undefined;
+    const id = selectedBody.kind === 'planet' ? selectedBody.id
+      : selectedBody.kind === 'sun' || selectedBody.kind === 'moon' ? selectedBody.kind
+      : null;
+    return id ? natalPlacements(reading).find((p) => p.id === id)?.horoscope : undefined;
+  }, [reading, selectedBody]);
+  // Moon and Ascendant — asked about right after the sign (the Sun, which
+  // the sidebar card already shows large).
+  const keyPlacements = useMemo(() => {
+    if (!reading) return [];
+    return natalPlacements(reading).slice(1, 3).map((p) => ({
+      glyph: p.glyph,
+      label: p.id === 'moon' ? t.bodies.moon : t.signReveal.ascendant,
+      // The ascendant needs the time and the place.
+      value: p.id === 'ascendant' && !(birthTimeKnown && reading.input.placeLabel)
+        ? null
+        : loreShortName(p.sky),
+    }));
+  }, [reading, birthTimeKnown, t]);
 
   const offscreenReport = reading ? (
-    <OffscreenFullReport ref={fullReportRef} reading={reading} />
+    <OffscreenFullReport ref={fullReportRef} reading={reading} birthTimeKnown={birthTimeKnown} />
   ) : null;
 
-  const signRevealModal = (
-    <SignRevealModal
+  const signRevealPanel = (
+    <SignRevealPanel
       open={analysisOpen}
       onClose={closeAnalysis}
       reading={reading}
-      onRevealConstellation={handleRevealFromModal}
+      onRevealConstellation={handleRevealFromPanel}
+      onAddBirthTime={handleAddBirthTime}
       onShare={handleShareLink}
       shareCopied={shareCopied}
-      birthTimeKnown={time !== ''}
+      birthTimeKnown={birthTimeKnown}
+      bottomOffset={isMobile ? MOBILE_TAB_BAR_OFFSET : undefined}
     />
   );
 
@@ -315,16 +352,19 @@ export function Cockpit() {
           onRemoveSearch={removeSearch}
           reading={reading}
           hasSharedFromUrl={sharedFromUrl !== null}
+          welcomeOpen={welcomeSlot !== null}
           selectedBody={selectedBody}
+          selectedHoroscope={selectedHoroscope}
           onCloseSelection={clearSelection}
           onFlySun={flyToSun}
           onFlyMoon={flyToMoon}
           onFlyEarth={flyToEarth}
+          signOpen={analysisOpen}
           onOpenSign={openAnalysis}
-          signLabel={reading ? loreShortName(reading.trueConstellation, locale) : null}
+          onCloseSign={closeAnalysis}
+          signLabel={reading ? loreShortName(reading.trueConstellation) : null}
           activeTab={mobileActiveTab}
           onActiveTabChange={setMobileActiveTab}
-          analysisAttention={analysisAttention}
           onShareLink={handleShareLink}
           shareCopied={shareCopied}
           canShareLink={canShareLink}
@@ -337,7 +377,7 @@ export function Cockpit() {
         >
           {spaceView}
         </MobileCockpit>
-        {signRevealModal}
+        {signRevealPanel}
         {offscreenReport}
       </CockpitDisplayProvider>
     );
@@ -357,8 +397,8 @@ export function Cockpit() {
 
       {/* === 3D VIEW — text selection disabled (globe navigation / capture) === */}
       <div
-        className="absolute top-0 bottom-0 right-0 z-0 select-none touch-manipulation
-                   transition-[left] duration-300 ease-out"
+        className="absolute top-0 bottom-0 z-0 select-none touch-manipulation
+                   transition-[left,right] duration-300 ease-out"
         style={canvasInsetStyle}
       >
         {spaceView}
@@ -367,23 +407,32 @@ export function Cockpit() {
       {/* === CRYSTAL-BALL VIGNETTE === */}
       <div className="absolute inset-0 z-1 pointer-events-none crystal-vignette" />
 
-      {/* === KEYBOARD HINT — surfaces the 3D keyboard navigation === */}
-      <KeyboardHintChip
-        onOpen={openLegend}
-        hidden={activePanel === 'legend'}
-      />
-
-      {/* === CAMERA DISTANCE — live altitude, refreshed by the Cesium listener === */}
-      <DistanceChip label={distanceLabel} />
+      {/* === CANVAS CORNER CHIPS — follow the canvas when the result opens === */}
+      <div
+        className="absolute top-0 bottom-0 z-20 pointer-events-none [&>*]:pointer-events-auto
+                   transition-[left,right] duration-300 ease-out"
+        style={canvasInsetStyle}
+      >
+        {/* Keyboard hint — surfaces the 3D keyboard navigation */}
+        {!resultWidth && <KeyboardHintChip />}
+        {/* Map key — what the gold, grey and blue marks mean */}
+        {reading && showZones && !sideViewActive && <MapKey placement="bottom-left" />}
+        {/* Camera distance — live altitude, refreshed by the Cesium listener */}
+        {/* Hidden beside the result: the narrower sky keeps its corners for the key. */}
+        {!resultWidth && (
+          <DistanceChip label={distanceLabel && t.distanceFromEarth(distanceLabel)} placement="bottom-right" />
+        )}
+      </div>
 
       {/* === HUD FRAME (slim — status only; branding lives in the sidebar) === */}
       <div
         className="absolute top-0 z-10 pointer-events-none
-                   transition-[left] duration-300 ease-out"
-        style={{ left: sidebarWidth, right: 0 }}
+                   transition-[left,right] duration-300 ease-out"
+        style={canvasInsetStyle}
       >
         <HudFrame
           reading={reading}
+          birthTimeKnown={time !== ''}
           onOpenSummary={openAnalysis}
         />
       </div>
@@ -409,6 +458,7 @@ export function Cockpit() {
         onRemoveSearch={removeSearch}
         hasReading={!!reading}
         signLabel={signLabel}
+        keyPlacements={keyPlacements}
         onFlySun={flyToSun}
         onFlyMoon={flyToMoon}
         onFlyEarth={flyToEarth}
@@ -430,6 +480,7 @@ export function Cockpit() {
           <BodyInfoHud
             key={bodyInfoKey(selectedBody)}
             selected={selectedBody}
+            horoscopeSign={selectedHoroscope}
             sidebarWidth={sidebarWidth}
             sideViewActive={sideViewActive}
             onToggleSideView={toggleSideView}
@@ -446,7 +497,7 @@ export function Cockpit() {
       </AnimatePresence>
 
     </div>
-    {signRevealModal}
+    {signRevealPanel}
     {offscreenReport}
     </CockpitDisplayProvider>
   );

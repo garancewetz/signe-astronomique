@@ -46,7 +46,7 @@ export function HudCard({
       <header className="flex items-start gap-3 px-4 pt-3.5 pb-3 border-b border-white/5">
         <div className="min-w-0 flex-1">
           {subtitle && (
-            <div className="text-cockpit-xs tracking-cockpit-caps text-accent-label/80 mb-0.5">
+            <div className="text-cockpit-xs tracking-normal text-accent-label/80 mb-0.5">
               {subtitle}
             </div>
           )}
@@ -54,15 +54,18 @@ export function HudCard({
             {title}
           </h2>
         </div>
-        <IconButton
-          size="sm"
-          tone="glass"
-          onClick={onClose}
-          aria-label={closeAriaLabel}
-          className="shrink-0"
-        >
-          <X className="size-3.5" strokeWidth={1.4} aria-hidden />
-        </IconButton>
+        {/* Inline (mobile sheet): the sheet's own close button does the job. */}
+        {variant !== 'inline' && (
+          <IconButton
+            size="sm"
+            tone="glass"
+            onClick={onClose}
+            aria-label={closeAriaLabel}
+            className="shrink-0"
+          >
+            <X className="size-3.5" strokeWidth={1.4} aria-hidden />
+          </IconButton>
+        )}
       </header>
 
       <div className="overflow-y-auto px-4 py-3.5 space-y-3.5">{children}</div>

@@ -1,4 +1,4 @@
-import { CalendarDays, MoreVertical } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { type Ref } from 'react';
 import type { CityResult } from '@/features/natal-input';
 import { useT } from '@/context/useLocale';
@@ -7,27 +7,22 @@ interface MobileHeaderProps {
   date: string;
   city: CityResult;
   coordsOpen: boolean;
-  drawerOpen: boolean;
   onOpenCoords: () => void;
-  onToggleDrawer: () => void;
   /** Forwarded so the parent can ResizeObserver the header for layout math. */
   ref?: Ref<HTMLElement>;
 }
 
 /**
- * Top bar of the mobile cockpit. The left chip shows the active natal
- * coordinates (date + city) and acts as the primary entry point to edit
- * them; the right button toggles the system drawer (export, share,
- * language…). Visual height drives the bottom sheet's full-snap math, so
- * the parent measures it via a forwarded ref.
+ * Top bar of the mobile cockpit: the active natal coordinates (date +
+ * city), tappable to edit them. Everything else lives in the tab bar.
+ * Visual height drives the bottom sheet's full-snap math, so the parent
+ * measures it via a forwarded ref.
  */
 export function MobileHeader({
   date,
   city,
   coordsOpen,
-  drawerOpen,
   onOpenCoords,
-  onToggleDrawer,
   ref,
 }: MobileHeaderProps) {
   const t = useT();
@@ -73,20 +68,6 @@ export function MobileHeader({
         >
           <CalendarDays className="size-3" strokeWidth={1.6} />
         </span>
-      </button>
-      <button
-        type="button"
-        onClick={onToggleDrawer}
-        aria-label={t.mobile.systemDrawer.openAriaLabel}
-        aria-haspopup="dialog"
-        aria-expanded={drawerOpen}
-        className="cockpit-focus shrink-0 grid place-items-center
-                   w-11
-                   border-l border-border-hud-faint
-                   text-slate-300/85 hover:text-slate-100
-                   hover:bg-violet-500/10 transition-colors"
-      >
-        <MoreVertical className="size-4" strokeWidth={1.5} aria-hidden />
       </button>
     </header>
   );
