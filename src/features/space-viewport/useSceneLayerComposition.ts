@@ -162,7 +162,6 @@ export function useSceneLayerComposition({
         raHours: zone.raHours,
         decDeg: zone.decDeg,
         gmstRad,
-        ecliptic: { longitudeDeg: zone.eclipticLongitude, obliquityDeg: active.obliquity },
       });
     }
 
