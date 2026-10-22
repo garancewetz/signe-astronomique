@@ -307,13 +307,16 @@ function ascendant(lstHours: number, latDeg: number, epsDeg: number): number {
   const lat = latDeg * DEG;
   const eps = epsDeg * DEG;
 
-  // Meeus 14.6: tan(asc) = -cos(LST) / (sin(LST)·cos(eps) + tan(lat)·sin(eps))
-  const y = -Math.cos(lst);
-  const x = Math.sin(lst) * Math.cos(eps) + Math.tan(lat) * Math.sin(eps);
+  // Meeus 14.6: tan(asc) = -cos(LST) / (sin(LST)·cos(eps) + tan(lat)·sin(eps)).
+  // The signs go on atan2's arguments as (cos, -(…)), not (-cos, …): the
+  // ratio is the same, but the latter lands on the opposite point — the
+  // Descendant. Check: on the equator with 0° Aries culminating (LST = 0),
+  // 90° (Cancer) must be rising.
+  const y = Math.cos(lst);
+  const x = -(Math.sin(lst) * Math.cos(eps) + Math.tan(lat) * Math.sin(eps));
   const asc = Math.atan2(y, x) * RAD;
 
-  // The ascendant must sit in the quadrant that follows the MC (Medium Coeli).
-  // The atan2 above returns [-180, 180]; normalize to [0, 360).
+  // atan2 returns [-180, 180]; normalize to [0, 360).
   return norm360(asc);
 }
 
