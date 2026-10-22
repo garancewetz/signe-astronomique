@@ -284,7 +284,6 @@ export function SpaceView({
           raHours: active.sunRA,
           decDeg: active.sunDec,
           gmstRad: activeGmstRef.current,
-          ecliptic: { longitudeDeg: active.sunEclipticLongitude, obliquityDeg: active.obliquity },
         });
       },
       flyToSign: () => {
@@ -296,7 +295,6 @@ export function SpaceView({
           raHours: zone.raHours,
           decDeg: zone.decDeg,
           gmstRad: activeGmstRef.current,
-          ecliptic: { longitudeDeg: zone.eclipticLongitude, obliquityDeg: active.obliquity },
         });
       },
       flyToMoon: () => {
@@ -307,7 +305,6 @@ export function SpaceView({
           raHours: active.moon.ra,
           decDeg: active.moon.dec,
           gmstRad: activeGmstRef.current,
-          ecliptic: { longitudeDeg: active.moon.eclipticLongitude, obliquityDeg: active.obliquity },
         });
       },
       flyToEarth: () => {

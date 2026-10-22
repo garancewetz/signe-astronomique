@@ -169,6 +169,22 @@ body {
   outline: 2px solid color-mix(in srgb, var(--color-ring) 95%, transparent);
   outline-offset: 2px;
 }
+/* iOS Safari gives date/time inputs an intrinsic min-width and ignores
+   width: 100%, so they overflow narrow panels. Native appearance off,
+   min-width reset, value left-aligned like the other fields. */
+.cockpit-input[type='date'],
+.cockpit-input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.75rem;
+}
+.cockpit-input::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0;
+}
 .cockpit-input::-webkit-calendar-picker-indicator {
   filter: invert(0.75);
   opacity: 0.6;

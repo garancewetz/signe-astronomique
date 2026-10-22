@@ -72,16 +72,16 @@ export function mountZodiacBand(viewer: Viewer, opts: MountOptions): () => void 
   const created: Entity[] = [];
   const boundaries = getIauBoundaries();
 
-  // The reader's own label goes above the ecliptic (the Earth sits just
-  // below the Sun in the framing) and in the half of the stretch away from
-  // the Sun, so it never lands on the Earth or the Sun. Neighbours keep
-  // the middle, below the band.
+  // The reader's own label goes under the band, like the neighbours (above
+  // it, it lands on the cyan constellation name), in the half of the
+  // stretch away from the Sun so it never lands on the Earth, which sits
+  // just below the Sun in the framing. Neighbours keep the middle.
   const labelPosition = (start: number, end: number, isTrue: boolean) => {
     if (!isTrue) return eclipticToEcef((start + end) / 2, LABEL_LAT_DEG, gmstRad);
     const sun = sunLongitude < start ? sunLongitude + 360 : sunLongitude;
     const sunInFirstHalf = sun - start < (end - start) / 2;
     const lon = start + (end - start) * (sunInFirstHalf ? 0.75 : 0.25);
-    return eclipticToEcef(lon, -LABEL_LAT_DEG, gmstRad);
+    return eclipticToEcef(lon, LABEL_LAT_DEG, gmstRad);
   };
 
   boundaries.forEach((b, i) => {
