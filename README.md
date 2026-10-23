@@ -6,7 +6,7 @@
 
 ![Cockpit en vue normale : Terre centrée, Lune et Jupiter visibles, constellations du Cancer, Lion et Gémeaux dessinées sur la sphère céleste](public/screenshot.jpg)
 
-**Live demo:** <https://signe-astronomique.netlify.app/>
+**Live demo:** <https://signe-astronomique.garancewetz.dev/>
 
 ---
 

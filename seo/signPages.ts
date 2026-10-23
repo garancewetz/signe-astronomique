@@ -27,7 +27,7 @@ import {
   type Run,
 } from './signData';
 
-export const SITE_URL = 'https://signe-astronomique.netlify.app';
+export const SITE_URL = 'https://signe-astronomique.garancewetz.dev';
 const SITE_NAME = 'Signe astronomique';
 
 export interface StaticPage {
