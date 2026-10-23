@@ -77,3 +77,13 @@
   [headers.values]
     # Service worker must revalidate so PWA updates aren't stuck behind cache.
     Cache-Control = "no-cache"
+
+# ─── Old Netlify address → custom domain ─────────────────────────────────────
+# Netlify keeps *.netlify.app reachable even with a primary domain set, so the
+# permanent redirect has to be declared here (path and query are kept).
+
+[[redirects]]
+  from = "https://signe-astronomique.netlify.app/*"
+  to = "https://signe-astronomique.garancewetz.dev/:splat"
+  status = 301
+  force = true
