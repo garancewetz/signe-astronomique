@@ -42,7 +42,7 @@
   "dependencies": {
     "@floating-ui/react": "0.27.20",
     "cesium": "1.146.0",
-    "framer-motion": "12.38.0",
+    "framer-motion": "14.3.0",
     "html2canvas-pro": "2.5.0",
     "jspdf": "4.2.1",
     "lucide-react": "1.57.0",
