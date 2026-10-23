@@ -48,7 +48,7 @@
     "lucide-react": "1.57.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "satellite.js": "5.0.0",
+    "satellite.js": "6.0.2",
     "tailwind-merge": "3.7.0",
     "tz-lookup": "6.1.25"
   },
